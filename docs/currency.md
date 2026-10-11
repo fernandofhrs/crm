@@ -40,12 +40,15 @@ inverts on ingest.
 - **`MAX_AMOUNT_CENTS`** (`deals.contracts.ts`) is what `Decimal(14, 2)` holds;
   `baseAmount` is `Decimal(24, 4)` so amount × rate still fits.
 - **Reporting currency is `AppSetting.reportingCurrency`**, read only through
-  `readReportingCurrency`.
+  `readReportingCurrency`. Until an admin chooses one the column is null and the
+  answer is `defaultReportingCurrency()`: `DEFAULT_REPORTING_CURRENCY` from the
+  environment when it names a supported code, otherwise USD. The variable is a
+  starting point, never an override: a stored choice always wins.
 - **Codes are validated against `isCurrencyCode` (`@crm/db/currency`), not a regex** —
   `z.string().length(3)` accepted `ZZZ`. `isWellFormedCurrency` is separate because
   `Intl` throws on non-three-letter input.
-- **`CURRENCIES` is eleven currencies and that is all this CRM supports** — USD, EUR,
-  JPY, GBP, CNY, AUD, CAD, CHF, HKD, SGD, ZAR, in array order. `isCurrencyCode` is the
+- **`CURRENCIES` is twelve currencies and that is all this CRM supports** — USD, EUR,
+  JPY, GBP, CNY, AUD, CAD, CHF, HKD, SGD, ZAR, BRL, in array order. `isCurrencyCode` is the
   single gate for the picker, the feed filter and the stored setting. A refresh
   **prunes** `FETCHED` rows outside the list and leaves `MANUAL` alone.
 - **`applyRate` rounds to the *reporting* currency's `minorUnitsOf`**, not to two. The
