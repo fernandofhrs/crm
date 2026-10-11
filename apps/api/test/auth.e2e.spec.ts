@@ -64,9 +64,14 @@ describe("Auth (e2e)", () => {
 			process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET,
 		);
 
+		const imapSignInConfigured = Boolean(
+			process.env.IMAP_HOST && process.env.IMAP_SIGN_IN,
+		);
+
 		expect(response.body.result.data).toEqual({
 			google: true,
 			microsoft: microsoftConfigured,
+			imap: imapSignInConfigured,
 			providers: [],
 		});
 	});

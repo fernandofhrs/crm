@@ -10,6 +10,7 @@ import { organization } from "better-auth/plugins/organization";
 import { API_KEY_EXPIRATION, API_KEY_HEADER, API_KEY_PREFIX } from "./api-keys";
 import { AUTH_COOKIE_PREFIX } from "./cookies";
 import { env } from "./env";
+import { imapSignIn } from "./imap-sign-in";
 import { ensureWorkspaceMembership } from "./organization";
 import {
 	GOOGLE_PROVIDER_ID,
@@ -210,6 +211,7 @@ export const auth = betterAuth({
 					}),
 				]
 			: []),
+		imapSignIn(),
 		organization({
 			allowUserToCreateOrganization: false,
 			disableOrganizationDeletion: true,

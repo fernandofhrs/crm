@@ -15,6 +15,13 @@ export {
 	isSlackConfigured,
 } from "./env";
 export {
+	hostImapSignIn,
+	type ImapSignInCredentials,
+	type ImapSignInVerdict,
+	isImapSignInEnabled,
+} from "./imap-sign-in";
+export { IMAP_SIGN_IN } from "./imap-sign-in-config";
+export {
 	canChangeRole,
 	canManageConnections,
 	canManageCurrency,
