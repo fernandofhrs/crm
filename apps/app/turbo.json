@@ -15,7 +15,8 @@
 				"BETTER_AUTH_SECRET",
 				"BETTER_AUTH_URL",
 				"DATABASE_URL",
-				"IS_MARKETING"
+				"IS_MARKETING",
+				"RESEARCH_KEY_OPTIONAL"
 			]
 		},
 		"check-types": {
@@ -39,6 +40,7 @@
 				"BETTER_AUTH_URL",
 				"DATABASE_URL",
 				"IS_MARKETING",
+				"RESEARCH_KEY_OPTIONAL",
 				"NEXT_PUBLIC_API_URL",
 				"NEXT_PUBLIC_AUTH_URL"
 			]

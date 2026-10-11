@@ -76,7 +76,10 @@ request.
   year-long marker insists the gate passed. Cache in the API if cost ever matters.
 - **Both reads run concurrently**, but order decides which is *asked* — the research
   read is never made while onboarding is open.
-- **An unreachable API fails open** (`unknown` lets the request through).
+- **An unreachable API fails open** (`unknown` lets the request through). The read
+  waits `GATE_TIMEOUT_MS`, which has to outlast a cold start of the API: a signed-in
+  rep whose gate read times out at `/` is shown the landing page.
+- **`RESEARCH_KEY_OPTIONAL` skips the key gate** and its read. See `environment.md`.
 - **`/sign-in`, `/grant-access`, `/eve` are ungated.** `/sign-in` is the only path a
   stranger may read; `/` joins it only when `IS_MARKETING` is set.
 - **There is no way past the key gate but to answer** — Skip stranded installs, every
@@ -260,6 +263,9 @@ with. It is `POST /api/auth/sign-in/imap`, a Better Auth plugin in
   a changed password heals `NEEDS_RECONNECT` at the next sign-in. A new row starts
   with `IMAP.signIn.autoCreate`; an existing row keeps what the rep chose. A failed
   save is logged and never fails the sign-in.
+- **The form leaves with a full page load, never `router.replace`.** The sign-in page
+  links to `/`, the router prefetches it signed out, and the cached answer is a
+  redirect back to `/sign-in`: a client navigation after signing in goes nowhere.
 - **The endpoint is always mounted and answers `404` when the variable is unset**,
   so the client type does not depend on the environment.
 - **`IMAP_SIGN_IN.attempts` is the rate limit**, declared on the plugin. Behind the

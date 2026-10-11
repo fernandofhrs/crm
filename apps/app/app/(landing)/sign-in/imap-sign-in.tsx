@@ -10,13 +10,10 @@ import {
 } from "@crm/ui/components/field";
 import { Input } from "@crm/ui/components/input";
 import { Spinner } from "@crm/ui/components/spinner";
-import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 
 export function ImapSignIn() {
-	const router = useRouter();
-
 	const emailId = useId();
 	const passwordId = useId();
 	const [pending, setPending] = useState(false);
@@ -39,8 +36,7 @@ export function ImapSignIn() {
 			return;
 		}
 
-		router.refresh();
-		router.replace("/");
+		window.location.assign("/");
 	}
 
 	return (

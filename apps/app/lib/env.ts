@@ -4,3 +4,7 @@ export const API_URL =
 export function isMarketing(): boolean {
 	return process.env.IS_MARKETING === "true";
 }
+
+export function isResearchKeyOptional(): boolean {
+	return process.env.RESEARCH_KEY_OPTIONAL === "true";
+}
