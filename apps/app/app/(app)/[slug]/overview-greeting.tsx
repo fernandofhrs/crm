@@ -8,9 +8,9 @@ import { overviewParsers } from "./overview-search-params";
 export function OverviewGreetingFallback() {
 	return (
 		<>
-			<PageShellTitle>Welcome back</PageShellTitle>
+			<PageShellTitle>Que bom ver você de novo</PageShellTitle>
 			<PageShellDescription>
-				What you have closed, what is still in play, and what needs you today.
+				O que você ganhou, o que está em andamento e o que precisa de você hoje.
 			</PageShellDescription>
 		</>
 	);
@@ -24,11 +24,11 @@ export function OverviewGreeting() {
 
 	return (
 		<>
-			<PageShellTitle>Welcome back</PageShellTitle>
+			<PageShellTitle>Que bom ver você de novo</PageShellTitle>
 			<PageShellDescription>
 				{scope === "me"
-					? "What you have closed, what is still in play, and what needs you today."
-					: "What the team has closed, what is still in play, and what needs you today."}
+					? "O que você ganhou, o que está em andamento e o que precisa de você hoje."
+					: "O que o time ganhou, o que está em andamento e o que precisa de você hoje."}
 			</PageShellDescription>
 		</>
 	);

@@ -28,6 +28,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import type { RouterOutputs } from "@/lib/trpc/types";
 import { DealsBulkActions } from "./deals-bulk-actions";
 import { dealsSearchParams } from "./deals-search-params";
+import { DealsViewToggle } from "./deals-view-toggle";
 
 type DealRow = RouterOutputs["deals"]["list"]["rows"][number];
 
@@ -232,6 +233,7 @@ export function DealsTable() {
 		<DataTable
 			query={query}
 			search={<ListSearch placeholder="Buscar negócios por nome ou empresa…" />}
+			leadingActions={<DealsViewToggle />}
 			actions={
 				<Button
 					variant={input.archived ? "contrast" : "outline"}

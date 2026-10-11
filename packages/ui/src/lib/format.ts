@@ -97,3 +97,30 @@ export function initialsFromName(name: string | null | undefined): string {
 	const last = parts[parts.length - 1] ?? first;
 	return (first.slice(0, 1) + last.slice(0, 1)).toUpperCase();
 }
+
+const numberFormat = new Intl.NumberFormat(LOCALE, {
+	maximumFractionDigits: 4,
+});
+
+const GROUPED_INTEGER = /^\d{1,3}(\.\d{3})+$/;
+
+export function formatNumber(value: number): string {
+	return numberFormat.format(value);
+}
+
+export function formatDecimalInput(value: number): string {
+	return String(value).replace(".", ",");
+}
+
+export function parseDecimal(text: string): number {
+	const compact = text.trim().replace(/\s/g, "");
+	if (compact === "") return Number.NaN;
+
+	if (compact.includes(",")) {
+		return Number(compact.replace(/\./g, "").replace(",", "."));
+	}
+
+	if (GROUPED_INTEGER.test(compact)) return Number(compact.replace(/\./g, ""));
+
+	return Number(compact);
+}

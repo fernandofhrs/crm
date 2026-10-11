@@ -25,8 +25,8 @@ import { useWorkspaceUrl } from "@/lib/use-workspace-url";
 type Summary = RouterOutputs["dashboard"]["summary"];
 
 const TREND_CONFIG: ChartConfig = {
-	won: { label: "Closed won", color: "var(--success)" },
-	created: { label: "New pipeline", color: "var(--chart-1)" },
+	won: { label: "Ganhos", color: "var(--success)" },
+	created: { label: "Novos no funil", color: "var(--chart-1)" },
 };
 
 function changeDelta(
@@ -81,22 +81,25 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 		<div className="flex flex-col gap-6">
 			<StatGroup>
 				<StatCard
-					label="Closed won this month"
+					tone="success"
+					label="Ganho no mês"
 					value={money(wonThisMonth.valueCents)}
 					delta={changeDelta(
 						wonThisMonth.valueCents,
 						wonPrevMonth.valueCents,
-						"vs. last month",
+						"vs. mês passado",
 					)}
-					description={`${formatCount(wonThisMonth.count, "deal")} · ${money(wonPrevMonth.valueCents)} last month`}
+					description={`${formatCount(wonThisMonth.count, "negócio")} · ${money(wonPrevMonth.valueCents)} no mês passado`}
 				/>
 				<StatCard
-					label="Open pipeline"
+					tone="primary"
+					label="Funil em aberto"
 					value={money(pipeline.totalCents)}
-					description={`${formatCount(pipeline.totalDeals, "deal")} in progress · ${money(closingThisMonthTotal.valueCents)} due this month`}
+					description={`${formatCount(pipeline.totalDeals, "negócio")} em andamento · ${money(closingThisMonthTotal.valueCents)} com fechamento neste mês`}
 				/>
 				<StatCard
-					label={`Win rate (${performance.windowDays}d)`}
+					tone="info"
+					label={`Taxa de ganho (${performance.windowDays} dias)`}
 					value={
 						performance.winRate === null
 							? "—"
@@ -104,12 +107,13 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 					}
 					description={
 						performance.wins + performance.losses === 0
-							? "Nothing has closed yet"
-							: `${performance.wins} won · ${performance.losses} lost`
+							? "Nenhum negócio fechado ainda"
+							: `${formatCount(performance.wins, "ganho")} · ${formatCount(performance.losses, "perdido")}`
 					}
 				/>
 				<StatCard
-					label={`Average deal (${performance.windowDays}d)`}
+					tone="warning"
+					label={`Ticket médio (${performance.windowDays} dias)`}
 					value={
 						performance.avgDealCents === null
 							? "—"
@@ -117,25 +121,24 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 					}
 					description={
 						performance.avgCycleDays === null
-							? "No wins to measure"
-							: `${performance.avgCycleDays}-day average cycle`
+							? "Sem ganhos para medir"
+							: `Ciclo médio de ${formatCount(performance.avgCycleDays, "dia")}`
 					}
 				/>
 			</StatGroup>
 
 			{unconverted.count > 0 ? (
 				<p className="text-muted-foreground text-xs">
-					Every figure above is in {reportingCurrency}.{" "}
-					{formatCount(unconverted.count, "deal")} in{" "}
-					{unconverted.currencies.join(", ")}{" "}
-					{unconverted.count === 1 ? "is" : "are"} not included — there is no
-					rate to convert {unconverted.currencies.length === 1 ? "it" : "them"}{" "}
-					with.{" "}
+					Os valores acima estão em {reportingCurrency}.{" "}
+					{unconverted.count === 1
+						? `1 negócio em ${unconverted.currencies.join(", ")} ficou de fora`
+						: `${unconverted.count} negócios em ${unconverted.currencies.join(", ")} ficaram de fora`}
+					: falta a taxa de câmbio.{" "}
 					<Link
 						href={workspaceUrl("/settings/currencies")}
 						className="underline hover:no-underline"
 					>
-						Set one
+						Definir a taxa
 					</Link>
 					.
 				</p>
@@ -143,8 +146,8 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 
 			<DashboardRow split="hero">
 				<ChartPanel
-					title="Closed won vs. new pipeline"
-					description="Last six months, by the month a deal closed or was created"
+					title="Ganhos e novos negócios"
+					description="Últimos seis meses, pelo mês em que o negócio foi ganho ou criado"
 				>
 					{hasTrend ? (
 						<div className="flex flex-1 flex-col justify-center py-4">
@@ -160,13 +163,13 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 							/>
 						</div>
 					) : (
-						<EmptyChart label="No deals closed or created yet" />
+						<EmptyChart label="Nenhum negócio ganho ou criado ainda" />
 					)}
 				</ChartPanel>
 
 				<ChartPanel
-					title="Open pipeline by stage"
-					description="Where the value sits right now"
+					title="Funil em aberto por etapa"
+					description="Onde o valor está agora"
 				>
 					{stageSlices.length > 0 ? (
 						<div className="flex flex-1 flex-col justify-between gap-1 pt-4">
@@ -174,19 +177,19 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 								data={stageSlices}
 								height={168}
 								centerValue={money(pipeline.totalCents)}
-								centerLabel="open"
+								centerLabel="em aberto"
 								formatValue={exact}
 							/>
 							<ul className="flex flex-col px-5 pb-1 md:px-6">
 								{stageSlices.map((slice) => (
 									<li key={slice.key} className="border-t first:border-t-0">
 										<Link
-											href={`${workspaceUrl("/deals")}?stage=${slice.key}`}
+											href={`${workspaceUrl("/deals")}?view=list&stage=${slice.key}`}
 											className="flex items-center gap-2.5 py-2 text-xs hover:underline"
 										>
 											<span
 												aria-hidden
-												className="size-1.5 shrink-0"
+												className="size-2 shrink-0 rounded-full"
 												style={{ backgroundColor: slice.color }}
 											/>
 											<span className="min-w-0 flex-1 truncate">
@@ -204,7 +207,7 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 							</ul>
 						</div>
 					) : (
-						<EmptyChart label="Nothing open" />
+						<EmptyChart label="Nada em aberto" />
 					)}
 				</ChartPanel>
 			</DashboardRow>
@@ -227,7 +230,9 @@ function ChartPanel({
 				<CardTitle>{title}</CardTitle>
 				{description ? <CardDescription>{description}</CardDescription> : null}
 			</CardHeader>
-			<div className="flex flex-1 flex-col border">{children}</div>
+			<div className="flex flex-1 flex-col overflow-hidden rounded-lg border bg-card shadow-xs">
+				{children}
+			</div>
 		</Card>
 	);
 }

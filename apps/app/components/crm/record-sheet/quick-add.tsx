@@ -12,6 +12,7 @@ import {
 	SelectValue,
 } from "@crm/ui/components/select";
 import { Spinner } from "@crm/ui/components/spinner";
+import { parseDecimal } from "@crm/ui/lib/format";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -285,7 +286,7 @@ export function QuickAddDeal({
 
 		let amountCents: number | null = null;
 		if (amount.trim() !== "") {
-			const parsed = Number.parseFloat(amount);
+			const parsed = parseDecimal(amount);
 			if (!Number.isFinite(parsed) || parsed < 0) {
 				toast.error("O valor precisa ser um número.");
 				return;
@@ -327,7 +328,7 @@ export function QuickAddDeal({
 					id={amountId}
 					value={amount}
 					onChange={(event) => setAmount(event.target.value)}
-					placeholder="24000"
+					placeholder="24.000,00"
 					autoComplete="off"
 				/>
 			</Field>

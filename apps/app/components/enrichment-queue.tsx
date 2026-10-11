@@ -50,7 +50,13 @@ const STATE_TONE = {
 	failed: "error",
 } satisfies Record<QueueRow["state"], StatusTone>;
 
-export function EnrichmentQueue() {
+type EnrichmentQueueLayout = "button" | "row" | "compact";
+
+export function EnrichmentQueue({
+	layout = "button",
+}: {
+	layout?: EnrichmentQueueLayout;
+}) {
 	const trpc = useTRPC();
 	const openRecord = useOpenRecord();
 	const [open, setOpen] = useState(false);
@@ -95,19 +101,39 @@ export function EnrichmentQueue() {
 			onOpenChange={(next) => (next ? setOpen(true) : close())}
 		>
 			<PopoverTrigger asChild>
-				<Button variant="outline" size="sm">
+				<Button
+					variant={layout === "button" ? "outline" : "ghost"}
+					size={layout === "compact" ? "icon" : "sm"}
+					className={cn(
+						layout === "row" && "w-full justify-start gap-2.5 px-2.5",
+						layout === "compact" && "relative",
+					)}
+					aria-label={total > 0 ? `Pesquisando ${total}` : "Fila de pesquisa"}
+				>
 					<IndicatorDot
 						tone={total > 0 ? "primary" : "neutral"}
 						aria-hidden="true"
 					/>
-					{total > 0 ? `Enriching ${total}` : "Enriching"}
+					{layout === "compact" ? (
+						<span className="font-medium text-[11px] tabular-nums">
+							{total > 0 ? total : null}
+						</span>
+					) : (
+						<span className="min-w-0 truncate">
+							{total > 0 ? `Pesquisando ${total}` : "Fila de pesquisa"}
+						</span>
+					)}
 				</Button>
 			</PopoverTrigger>
 
-			<PopoverContent align="end" size="panel">
+			<PopoverContent
+				align={layout === "button" ? "end" : "start"}
+				side={layout === "row" ? "top" : "bottom"}
+				size="panel"
+			>
 				<div className="flex items-center justify-between border-b px-4 py-3">
 					<span className="font-semibold text-popover-foreground text-sm">
-						Enriching now
+						Pesquisando agora
 					</span>
 					<span className="font-mono text-muted-foreground text-xs">
 						{total}
@@ -117,11 +143,11 @@ export function EnrichmentQueue() {
 				{visible.length === 0 ? (
 					<div className="flex flex-col gap-1 px-6 py-8 text-center">
 						<span className="font-medium text-popover-foreground text-sm">
-							Nothing right now
+							Nada no momento
 						</span>
 						<span className="text-muted-foreground text-xs">
-							New companies and contacts show up here while your agents look
-							them up.
+							Empresas e contatos novos aparecem aqui enquanto os agentes
+							pesquisam.
 						</span>
 					</div>
 				) : (
@@ -135,7 +161,9 @@ export function EnrichmentQueue() {
 				{footer.more > 0 ? (
 					<div className="flex items-center justify-between px-4 py-3 text-xs">
 						<span className="text-muted-foreground">
-							{footer.more} more queued
+							{footer.more === 1
+								? "Mais 1 na fila"
+								: `Mais ${footer.more} na fila`}
 						</span>
 						{footer.action === "show-all" ? (
 							<button
@@ -143,7 +171,7 @@ export function EnrichmentQueue() {
 								className="cursor-pointer text-primary"
 								onClick={() => setExpanded(true)}
 							>
-								Show all
+								Mostrar todos
 							</button>
 						) : null}
 						{footer.action === "load-more" ? (
@@ -156,7 +184,7 @@ export function EnrichmentQueue() {
 									)
 								}
 							>
-								Load more
+								Carregar mais
 							</button>
 						) : null}
 					</div>
@@ -284,10 +312,10 @@ function ScheduledSection({
 			<CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-xs hover:bg-muted">
 				<span className="text-muted-foreground">
 					{total === 1
-						? "1 record is booked for a later look"
-						: `${total} records are booked for a later look`}
+						? "1 registro tem nova pesquisa agendada"
+						: `${total} registros têm nova pesquisa agendada`}
 				</span>
-				<span className="text-primary">{shown ? "Hide" : "Show"}</span>
+				<span className="text-primary">{shown ? "Ocultar" : "Mostrar"}</span>
 			</CollapsibleTrigger>
 
 			<CollapsibleContent className="max-h-60 overflow-y-auto border-t">
@@ -310,7 +338,7 @@ function ScheduledSection({
 
 				{total > rows.length ? (
 					<div className="px-4 py-3 text-muted-foreground text-xs">
-						{total - rows.length} more are booked but not listed here
+						Há mais {total - rows.length} agendados fora desta lista
 					</div>
 				) : null}
 			</CollapsibleContent>

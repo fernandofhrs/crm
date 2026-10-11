@@ -1,8 +1,7 @@
 import { notFound, unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { AppHeader, AppHeaderFallback } from "@/components/app-header";
-import { AppIconRail, AppIconRailFallback } from "@/components/app-icon-rail";
+import { AppNav, AppNavFallback } from "@/components/app-nav";
 import { QuickSwitcher } from "@/components/crm/quick-switcher";
 import { RecordSheetHost } from "@/components/crm/record-sheet/record-sheet-host";
 import { MobileNavProvider } from "@/components/mobile-nav";
@@ -16,17 +15,12 @@ export default function AppLayout({
 }: LayoutProps<"/[slug]">) {
 	return (
 		<MobileNavProvider>
-			<div className="isolate flex h-svh flex-col">
-				<Suspense fallback={<AppHeaderFallback />}>
-					<WorkspaceHeader params={params} />
+			<div className="isolate flex h-svh flex-col md:flex-row">
+				<Suspense fallback={<AppNavFallback />}>
+					<WorkspaceNav params={params} />
 				</Suspense>
 
-				<div className="flex min-h-0 flex-1">
-					<Suspense fallback={<AppIconRailFallback />}>
-						<AppIconRail />
-					</Suspense>
-					{children}
-				</div>
+				<div className="flex min-h-0 min-w-0 flex-1">{children}</div>
 
 				<Suspense fallback={null}>
 					<RecordSheetHost />
@@ -51,7 +45,7 @@ async function loadWorkspace() {
 	}
 }
 
-async function WorkspaceHeader({
+async function WorkspaceNav({
 	params,
 }: Pick<LayoutProps<"/[slug]">, "params">) {
 	await connection();
@@ -65,7 +59,7 @@ async function WorkspaceHeader({
 
 	return (
 		<HydrateClient>
-			<AppHeader
+			<AppNav
 				user={{
 					name: user.name,
 					email: user.email,

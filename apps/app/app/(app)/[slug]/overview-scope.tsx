@@ -10,8 +10,8 @@ import {
 } from "./overview-search-params";
 
 const LABELS = {
-	me: "Me",
-	everyone: "Everyone",
+	me: "Eu",
+	everyone: "Todos",
 } satisfies Record<OverviewScope, string>;
 
 function isScope(value: string): value is OverviewScope {
@@ -26,7 +26,7 @@ export function OverviewScopeToggleFallback() {
 			size="sm"
 			spacing={0}
 			disabled
-			aria-label="Whose numbers to show"
+			aria-label="De quem são os números"
 		>
 			{OVERVIEW_SCOPES.map((value) => (
 				<ToggleGroupItem key={value} value={value}>
@@ -53,7 +53,7 @@ export function OverviewScopeToggle() {
 			onValueChange={(next) => {
 				if (isScope(next)) void setScope(next);
 			}}
-			aria-label="Whose numbers to show"
+			aria-label="De quem são os números"
 		>
 			{OVERVIEW_SCOPES.map((value) => (
 				<ToggleGroupItem key={value} value={value}>

@@ -158,7 +158,7 @@ function QuestionnaireChoice({
 			</QuestionnairePrimitive.ChoiceLabel>
 			<QuestionnairePrimitive.ChoiceShortcut
 				data-slot="questionnaire-choice-shortcut"
-				className="pointer-events-none ms-auto mt-0.5 hidden size-5 shrink-0 items-center justify-center rounded-md border border-input bg-background font-mono font-medium text-[0.625rem] text-muted-foreground leading-none group-data-[shortcut]/questionnaire-choice:inline-flex"
+				className="pointer-events-none ms-auto mt-0.5 hidden size-5 shrink-0 items-center justify-center rounded-md border border-input bg-card font-mono font-medium text-[0.625rem] text-muted-foreground leading-none group-data-[shortcut]/questionnaire-choice:inline-flex"
 			/>
 		</QuestionnairePrimitive.Choice>
 	);

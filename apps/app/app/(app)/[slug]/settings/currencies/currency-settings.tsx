@@ -28,7 +28,7 @@ import {
 import { Spinner } from "@crm/ui/components/spinner";
 import { StatusIndicator } from "@crm/ui/components/status-indicator";
 import { TableCell } from "@crm/ui/components/table";
-import { formatCount } from "@crm/ui/lib/format";
+import { formatCount, parseDecimal } from "@crm/ui/lib/format";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -194,7 +194,7 @@ export function CurrencySettings() {
 						className="flex flex-wrap items-end gap-3"
 						onSubmit={(event) => {
 							event.preventDefault();
-							const rate = Number.parseFloat(draftRate);
+							const rate = parseDecimal(draftRate);
 							if (!Number.isFinite(rate) || rate <= 0) {
 								toast.error("A taxa precisa ser um número maior que zero.");
 								return;
@@ -232,7 +232,7 @@ export function CurrencySettings() {
 								id={rateValueId}
 								value={draftRate}
 								inputMode="decimal"
-								placeholder="1.09"
+								placeholder="5,43"
 								disabled={busy}
 								onChange={(event) => setDraftRate(event.target.value)}
 							/>

@@ -20,7 +20,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@crm/ui/components/tooltip";
-import { formatMoney } from "@crm/ui/lib/format";
+import {
+	formatDecimalInput,
+	formatMoney,
+	parseDecimal,
+} from "@crm/ui/lib/format";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AgentPanel } from "@/components/crm/agent-panel";
@@ -303,13 +307,15 @@ function DealOverview({ deal }: { deal: Deal }) {
 					<InlineField
 						label="Valor"
 						value={
-							deal.amountCents === null ? null : String(deal.amountCents / 100)
+							deal.amountCents === null
+								? null
+								: formatDecimalInput(deal.amountCents / 100)
 						}
-						placeholder="24000"
+						placeholder="24.000,00"
 						saving={isSaving("amountCents")}
 						onSave={(next) => {
 							if (next === "") return save({ amountCents: null });
-							const parsed = Number.parseFloat(next);
+							const parsed = parseDecimal(next);
 							if (!Number.isFinite(parsed) || parsed < 0) {
 								toast.error("O valor precisa ser um número.");
 								return;
@@ -317,7 +323,7 @@ function DealOverview({ deal }: { deal: Deal }) {
 							save({ amountCents: Math.round(parsed * 100) });
 						}}
 						render={(value) =>
-							formatMoney(Math.round(Number(value) * 100), currency)
+							formatMoney(Math.round(parseDecimal(value) * 100), currency)
 						}
 					/>
 					<InlineSelectField

@@ -55,11 +55,22 @@ function StatDeltaText({
 	);
 }
 
+type StatTone = "neutral" | "primary" | "success" | "warning" | "info";
+
+const TONE_SURFACE: Record<StatTone, string> = {
+	neutral: "bg-card",
+	primary: "bg-tint-primary",
+	success: "bg-tint-success",
+	warning: "bg-tint-warning",
+	info: "bg-tint-info",
+};
+
 function StatCard({
 	label,
 	value,
 	delta,
 	description,
+	tone = "neutral",
 	className,
 	children,
 	...props
@@ -68,26 +79,32 @@ function StatCard({
 	value: React.ReactNode;
 	delta?: StatDelta;
 	description?: React.ReactNode;
+	tone?: StatTone;
 }) {
 	return (
 		<div
 			data-slot="stat-card"
-			className={cn("flex flex-col gap-2.5 p-4 md:p-6", className)}
+			data-tone={tone}
+			className={cn(
+				"flex min-w-0 flex-col gap-2 rounded-lg border border-foreground/5 p-4 md:p-5",
+				TONE_SURFACE[tone],
+				className,
+			)}
 			{...props}
 		>
 			{label != null ? (
-				<span className="truncate text-sm font-medium text-muted-foreground">
+				<span className="text-pretty font-semibold text-[13px] text-foreground/70 leading-snug">
 					{label}
 				</span>
 			) : null}
 			<div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-				<span className="font-medium text-3xl tracking-tight tabular-nums">
+				<span className="font-bold text-2xl tracking-tight tabular-nums md:text-[1.75rem]">
 					{value}
 				</span>
 				{delta ? <StatDeltaText delta={delta} /> : null}
 			</div>
 			{description ? (
-				<p className="text-pretty text-muted-foreground text-xs/relaxed">
+				<p className="text-pretty text-foreground/65 text-xs/relaxed">
 					{description}
 				</p>
 			) : null}
@@ -96,5 +113,5 @@ function StatCard({
 	);
 }
 
-export type { StatDelta, TrendDirection };
+export type { StatDelta, StatTone, TrendDirection };
 export { StatCard, StatDeltaText };

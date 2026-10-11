@@ -524,7 +524,7 @@ function DonutStat({
 										<tspan
 											x={viewBox.cx}
 											y={viewBox.cy}
-											className="fill-foreground font-medium text-2xl tabular-nums"
+											className="fill-foreground font-bold text-lg tabular-nums"
 										>
 											{String(centerValue ?? "")}
 										</tspan>

@@ -30,6 +30,7 @@ import {
 	SheetTrigger,
 } from "@crm/ui/components/sheet";
 import { Spinner } from "@crm/ui/components/spinner";
+import { parseDecimal } from "@crm/ui/lib/format";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { type ComponentProps, Suspense, useId, useState } from "react";
@@ -126,7 +127,7 @@ function CreateDealForm({ companyId }: { companyId?: string }) {
 					className="flex-1 overflow-y-auto px-4"
 					onSubmit={(event) => {
 						event.preventDefault();
-						const parsed = Number.parseFloat(amount);
+						const parsed = parseDecimal(amount);
 						create.mutate({
 							name,
 							companyId: company,
@@ -205,7 +206,7 @@ function CreateDealForm({ companyId }: { companyId?: string }) {
 									id={amountId}
 									value={amount}
 									onChange={(event) => setAmount(event.target.value)}
-									placeholder="24000"
+									placeholder="24.000,00"
 									inputMode="decimal"
 									autoComplete="off"
 								/>

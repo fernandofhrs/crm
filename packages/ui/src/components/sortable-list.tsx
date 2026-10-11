@@ -95,7 +95,7 @@ export function SortableItem({
 			style={{ transform: CSS.Transform.toString(transform), transition }}
 			className={cn(
 				"flex items-center gap-2.5",
-				isDragging && "relative z-10 bg-background",
+				isDragging && "relative z-10 bg-card",
 				className,
 			)}
 		>

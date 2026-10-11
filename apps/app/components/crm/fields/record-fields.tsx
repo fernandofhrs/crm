@@ -10,6 +10,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@crm/ui/components/tooltip";
+import {
+	formatDecimalInput,
+	formatNumber,
+	parseDecimal,
+} from "@crm/ui/lib/format";
 import { useQuery } from "@tanstack/react-query";
 import {
 	InlineDateField,
@@ -163,6 +168,27 @@ export function RecordFields({
 								placeholder={UNASSIGNED}
 								saving={busy}
 								onSave={(next) => save(next === NONE ? null : next)}
+							/>
+						);
+					}
+
+					if (field.type === "NUMBER") {
+						return (
+							<InlineField
+								key={field.id}
+								label={field.label}
+								value={
+									field.value === null
+										? null
+										: formatDecimalInput(Number(field.value))
+								}
+								saving={busy}
+								onSave={(next) => {
+									if (next === "") return save(null);
+									const parsed = parseDecimal(next);
+									save(Number.isFinite(parsed) ? parsed : next);
+								}}
+								render={(value) => formatNumber(parseDecimal(value))}
 							/>
 						);
 					}

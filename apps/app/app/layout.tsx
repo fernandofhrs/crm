@@ -3,28 +3,25 @@ import { Toaster } from "@crm/ui/components/sonner";
 import { TooltipProvider } from "@crm/ui/components/tooltip";
 import { cn } from "@crm/ui/lib/utils";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { LocalDateTimeHydrator } from "@/components/local-date-time";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TRPCReactProvider } from "@/lib/trpc/client";
 
-const fontSans = Geist({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
-});
-
-const fontMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
+const fontSans = localFont({
+	src: "./fonts/manrope.woff2",
+	variable: "--font-manrope",
+	weight: "200 800",
+	display: "swap",
 });
 
 export const metadata: Metadata = {
 	title: {
-		default: "Comp AI - CRM",
-		template: "%s · Comp AI CRM",
+		default: "Moulin CRM",
+		template: "%s · Moulin CRM",
 	},
-	description: "Customer Relationship Management for Comp AI",
+	description: "CRM do time comercial da Moulin",
 	icons: {
 		icon: [
 			{ url: "/favicon.svg", type: "image/svg+xml" },
@@ -42,9 +39,9 @@ export default function RootLayout({
 }>) {
 	return (
 		<html
-			lang="en"
+			lang="pt-BR"
 			suppressHydrationWarning
-			className={cn(fontSans.variable, fontMono.variable, "h-full antialiased")}
+			className={cn(fontSans.variable, "h-full antialiased")}
 		>
 			<body className="flex min-h-full flex-col font-sans">
 				<NuqsAdapter>

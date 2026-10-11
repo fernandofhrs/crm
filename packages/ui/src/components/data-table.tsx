@@ -141,6 +141,62 @@ function columnLabel<TRow>(column: DataTableColumn<TRow>): string {
 	return typeof column.header === "string" ? column.header : column.id;
 }
 
+const CARD_DETAIL_COLUMNS = 4;
+
+function DataTableCard<TRow>({
+	row,
+	columns,
+	onOpen,
+}: {
+	row: TRow;
+	columns: DataTableColumn<TRow>[];
+	onOpen?: (row: TRow) => void;
+}) {
+	const [lead, ...rest] = columns;
+	const details = rest.slice(0, CARD_DETAIL_COLUMNS);
+
+	return (
+		<div
+			data-slot="data-table-card"
+			role={onOpen ? "button" : undefined}
+			tabIndex={onOpen ? 0 : undefined}
+			onClick={onOpen ? () => onOpen(row) : undefined}
+			onKeyDown={
+				onOpen
+					? (event) => {
+							if (event.target !== event.currentTarget) return;
+							if (event.key !== "Enter" && event.key !== " ") return;
+							event.preventDefault();
+							onOpen(row);
+						}
+					: undefined
+			}
+			className={cn(
+				"flex shrink-0 flex-col gap-3 rounded-lg border bg-card p-3.5 shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+				onOpen && "cursor-pointer active:bg-muted",
+			)}
+		>
+			{lead ? (
+				<div className="min-w-0 font-semibold text-sm">{lead.cell(row)}</div>
+			) : null}
+			{details.length > 0 ? (
+				<dl className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+					{details.map((column) => (
+						<div key={column.id} className="flex min-w-0 flex-col gap-0.5">
+							<dt className="truncate text-[11px] text-muted-foreground">
+								{columnLabel(column)}
+							</dt>
+							<dd className="min-w-0 truncate text-[13px]">
+								{column.cell(row)}
+							</dd>
+						</div>
+					))}
+				</dl>
+			) : null}
+		</div>
+	);
+}
+
 function SortIndicator({
 	active,
 	dir,
@@ -579,7 +635,7 @@ export function DataTable<TRow, TSub = unknown>({
 					"table-fixed [&_td:first-child]:pl-4 [&_th:first-child]:pl-4 [&_td:last-child]:pr-4 [&_th:last-child]:pr-4",
 					tableClassName,
 				)}
-				containerClassName="min-h-0 flex-1 overflow-auto rounded-lg border bg-card"
+				containerClassName="hidden min-h-0 flex-1 overflow-auto rounded-lg border bg-card shadow-xs sm:block"
 				overlay={
 					deferredRows.length === 0 ? (
 						<div className="absolute inset-x-0 top-11 bottom-0 flex items-center justify-center px-4 py-8 text-center text-muted-foreground">
@@ -789,6 +845,26 @@ export function DataTable<TRow, TSub = unknown>({
 					})}
 				</TableBody>
 			</Table>
+
+			<div
+				data-slot="data-table-cards"
+				className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto sm:hidden"
+			>
+				{deferredRows.length === 0 ? (
+					<div className="flex flex-1 items-center justify-center rounded-lg border bg-card px-4 py-12 text-center text-muted-foreground shadow-xs">
+						{loading ? <Spinner /> : (empty ?? "Nenhum resultado encontrado.")}
+					</div>
+				) : (
+					deferredRows.map((row) => (
+						<DataTableCard
+							key={getRowId(row)}
+							row={row}
+							columns={visibleColumns}
+							onOpen={onRowClick}
+						/>
+					))
+				)}
+			</div>
 
 			<TablePagination
 				page={query.page}

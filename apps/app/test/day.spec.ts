@@ -1,5 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import { formatDay, fromDay, toDay } from "@crm/ui/lib/format";
+import {
+	formatDay,
+	formatDecimalInput,
+	formatNumber,
+	fromDay,
+	parseDecimal,
+	toDay,
+} from "@crm/ui/lib/format";
 
 describe("day strings", () => {
 	it("round-trips a date through its local parts", () => {
@@ -22,5 +29,30 @@ describe("day strings", () => {
 		expect(fromDay("")).toBeUndefined();
 		expect(fromDay("someday")).toBeUndefined();
 		expect(formatDay(null)).toBe("—");
+	});
+});
+
+describe("numbers typed the Brazilian way", () => {
+	it("reads a comma as the decimal mark and dots as thousands", () => {
+		expect(parseDecimal("24.000,50")).toBe(24000.5);
+		expect(parseDecimal("5,43")).toBe(5.43);
+		expect(parseDecimal("24.000")).toBe(24000);
+		expect(parseDecimal("1.250.000")).toBe(1250000);
+	});
+
+	it("still reads a plain dot decimal", () => {
+		expect(parseDecimal("24000")).toBe(24000);
+		expect(parseDecimal("5.43")).toBe(5.43);
+		expect(parseDecimal("1234.56")).toBe(1234.56);
+	});
+
+	it("is not a number when it is not one", () => {
+		expect(Number.isNaN(parseDecimal(""))).toBe(true);
+		expect(Number.isNaN(parseDecimal("abc"))).toBe(true);
+	});
+
+	it("shows a number with a comma, for the field and for the screen", () => {
+		expect(formatDecimalInput(12500.5)).toBe("12500,5");
+		expect(formatNumber(6250.25)).toBe("6.250,25");
 	});
 });

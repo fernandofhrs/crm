@@ -1,53 +1,44 @@
-import Logo from "@crm/ui/components/logo";
-import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
-import { AuthShader } from "@/components/auth-shader";
 
 export function AuthShell({ children }: { children: ReactNode }) {
 	return (
-		<main className="dark grid min-h-svh bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)]">
-			<section className="relative hidden min-h-svh overflow-hidden bg-muted p-8 lg:flex lg:flex-col lg:justify-between xl:p-12">
-				<AuthShader />
-
-				<div className="relative flex gap-2 text-sm/5">
-					<Link href="/" aria-label="Página inicial" className="flex">
-						<Logo className="size-5 shrink-0" />
-					</Link>
-				</div>
-
-				<div className="relative flex max-w-lg flex-col gap-8">
-					<div className="flex flex-col gap-4">
-						<p className="font-mono text-xs/4 text-muted-foreground uppercase">
-							CRM
+		<main className="auth-backdrop min-h-svh text-foreground">
+			<div className="mx-auto grid min-h-svh w-full max-w-[1240px] px-6 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:px-14">
+				<section className="flex flex-col justify-center gap-7 pt-12 pb-2 lg:py-16 lg:pr-12">
+					<Image
+						src="/moulin-logo.png"
+						alt="Moulin"
+						width={130}
+						height={52}
+						className="h-[52px] w-auto self-start"
+						priority
+					/>
+					<div className="hidden flex-col gap-6 lg:flex">
+						<p className="flex items-center gap-2.5 font-bold text-[11.5px] text-primary uppercase tracking-[0.16em]">
+							<span
+								aria-hidden="true"
+								className="h-0.5 w-[22px] rounded-full bg-primary"
+							/>
+							CRM comercial
 						</p>
-						<h1 className="max-w-[14ch] text-5xl/14 font-semibold text-balance">
-							Todos os clientes em um só lugar.
+						<h1 className="max-w-[13ch] text-balance font-bold text-5xl/[1.05] tracking-tight xl:text-6xl/[1.05]">
+							Todos os clientes em um só{" "}
+							<span className="text-primary">lugar</span>.
 						</h1>
+						<p className="max-w-[46ch] text-[15px]/relaxed text-muted-foreground">
+							Empresas, contatos, propostas e a jornada de cada pedido, com o
+							histórico do Portal do Vendedor e os e-mails do time.
+						</p>
 					</div>
-				</div>
+				</section>
 
-				<p className="relative font-mono text-xs/4 text-muted-foreground">
-					Feito com carinho pela{" "}
-					<a
-						href="https://trycomp.ai"
-						target="_blank"
-						rel="noreferrer"
-						className="underline underline-offset-4 hover:text-foreground"
-					>
-						Comp AI
-					</a>
-				</p>
-			</section>
-
-			<section className="flex min-h-svh flex-col bg-background px-6 py-8 sm:px-10 lg:px-14">
-				<div className="flex gap-2 text-sm/5 max-lg:hidden lg:invisible">
-					<Logo className="size-5 shrink-0" />
-				</div>
-
-				<div className="flex flex-1 items-center justify-center py-12">
-					<div className="flex w-full max-w-sm flex-col gap-8">{children}</div>
-				</div>
-			</section>
+				<section className="flex items-start justify-center pt-4 pb-12 lg:items-center lg:py-16 lg:pl-10">
+					<div className="flex w-full max-w-[420px] flex-col gap-7 rounded-3xl border bg-card p-7 shadow-lg sm:p-9">
+						{children}
+					</div>
+				</section>
+			</div>
 		</main>
 	);
 }
@@ -60,18 +51,13 @@ export function AuthHeading({
 	description: ReactNode;
 }) {
 	return (
-		<div className="flex flex-col gap-3 text-left">
-			<Link href="/" aria-label="Página inicial" className="flex">
-				<Logo className="size-6 shrink-0" />
-			</Link>
-			<div className="flex flex-col gap-1">
-				<h2 className="text-2xl/8 font-semibold tracking-tight text-balance">
-					{title}
-				</h2>
-				<p className="max-w-[32ch] text-sm/5 text-muted-foreground text-pretty">
-					{description}
-				</p>
-			</div>
+		<div className="flex flex-col gap-1.5 text-left">
+			<h2 className="text-balance font-bold text-2xl/8 tracking-tight">
+				{title}
+			</h2>
+			<p className="text-pretty text-muted-foreground text-sm/5">
+				{description}
+			</p>
 		</div>
 	);
 }

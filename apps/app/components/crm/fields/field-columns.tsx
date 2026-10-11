@@ -2,7 +2,7 @@
 
 import type { DataTableColumn } from "@crm/ui/components/data-table";
 import { EmptyCellValue } from "@crm/ui/components/empty-cell";
-import { formatDay } from "@crm/ui/lib/format";
+import { formatDay, formatNumber } from "@crm/ui/lib/format";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { type Owner, OwnerCell } from "@/components/crm/owner-cell";
@@ -25,7 +25,7 @@ function render(
 		return user ? <OwnerCell owner={user} /> : <EmptyCellValue />;
 	}
 	if (type === "NUMBER") {
-		return <span className="tabular-nums">{String(value)}</span>;
+		return <span className="tabular-nums">{formatNumber(Number(value))}</span>;
 	}
 
 	return String(value);

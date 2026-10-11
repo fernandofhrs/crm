@@ -14,6 +14,8 @@ import { requireSession } from "@/lib/session";
 import { HydrateClient } from "@/lib/trpc/hydrate";
 import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
 import { CreateDealSheet } from "./create-deal-sheet";
+import { DealsBoard } from "./deals-board";
+import { loadDealsView } from "./deals-board-config";
 import { dealsSearchParams } from "./deals-search-params";
 import { DealsTable } from "./deals-table";
 
@@ -50,10 +52,13 @@ export default function DealsPage({
 async function Deals({
 	searchParams,
 }: Pick<PageProps<"/[slug]/deals">, "searchParams">) {
-	const [, values] = await Promise.all([
+	const [, values, { view }] = await Promise.all([
 		requireSession(),
 		dealsSearchParams.load(searchParams),
+		loadDealsView(searchParams),
 	]);
+
+	if (view === "board") return <DealsBoard />;
 
 	const trpc = getServerTrpc();
 	const queryClient = getServerQueryClient();
