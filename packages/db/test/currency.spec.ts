@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import type { Db } from "../src/client";
 import {
 	CURRENCIES,
@@ -11,6 +11,10 @@ import {
 import { applyRate, type ResolvedRate, resolveRate } from "../src/fx";
 import { Prisma } from "../src/generated/prisma/client";
 import { RateSource } from "../src/generated/prisma/enums";
+import {
+	defaultReportingCurrency,
+	readReportingCurrency,
+} from "../src/settings";
 
 type Row = {
 	rate: Prisma.Decimal;
@@ -62,7 +66,7 @@ describe("normalizeCurrency and isCurrencyCode", () => {
 		}
 	});
 
-	it("offers only the eleven currencies most of the world trades in", () => {
+	it("offers only the twelve currencies it keeps rates for", () => {
 		expect(CURRENCIES.map((entry) => entry.code)).toEqual([
 			"USD",
 			"EUR",
@@ -75,6 +79,7 @@ describe("normalizeCurrency and isCurrencyCode", () => {
 			"HKD",
 			"SGD",
 			"ZAR",
+			"BRL",
 		]);
 	});
 
@@ -189,5 +194,44 @@ describe("applyRate", () => {
 		expect(converted.fxRate.toNumber()).toBe(1.23);
 		expect(converted.fxRateAt.toISOString()).toBe("2026-08-01T00:00:00.000Z");
 		expect(converted.origin).toBe("FETCHED");
+	});
+});
+
+describe("the reporting currency an install starts with", () => {
+	const before = process.env.DEFAULT_REPORTING_CURRENCY;
+
+	afterEach(() => {
+		if (before === undefined) delete process.env.DEFAULT_REPORTING_CURRENCY;
+		else process.env.DEFAULT_REPORTING_CURRENCY = before;
+	});
+
+	const holding = (reportingCurrency: string | null) =>
+		({
+			appSetting: { findUnique: async () => ({ reportingCurrency }) },
+		}) as unknown as Db;
+
+	it("is USD when the install names none", () => {
+		delete process.env.DEFAULT_REPORTING_CURRENCY;
+
+		expect(defaultReportingCurrency()).toBe("USD");
+	});
+
+	it("is the supported code the install names, however it is typed", () => {
+		process.env.DEFAULT_REPORTING_CURRENCY = " brl ";
+
+		expect(defaultReportingCurrency()).toBe("BRL");
+	});
+
+	it("ignores a code the CRM keeps no rates for", () => {
+		process.env.DEFAULT_REPORTING_CURRENCY = "SEK";
+
+		expect(defaultReportingCurrency()).toBe("USD");
+	});
+
+	it("applies only until an admin has chosen", async () => {
+		process.env.DEFAULT_REPORTING_CURRENCY = "BRL";
+
+		expect(await readReportingCurrency(holding(null))).toBe("BRL");
+		expect(await readReportingCurrency(holding("EUR"))).toBe("EUR");
 	});
 });

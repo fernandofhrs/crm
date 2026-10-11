@@ -75,6 +75,10 @@ list, read by the sign-in guard *and* the sync's "which side is external" decisi
 if they drifted a colleague would be refused at the door or filed as a lead. **An empty
 list fails closed.** Parsed on demand. `packages/auth/src/workspace.ts`.
 
+**`DEFAULT_REPORTING_CURRENCY`** — the reporting currency before an admin picks one on
+Settings → Currencies. A supported code or it is ignored. Read by
+`defaultReportingCurrency()` in `@crm/db/settings`; the rules are in `currency.md`.
+
 ## Where things are
 
 - **`API_URL`** (`:3001`) mints session cookies and serves `/api/auth/*`;

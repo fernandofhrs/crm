@@ -83,7 +83,13 @@ export async function readReportingCurrency(db: Db): Promise<string> {
 
 	const stored = normalizeCurrency(row?.reportingCurrency);
 
-	return isCurrencyCode(stored) ? stored : DEFAULT_REPORTING_CURRENCY;
+	return isCurrencyCode(stored) ? stored : defaultReportingCurrency();
+}
+
+export function defaultReportingCurrency(): string {
+	const configured = normalizeCurrency(process.env.DEFAULT_REPORTING_CURRENCY);
+
+	return isCurrencyCode(configured) ? configured : DEFAULT_REPORTING_CURRENCY;
 }
 
 export async function writeReportingCurrency(
