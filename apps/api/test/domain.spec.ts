@@ -41,6 +41,23 @@ describe("domainFromEmail", () => {
 		expect(domainFromEmail("  Ada@WWW.Stripe.com ")).toBe("stripe.com");
 	});
 
+	it("ignores the personal mailboxes a Brazilian rep hears from", () => {
+		for (const email of [
+			"ana@yahoo.com.br",
+			"ana@hotmail.com.br",
+			"ana@outlook.com.br",
+			"ana@uol.com.br",
+			"ana@bol.com.br",
+			"ana@terra.com.br",
+			"ana@ig.com.br",
+			"ana@globo.com",
+		]) {
+			expect(domainFromEmail(email)).toBeNull();
+		}
+
+		expect(domainFromEmail("ana@moulin.com.br")).toBe("moulin.com.br");
+	});
+
 	it("ignores free and malformed addresses", () => {
 		for (const email of [
 			"ada@gmail.com",

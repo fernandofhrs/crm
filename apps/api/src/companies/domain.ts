@@ -64,6 +64,19 @@ const FREE_EMAIL_DOMAINS = new Set([
 	"yandex.ru",
 	"qq.com",
 	"163.com",
+	"yahoo.com.br",
+	"ymail.com",
+	"hotmail.com.br",
+	"outlook.com.br",
+	"uol.com.br",
+	"bol.com.br",
+	"terra.com.br",
+	"ig.com.br",
+	"globo.com",
+	"globomail.com",
+	"r7.com",
+	"zipmail.com.br",
+	"oi.com.br",
 ]);
 
 const MACHINE_DOMAINS = new Set([
