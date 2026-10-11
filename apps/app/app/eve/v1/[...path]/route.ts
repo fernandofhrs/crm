@@ -5,6 +5,7 @@ import {
 	bridgeConfigured,
 	mintBridgeToken,
 } from "@/lib/agent-bridge";
+import { BRIDGE_ERRORS } from "@/lib/agent-bridge-errors";
 import { getSession } from "@/lib/session";
 
 async function handler(request: Request): Promise<Response> {
@@ -12,14 +13,17 @@ async function handler(request: Request): Promise<Response> {
 
 	if (!bridgeConfigured()) {
 		return Response.json(
-			{ error: "The research agent is not configured for this install." },
+			{ error: BRIDGE_ERRORS.notConfigured },
 			{ status: 503 },
 		);
 	}
 
 	const session = await getSession();
 	if (!session) {
-		return Response.json({ error: "Not signed in." }, { status: 401 });
+		return Response.json(
+			{ error: BRIDGE_ERRORS.notSignedIn },
+			{ status: 401 },
+		);
 	}
 
 	const url = new URL(request.url);
@@ -62,7 +66,7 @@ async function handler(request: Request): Promise<Response> {
 		});
 		if (conversation && conversation.userId !== session.user.id) {
 			return Response.json(
-				{ error: "Conversation not found." },
+				{ error: BRIDGE_ERRORS.conversationNotFound },
 				{ status: 404 },
 			);
 		}
@@ -82,7 +86,7 @@ async function handler(request: Request): Promise<Response> {
 			(requestedSession && conversation.sessionId !== requestedSession)
 		) {
 			return Response.json(
-				{ error: "Conversation not found." },
+				{ error: BRIDGE_ERRORS.conversationNotFound },
 				{ status: 404 },
 			);
 		}
@@ -122,7 +126,7 @@ async function handler(request: Request): Promise<Response> {
 	} catch (error) {
 		return Response.json(
 			{
-				error: "The research agent is not reachable.",
+				error: BRIDGE_ERRORS.notReachable,
 				detail: error instanceof Error ? error.message : String(error),
 			},
 			{ status: 502 },

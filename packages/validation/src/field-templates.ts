@@ -1,4 +1,5 @@
 export type FieldTemplate = {
+	legacyKey: string;
 	label: string;
 	type: "SELECT" | "USER" | "NUMBER";
 	options?: readonly string[];
@@ -7,32 +8,41 @@ export type FieldTemplate = {
 export const FIELD_TEMPLATES = {
 	COMPANY: [
 		{
-			label: "Account type",
+			legacyKey: "account_type",
+			label: "Tipo de conta",
 			type: "SELECT",
-			options: ["Prospect", "Customer", "Partner", "Churned"],
+			options: ["Prospect", "Cliente", "Parceiro", "Ex-cliente"],
 		},
 		{
-			label: "Segment",
+			legacyKey: "segment",
+			label: "Segmento",
 			type: "SELECT",
-			options: ["Enterprise", "Mid-Market", "SMB"],
+			options: ["Grande empresa", "Média empresa", "Pequena empresa"],
 		},
 		{
-			label: "Territory",
+			legacyKey: "territory",
+			label: "Regional",
 			type: "SELECT",
 			options: ["AMER", "EMEA", "APAC"],
 		},
 		{
-			label: "Lifecycle stage",
+			legacyKey: "lifecycle_stage",
+			label: "Etapa do ciclo de vida",
 			type: "SELECT",
-			options: ["Lead", "MQL", "SQL", "Opportunity", "Customer"],
+			options: ["Lead", "MQL", "SQL", "Oportunidade", "Cliente"],
 		},
 		{
-			label: "Lead source",
+			legacyKey: "lead_source",
+			label: "Origem do lead",
 			type: "SELECT",
-			options: ["Inbound", "Outbound", "Event"],
+			options: ["Inbound", "Outbound", "Evento"],
 		},
-		{ label: "ICP fit score", type: "NUMBER" },
-		{ label: "BDR owner", type: "USER" },
+		{
+			legacyKey: "icp_fit_score",
+			label: "Nota de fit com o ICP",
+			type: "NUMBER",
+		},
+		{ legacyKey: "bdr_owner", label: "BDR da conta", type: "USER" },
 	],
 	CONTACT: [],
 	DEAL: [],

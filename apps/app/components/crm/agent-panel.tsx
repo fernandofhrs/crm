@@ -359,11 +359,7 @@ function Idle({
 }
 
 function Failure({ message }: { message: string }) {
-	const hint = message.includes("not reachable")
-		? "Inicie com `bun run dev` ou confira AGENT_URL."
-		: message.includes("not configured")
-			? "Defina AGENT_BRIDGE_SECRET no aplicativo e no agente."
-			: null;
+	const hint = bridgeErrorHint(message);
 
 	return (
 		<div className="border-t px-4 py-3 text-xs sm:px-5">

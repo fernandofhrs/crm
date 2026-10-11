@@ -33,7 +33,7 @@ export const slackConnectGuard = createAuthMiddleware(async (ctx) => {
 	const session = await getSessionFromCtx(ctx, { disableCookieCache: true });
 	if (!session) {
 		throw new APIError("UNAUTHORIZED", {
-			message: "Sign in to the CRM before you connect Slack.",
+			message: "Entre no CRM antes de conectar o Slack.",
 		});
 	}
 
@@ -49,7 +49,7 @@ export const slackConnectGuard = createAuthMiddleware(async (ctx) => {
 
 	if (!role) {
 		throw new APIError("FORBIDDEN", {
-			message: "Only a member of this workspace can connect Slack.",
+			message: "Só um membro deste espaço de trabalho pode conectar o Slack.",
 		});
 	}
 
@@ -57,7 +57,7 @@ export const slackConnectGuard = createAuthMiddleware(async (ctx) => {
 	if (!canManageConnections(role)) {
 		throw new APIError("FORBIDDEN", {
 			message:
-				"Only an owner or an admin can connect Slack. One Slack workspace is shared by everyone here, so ask one of them to connect or reconnect it.",
+				"Só um dono ou um administrador pode conectar o Slack. Todos aqui usam o mesmo workspace do Slack. Peça a um deles para conectar ou reconectar.",
 		});
 	}
 });

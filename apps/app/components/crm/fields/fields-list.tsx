@@ -199,7 +199,9 @@ export function FieldsList({
 
 	const existingKeys = new Set(all.map((field) => field.key));
 	const suggestions = FIELD_TEMPLATES[entity].filter(
-		(template) => !existingKeys.has(fieldKeyFromLabel(template.label)),
+		(template) =>
+			!existingKeys.has(template.legacyKey) &&
+			!existingKeys.has(fieldKeyFromLabel(template.label)),
 	);
 
 	return (

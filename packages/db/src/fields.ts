@@ -112,7 +112,7 @@ export function coerceValue(
 		if (definition.required) {
 			throw new FieldValueError(
 				definition.key,
-				`${definition.label} cannot be empty.`,
+				`${definition.label} não pode ficar em branco.`,
 			);
 		}
 
@@ -127,7 +127,7 @@ export function coerceValue(
 			}
 			throw new FieldValueError(
 				definition.key,
-				`${definition.label} takes true or false.`,
+				`${definition.label} aceita só true ou false.`,
 			);
 		}
 
@@ -138,7 +138,7 @@ export function coerceValue(
 			if (!Number.isFinite(parsed)) {
 				throw new FieldValueError(
 					definition.key,
-					`${definition.label} takes a number.`,
+					`${definition.label} aceita só número.`,
 				);
 			}
 
@@ -152,7 +152,7 @@ export function coerceValue(
 			if (!dateOnly && !ISO_DATE_TIME.test(raw)) {
 				throw new FieldValueError(
 					definition.key,
-					`${definition.label} takes a date like 2027-03-31.`,
+					`${definition.label} aceita só data no formato 2027-03-31.`,
 				);
 			}
 
@@ -161,7 +161,7 @@ export function coerceValue(
 			if (Number.isNaN(parsed.getTime())) {
 				throw new FieldValueError(
 					definition.key,
-					`${definition.label} takes a date like 2027-03-31.`,
+					`${definition.label} aceita só data no formato 2027-03-31.`,
 				);
 			}
 
@@ -179,7 +179,7 @@ export function coerceValue(
 			if (!option) {
 				throw new FieldValueError(
 					definition.key,
-					`${definition.label} has no option "${raw}".`,
+					`${definition.label} não tem a opção "${raw}".`,
 				);
 			}
 
@@ -269,7 +269,7 @@ export async function writeValues(
 		const definition = byKey.get(key);
 
 		if (!definition) {
-			throw new FieldValueError(key, `There is no field called "${key}".`);
+			throw new FieldValueError(key, `Não existe campo chamado "${key}".`);
 		}
 
 		const data = coerceValue(definition, input);
@@ -324,7 +324,7 @@ async function assertUsersExist(
 		if (!found.has(write.stored)) {
 			throw new FieldValueError(
 				write.definition.key,
-				`${write.definition.label} takes someone who works here.`,
+				`${write.definition.label} aceita só alguém que trabalha aqui.`,
 			);
 		}
 	}

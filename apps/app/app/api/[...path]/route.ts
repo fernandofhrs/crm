@@ -46,7 +46,7 @@ async function handler(request: Request): Promise<Response> {
 		);
 
 		return Response.json(
-			{ error: `The API at ${API_URL} is not reachable.` },
+			{ error: `Não foi possível acessar a API em ${API_URL}.` },
 			{ status: 502 },
 		);
 	}

@@ -160,7 +160,7 @@ export const auth = betterAuth({
 									);
 									if (!response.ok || !grant.ok || !grant.access_token) {
 										throw new APIError("BAD_REQUEST", {
-											message: `Slack authorization failed (${grant.error ?? "rejected"}).`,
+											message: `A autorização do Slack falhou (${grant.error ?? "recusada"}).`,
 										});
 									}
 									await rememberSlackInstall(grant);

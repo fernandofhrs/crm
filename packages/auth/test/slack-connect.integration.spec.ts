@@ -226,7 +226,7 @@ describe("the Slack callback that writes the connection", () => {
 		const response = await completeConnect();
 
 		expect(response.status).toBe(401);
-		expect(await messageOf(response)).toContain("Sign in to the CRM");
+		expect(await messageOf(response)).toContain("Entre no CRM");
 	});
 
 	it("turns away a member", async () => {
@@ -234,7 +234,7 @@ describe("the Slack callback that writes the connection", () => {
 		const response = await completeConnect(await seat("rep", "member"));
 
 		expect(response.status).toBe(403);
-		expect(await messageOf(response)).toContain("Only an owner or an admin");
+		expect(await messageOf(response)).toContain("Só um dono ou um administrador");
 	});
 
 	it("turns away someone signed in who is not in this workspace", async () => {
@@ -242,7 +242,7 @@ describe("the Slack callback that writes the connection", () => {
 		const response = await completeConnect(await seat("stranger", null));
 
 		expect(response.status).toBe(403);
-		expect(await messageOf(response)).toContain("member of this workspace");
+		expect(await messageOf(response)).toContain("membro deste espaço de trabalho");
 	});
 
 	it("lets an admin finish", async () => {

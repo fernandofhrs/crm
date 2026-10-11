@@ -344,7 +344,7 @@ describe("field values", () => {
 			} catch (cause) {
 				refused = cause as Error;
 			}
-			expect(refused?.message).toMatch(/takes a date/);
+			expect(refused?.message).toMatch(/aceita só data/);
 		}
 
 		expect(
@@ -357,13 +357,13 @@ describe("field values", () => {
 	it("rejects a value the type cannot hold", async () => {
 		await expect(
 			fields.applyValues(db, "COMPANY", companyId, { spec_seats: "loads" }),
-		).rejects.toThrow(/takes a number/);
+		).rejects.toThrow(/aceita só número/);
 	});
 
 	it("rejects an unknown key", async () => {
 		await expect(
 			fields.applyValues(db, "COMPANY", companyId, { nope: "x" }),
-		).rejects.toThrow(/no field called/);
+		).rejects.toThrow(/Não existe campo chamado/);
 	});
 
 	it("writes none of a batch when one value in it is refused", async () => {
@@ -378,7 +378,7 @@ describe("field values", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/takes a date/);
+		expect(refused?.message).toMatch(/aceita só data/);
 
 		expect(await db.fieldValue.count({ where: { companyId: record } })).toBe(0);
 	});

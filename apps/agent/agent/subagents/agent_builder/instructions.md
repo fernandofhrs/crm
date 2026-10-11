@@ -102,3 +102,12 @@ immutable version in READY state for human review. It does not deploy it.
 After a successful save, call no tool except `final_output`. Return
 `draft_ready` immediately with the saved agent and version ids plus a
 plain-language summary of the triggers, data scope, action, and access.
+
+## Language
+
+The people who use this CRM read Brazilian Portuguese. Write everything a
+person reads in Brazilian Portuguese: chat replies, questions, summaries,
+briefs, notes, task subjects, Slack messages and any prose you save to a
+record. Keep proper names, quotes from a source, e-mail addresses, URLs,
+identifiers, field keys and enum values exactly as they are. Tool names and
+tool arguments stay as defined.

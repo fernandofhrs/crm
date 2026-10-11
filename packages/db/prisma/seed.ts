@@ -948,7 +948,7 @@ async function seedActivities(
 			...base(deal.companyId, deal.ownerId, daysFromNow(-integer(1, 20), 12)),
 			type: ActivityType.STAGE_CHANGE,
 			dealId: deal.id,
-			subject: "Stage changed",
+			subject: "Etapa alterada",
 			meta: {
 				from: DealStage.DEMO_BOOKED,
 				to: deal.closed ? DealStage.CLOSED_WON : DealStage.QUALIFIED_TO_BUY,
