@@ -43,7 +43,8 @@ the three that is genuinely optional on its own — set it to your tenant's GUID
 refuse other tenants at Microsoft instead of at `ALLOWED_SIGN_IN`. There is **no
 Microsoft equivalent of `hd`**: `tenantId` is the whole of it.
 
-**Neither pair is required, but an install wants one of them or an SSO provider** —
+**Neither pair is required, but an install wants one of them, an SSO provider or
+`IMAP_SIGN_IN`** —
 with none, the sign-in page says so by name rather than rendering nothing.
 
 **`SIGN_IN_SCOPES="identity"`** turns both social providers into identity only: no
@@ -59,6 +60,14 @@ Connections can still link Gmail or Outlook for a rep who has one.
 connect by IMAP. Unset, the connection is not offered — a capability that is off. An
 unparseable port falls back to 993 rather than failing the boot. The rules are in
 `api.md`, *IMAP is a third mail source*.
+
+**`IMAP_SIGN_IN`** — comma-separated mail domains hosted on `IMAP_HOST`. Set, a rep
+may sign in with a mailbox address and its password; unset, or without `IMAP_HOST`,
+the form is not offered. **List only domains whose mail lives on that server**: the
+server is trusted to say who owns an address. Read in
+`packages/auth/src/imap-sign-in.ts`, so it is not in `env.validation.ts`; it is in the
+root `turbo.json` and in `apps/api/turbo.json`. The rules are in `api.md`, *The mailbox
+is also a way in*.
 
 **`ALLOWED_SIGN_IN`** — comma-separated whole domains or single addresses (bare
 addresses exist for a solo self-hoster, where `gmail.com` would be an open door). **One

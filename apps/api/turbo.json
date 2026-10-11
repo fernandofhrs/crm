@@ -34,6 +34,7 @@
 				"SIGN_IN_SCOPES",
 				"IMAP_HOST",
 				"IMAP_PORT",
+				"IMAP_SIGN_IN",
 				"PORT",
 				"REDIS_URL"
 			]
@@ -55,6 +56,7 @@
 				"SIGN_IN_SCOPES",
 				"IMAP_HOST",
 				"IMAP_PORT",
+				"IMAP_SIGN_IN",
 				"PORT",
 				"REDIS_URL"
 			]

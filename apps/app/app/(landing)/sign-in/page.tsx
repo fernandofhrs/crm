@@ -1,10 +1,12 @@
 import type { MailboxProviderId } from "@crm/auth/scopes";
+import { FieldSeparator } from "@crm/ui/components/field";
 import type { Metadata } from "next";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { Suspense } from "react";
 import { AuthHeading, AuthShell } from "@/components/auth-shell";
 import { getSession } from "@/lib/session";
 import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
+import { ImapSignIn } from "./imap-sign-in";
 import { SocialSignIn } from "./social-sign-in";
 import { type SsoProvider, SsoSignIn } from "./sso-sign-in";
 
@@ -15,6 +17,7 @@ export const metadata: Metadata = {
 type SignInOptions = {
 	google: boolean;
 	microsoft: boolean;
+	imap: boolean;
 	providers: SsoProvider[];
 };
 
@@ -85,7 +88,10 @@ async function SignIn({
 				? configured
 				: [];
 
-	if (!showSso && social.length === 0) {
+	const showImap = (options?.imap ?? false) && insisted === undefined;
+	const showOthers = showSso || social.length > 0;
+
+	if (!showOthers && !showImap) {
 		return (
 			<>
 				<AuthHeading
@@ -95,9 +101,9 @@ async function SignIn({
 
 				<p className="text-center text-muted-foreground text-sm/5">
 					Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET — or MICROSOFT_CLIENT_ID
-					and MICROSOFT_CLIENT_SECRET — in the root .env file and restart. Your
-					own identity provider can be added from Settings once somebody is
-					signed in.
+					and MICROSOFT_CLIENT_SECRET, or IMAP_HOST and IMAP_SIGN_IN — in the
+					root .env file and restart. Your own identity provider can be added
+					from Settings once somebody is signed in.
 				</p>
 			</>
 		);
@@ -110,6 +116,8 @@ async function SignIn({
 				description="Sign in with your account to continue."
 			/>
 
+			{showImap ? <ImapSignIn /> : null}
+			{showImap && showOthers ? <FieldSeparator>or</FieldSeparator> : null}
 			{showSso ? <SsoSignIn providers={providers} /> : null}
 			{social.map((provider) => (
 				<SocialSignIn key={provider} provider={provider} />

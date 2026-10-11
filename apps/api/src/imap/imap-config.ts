@@ -44,6 +44,9 @@ export const IMAP = {
 	purge: {
 		timeoutMs: 60 * SECOND_MS,
 	},
+	signIn: {
+		autoCreate: true,
+	},
 } as const;
 
 export const IMAP_SOURCE = "imap";

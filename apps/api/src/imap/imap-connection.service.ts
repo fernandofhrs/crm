@@ -80,28 +80,28 @@ export class ImapConnectionService {
 			throw new BadRequestException(verified.reason);
 		}
 
-		const previous = await this.credentials.addressOf(userId);
-
-		await this.credentials.save(userId, {
-			address: input.address,
-			username,
-			password: input.password,
-		});
-
-		const row = await this.state.ensure(userId, IMAP_SOURCE, {
-			autoCreate: input.autoCreate,
-		});
+		await this.store(
+			userId,
+			{ address: input.address, username, password: input.password },
+			input.autoCreate,
+		);
 
 		await this.state.setAutoCreate(userId, IMAP_SOURCE, input.autoCreate);
 
-		if (previous !== null && previous !== input.address) {
-			await this.state.clearCursor(
-				row.id,
-				"A different mailbox was connected.",
-			);
-		}
-
 		this.logger.log({ message: "IMAP mailbox connected", userId });
+	}
+
+	async remember(
+		userId: string,
+		mailbox: { address: string; password: string },
+	): Promise<void> {
+		await this.store(
+			userId,
+			{ ...mailbox, username: mailbox.address },
+			IMAP.signIn.autoCreate,
+		);
+
+		this.logger.log({ message: "IMAP mailbox connected at sign-in", userId });
 	}
 
 	async disconnect(userId: string): Promise<DisconnectImapOutput> {
@@ -158,6 +158,25 @@ export class ImapConnectionService {
 		this.logger.log({ message: "IMAP data purged", userId, purged });
 
 		return { purged };
+	}
+
+	private async store(
+		userId: string,
+		mailbox: { address: string; username: string; password: string },
+		autoCreate: boolean,
+	): Promise<void> {
+		const previous = await this.credentials.addressOf(userId);
+
+		await this.credentials.save(userId, mailbox);
+
+		const row = await this.state.ensure(userId, IMAP_SOURCE, { autoCreate });
+
+		if (previous !== null && previous !== mailbox.address) {
+			await this.state.clearCursor(
+				row.id,
+				"A different mailbox was connected.",
+			);
+		}
 	}
 
 	private async requireRow(userId: string) {

@@ -232,6 +232,42 @@ mail server, an on-premise one. It hands `ThreadWriterService` the same
   `text/html`, and `download` fetches only that part, capped at `IMAP.body.maxBytes`.
   Attachments are never downloaded.
 
+### The mailbox is also a way in
+
+`IMAP_SIGN_IN` lets a rep sign in with the address and password of a mailbox on
+`IMAP_HOST`. It exists for a team with no Google, Microsoft or SSO account to sign in
+with. It is `POST /api/auth/sign-in/imap`, a Better Auth plugin in
+`packages/auth/src/imap-sign-in.ts`, so it is auth and stays off tRPC.
+
+- **The mail server is the identity provider.** A login it accepts for
+  `rep@acme.com` is the proof that the caller owns `rep@acme.com`. The login name is
+  always the address, never a separate username.
+- **`IMAP_SIGN_IN` lists mail domains, it is not a switch.** Only an address at a
+  listed domain is tried. An allowed address whose mail is hosted elsewhere must not
+  be accepted from this server: somebody else could register that address there.
+  The match is exact, so a subdomain is not included.
+- **`ALLOWED_SIGN_IN` still decides.** `acceptsImapSignIn` checks both lists before
+  the mail server is asked anything, and `user.create.before` checks again.
+- **`@crm/auth` cannot open a socket, so the API hosts the check.**
+  `ImapSignInService` registers `verify` and `connect` with `hostImapSignIn` at
+  module init, the same shape as `onSignedIn`. No host means `503`, never a pass.
+- **Three answers, not two.** `refused` is `401`, `unavailable` is `503`. A server
+  that is down must not tell a rep the password is wrong.
+- **No password is stored for sign-in.** The `account` row has provider `imap` and
+  no secret. Every sign-in asks the mail server again.
+- **Signing in connects the mailbox.** `ImapConnectionService.remember` seals the
+  password and ensures the `MailboxSync` row, so the rep does not type it twice and
+  a changed password heals `NEEDS_RECONNECT` at the next sign-in. A new row starts
+  with `IMAP.signIn.autoCreate`; an existing row keeps what the rep chose. A failed
+  save is logged and never fails the sign-in.
+- **The endpoint is always mounted and answers `404` when the variable is unset**,
+  so the client type does not depend on the environment.
+- **`IMAP_SIGN_IN.attempts` is the rate limit**, declared on the plugin. Behind the
+  app proxy every caller shares one bucket, so it is a ceiling on guessing for the
+  whole install.
+- **`sso.signInOptions` returns `imap`**, and the sign-in page shows the form above
+  the other buttons. `needsMailboxGrant` ignores an `imap` row, like an SSO rep.
+
 ## Asana is the agenda where there is no calendar
 
 `apps/api/src/asana` is the calendar's counterpart for a team whose mail server has
