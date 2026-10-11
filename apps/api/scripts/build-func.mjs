@@ -17,6 +17,7 @@ const repoRoot = dirname(dirname(apiDir));
 const outDir = join(repoRoot, ".vercel/output");
 const funcDir = join(outDir, "functions/api/index.func");
 const bun = process.env.BUN_BIN || "bun";
+const { crons } = JSON.parse(readFileSync(join(apiDir, "vercel.json"), "utf8"));
 
 const EXTERNALS = [
 	"@nestjs/microservices",
@@ -177,7 +178,7 @@ writeFileSync(
 	JSON.stringify({
 		version: 3,
 		routes: [{ src: "/(.*)", dest: "/api/index" }],
-		crons: [{ path: "/internal/sync/google", schedule: "0 9 * * *" }],
+		crons,
 	}),
 );
 
