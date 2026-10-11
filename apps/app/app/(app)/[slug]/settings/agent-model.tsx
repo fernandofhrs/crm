@@ -23,6 +23,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@crm/ui/components/popover";
+import { LOCALE } from "@crm/ui/lib/locale";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,20 +40,26 @@ type CatalogModel = {
 
 const FOLLOW_DEFAULT = "__default__";
 
+const dollarFormat = new Intl.NumberFormat(LOCALE, {
+	style: "currency",
+	currency: "USD",
+	minimumFractionDigits: 0,
+	maximumFractionDigits: 2,
+});
+
 function perMillion(rate: number): string {
-	const dollars = rate * 1_000_000;
-	return `$${dollars.toFixed(2).replace(/\.?0+$/, "")}`;
+	return dollarFormat.format(rate * 1_000_000);
 }
 
 function priceHint(model: CatalogModel): string | null {
 	if (!model.pricing) return null;
-	return `${perMillion(model.pricing.input)} in · ${perMillion(model.pricing.output)} out per 1M`;
+	return `${perMillion(model.pricing.input)} entrada · ${perMillion(model.pricing.output)} saída por 1M`;
 }
 
 function contextHint(tokens: number): string {
 	return tokens >= 1_000_000
-		? `${Math.round(tokens / 1_000_000)}M context`
-		: `${Math.round(tokens / 1_000)}K context`;
+		? `contexto de ${Math.round(tokens / 1_000_000)}M`
+		: `contexto de ${Math.round(tokens / 1_000)}K`;
 }
 
 function byProvider(models: CatalogModel[]): [string, CatalogModel[]][] {
@@ -79,7 +86,7 @@ export function AgentModel() {
 		trpc.settings.setAgentModel.mutationOptions({
 			onSuccess: async () => {
 				await cache.settings();
-				toast.success("The agent will use this model from its next session.");
+				toast.success("O agente passa a usar este modelo na próxima sessão.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -96,9 +103,7 @@ export function AgentModel() {
 
 	const effectiveName = effective?.name ?? effectiveId;
 
-	const currentLabel = selectedId
-		? effectiveName
-		: `Default — ${effectiveName}`;
+	const currentLabel = selectedId ? effectiveName : `Padrão: ${effectiveName}`;
 
 	const choose = (id: string) => {
 		setOpen(false);
@@ -109,9 +114,10 @@ export function AgentModel() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Research agent</CardTitle>
+				<CardTitle>Agente de pesquisa</CardTitle>
 				<CardDescription>
-					The model the agent thinks with, routed through the Vercel AI Gateway.
+					O modelo que o agente usa para pensar, acessado pelo Vercel AI
+					Gateway.
 				</CardDescription>
 			</CardHeader>
 
@@ -122,7 +128,7 @@ export function AgentModel() {
 							variant="outline"
 							role="combobox"
 							aria-expanded={open}
-							aria-label="Model"
+							aria-label="Modelo"
 							disabled={save.isPending || catalog.isPending || unavailable}
 						>
 							{currentLabel}
@@ -132,17 +138,17 @@ export function AgentModel() {
 
 					<PopoverContent align="start" size="fit" className="w-96">
 						<Command>
-							<CommandInput placeholder="Search models…" />
+							<CommandInput placeholder="Buscar modelos…" />
 							<CommandList>
-								<CommandEmpty>No model matches that.</CommandEmpty>
+								<CommandEmpty>Nenhum modelo corresponde à busca.</CommandEmpty>
 
 								<CommandGroup>
 									<CommandItem
-										value={`default ${defaultId}`}
+										value={`padrão padrao default ${defaultId}`}
 										data-checked={current === FOLLOW_DEFAULT}
 										onSelect={() => choose(FOLLOW_DEFAULT)}
 									>
-										Default — {defaultModel?.name ?? defaultId}
+										Padrão: {defaultModel?.name ?? defaultId}
 									</CommandItem>
 								</CommandGroup>
 
@@ -174,7 +180,7 @@ export function AgentModel() {
 
 				<p className="text-muted-foreground text-xs">
 					{unavailable
-						? `Could not reach the AI Gateway to list models. The agent is still running ${effectiveId}.`
+						? `Não foi possível acessar o AI Gateway para listar os modelos. O agente continua usando ${effectiveId}.`
 						: effective
 							? `${effectiveId} · ${contextHint(effective.contextWindowTokens)}${
 									priceHint(effective) ? ` · ${priceHint(effective)}` : ""

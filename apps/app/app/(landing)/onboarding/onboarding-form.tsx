@@ -60,7 +60,7 @@ export function OnboardingForm({ placeholder }: { placeholder: string }) {
 		>
 			<FieldGroup>
 				<Field>
-					<FieldLabel htmlFor={nameId}>Company name</FieldLabel>
+					<FieldLabel htmlFor={nameId}>Nome da empresa</FieldLabel>
 					<Input
 						id={nameId}
 						name="name"
@@ -78,7 +78,7 @@ export function OnboardingForm({ placeholder }: { placeholder: string }) {
 				</Field>
 
 				<Field>
-					<FieldLabel htmlFor={slugId}>Workspace URL</FieldLabel>
+					<FieldLabel htmlFor={slugId}>URL do espaço de trabalho</FieldLabel>
 					<InputGroup>
 						<InputGroupAddon>
 							<InputGroupText>/</InputGroupText>
@@ -103,12 +103,12 @@ export function OnboardingForm({ placeholder }: { placeholder: string }) {
 						/>
 					</InputGroup>
 					<FieldDescription>
-						Your team will use this address to open the CRM.
+						Seu time vai usar este endereço para abrir o CRM.
 					</FieldDescription>
 				</Field>
 
 				<Field>
-					<FieldLabel htmlFor={websiteId}>Website</FieldLabel>
+					<FieldLabel htmlFor={websiteId}>Site</FieldLabel>
 					<InputGroup>
 						<InputGroupAddon>
 							<InputGroupText>https://</InputGroupText>
@@ -126,14 +126,15 @@ export function OnboardingForm({ placeholder }: { placeholder: string }) {
 						/>
 					</InputGroup>
 					<FieldDescription>
-						Read once, so every answer afterwards knows what you sell.
+						Lido uma vez, para que toda resposta depois saiba o que vocês
+						vendem.
 					</FieldDescription>
 				</Field>
 			</FieldGroup>
 
 			<Button type="submit" disabled={save.isPending}>
 				{save.isPending ? <Spinner data-icon="inline-start" /> : null}
-				Continue
+				Continuar
 			</Button>
 		</form>
 	);

@@ -33,7 +33,10 @@ export class AsanaCredentialsService {
 		});
 
 		if (!connection) {
-			return { outcome: "not-connected", reason: "Asana is not connected." };
+			return {
+				outcome: "not-connected",
+				reason: "O Asana não está conectado.",
+			};
 		}
 
 		const token = this.vault.open(connection.secret);
@@ -42,7 +45,7 @@ export class AsanaCredentialsService {
 			return {
 				outcome: "needs-reconnect",
 				reason:
-					"The saved Asana token can no longer be read. Connect Asana again.",
+					"Não é mais possível ler o token salvo do Asana. Conecte o Asana de novo.",
 			};
 		}
 

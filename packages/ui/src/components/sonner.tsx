@@ -18,6 +18,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 			theme={theme as ToasterProps["theme"]}
 			position="bottom-left"
 			className="toaster group"
+			containerAriaLabel="Notificações"
 			icons={{
 				success: <CircleCheckIcon className="size-4" />,
 				info: <InfoIcon className="size-4" />,
@@ -37,6 +38,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
 				classNames: {
 					toast: "cn-toast",
 				},
+				closeButtonAriaLabel: "Fechar notificação",
 			}}
 			{...props}
 		/>

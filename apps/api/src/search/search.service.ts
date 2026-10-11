@@ -100,7 +100,7 @@ export class SearchService {
 						id: contact.id,
 						label:
 							[contact.firstName, contact.lastName].filter(Boolean).join(" ") ||
-							(contact.email ?? "Unnamed"),
+							(contact.email ?? "Sem nome"),
 						detail: contact.company?.name ?? contact.email,
 						iconUrl: null,
 						iconDarkUrl: null,

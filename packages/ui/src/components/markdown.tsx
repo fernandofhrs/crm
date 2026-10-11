@@ -3,6 +3,32 @@
 import { cn } from "@crm/ui/lib/utils";
 import { Streamdown } from "streamdown";
 
+const MARKDOWN_TRANSLATIONS = {
+	close: "Fechar",
+	copied: "Copiado",
+	copyCode: "Copiar código",
+	copyLink: "Copiar link",
+	copyTable: "Copiar tabela",
+	copyTableAsCsv: "Copiar tabela como CSV",
+	copyTableAsMarkdown: "Copiar tabela como Markdown",
+	copyTableAsTsv: "Copiar tabela como TSV",
+	downloadDiagram: "Baixar diagrama",
+	downloadDiagramAsMmd: "Baixar diagrama como MMD",
+	downloadDiagramAsPng: "Baixar diagrama como PNG",
+	downloadDiagramAsSvg: "Baixar diagrama como SVG",
+	downloadFile: "Baixar arquivo",
+	downloadImage: "Baixar imagem",
+	downloadTable: "Baixar tabela",
+	downloadTableAsCsv: "Baixar tabela como CSV",
+	downloadTableAsMarkdown: "Baixar tabela como Markdown",
+	exitFullscreen: "Sair da tela cheia",
+	externalLinkWarning: "Você vai abrir um site externo.",
+	imageNotAvailable: "Imagem indisponível",
+	openExternalLink: "Abrir link externo?",
+	openLink: "Abrir link",
+	viewFullscreen: "Ver em tela cheia",
+} as const;
+
 export function Markdown({
 	children,
 	className,
@@ -13,6 +39,7 @@ export function Markdown({
 	return (
 		<Streamdown
 			shikiTheme={["github-light", "github-dark"]}
+			translations={MARKDOWN_TRANSLATIONS}
 			className={cn(
 				"min-w-0 space-y-2.5 text-xs/5 wrap-break-word",
 				"[&_h1]:font-medium [&_h1]:text-xs [&_h2]:font-medium [&_h2]:text-xs [&_h3]:font-medium [&_h3]:text-xs",

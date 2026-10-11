@@ -282,7 +282,7 @@ export class CalendarSyncService {
 		await this.syncAttendees(record.id, event);
 		await this.prepareForMeeting(record.id, start.at);
 		await this.project(record.id, row.userId, {
-			title: event.summary ?? "Meeting",
+			title: event.summary ?? "Reunião",
 			startsAt: start.at,
 			companyId: match.companyId,
 			contactId: match.contactId,
@@ -375,7 +375,7 @@ export class CalendarSyncService {
 			location: string | null;
 		},
 	): Promise<void> {
-		const body = summary.location ? `Location: ${summary.location}` : null;
+		const body = summary.location ? `Local: ${summary.location}` : null;
 
 		const activity = await this.db.activity.upsert({
 			where: { calendarEventId },

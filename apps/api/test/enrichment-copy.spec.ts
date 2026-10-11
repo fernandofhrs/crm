@@ -19,12 +19,10 @@ describe("what a rep reads while the agent works", () => {
 	});
 
 	it("says what the agent is doing, not what the code calls it", () => {
-		expect(enrichmentStep("brand")).toBe("Fetching the logo");
-		expect(enrichmentStep("identify")).toBe("Reading their profile");
-		expect(enrichmentStep("portrait")).toBe("Finding their photo");
-		expect(enrichmentStep("company-profile")).toBe(
-			"Reading the company website",
-		);
+		expect(enrichmentStep("brand")).toBe("Buscando o logo");
+		expect(enrichmentStep("identify")).toBe("Lendo o perfil");
+		expect(enrichmentStep("portrait")).toBe("Procurando a foto");
+		expect(enrichmentStep("company-profile")).toBe("Lendo o site da empresa");
 	});
 
 	it("uses no internal vocabulary", () => {
@@ -37,7 +35,7 @@ describe("what a rep reads while the agent works", () => {
 	});
 
 	it("falls back to a sentence for a kind it does not know", () => {
-		expect(enrichmentStep("something-new")).toBe("Looking them up");
+		expect(enrichmentStep("something-new")).toBe("Pesquisando");
 	});
 });
 
@@ -69,16 +67,16 @@ describe("when work is booked for later", () => {
 		new Date(NOW.getTime() + days * 86_400_000 + hours * 3_600_000);
 
 	it("says the day in words, never a date", () => {
-		expect(enrichmentDueLabel(ahead(0, 6), NOW)).toBe("Later today");
-		expect(enrichmentDueLabel(ahead(1, 1), NOW)).toBe("Tomorrow");
-		expect(enrichmentDueLabel(ahead(3), NOW)).toBe("In 3 days");
+		expect(enrichmentDueLabel(ahead(0, 6), NOW)).toBe("Ainda hoje");
+		expect(enrichmentDueLabel(ahead(1, 1), NOW)).toBe("Amanhã");
+		expect(enrichmentDueLabel(ahead(3), NOW)).toBe("Em 3 dias");
 	});
 
 	it("counts weeks from a fortnight, and months from two", () => {
-		expect(enrichmentDueLabel(ahead(14), NOW)).toBe("In 2 weeks");
-		expect(enrichmentDueLabel(ahead(30), NOW)).toBe("In 4 weeks");
-		expect(enrichmentDueLabel(ahead(60), NOW)).toBe("In 2 months");
-		expect(enrichmentDueLabel(ahead(90), NOW)).toBe("In 3 months");
+		expect(enrichmentDueLabel(ahead(14), NOW)).toBe("Em 2 semanas");
+		expect(enrichmentDueLabel(ahead(30), NOW)).toBe("Em 4 semanas");
+		expect(enrichmentDueLabel(ahead(60), NOW)).toBe("Em 2 meses");
+		expect(enrichmentDueLabel(ahead(90), NOW)).toBe("Em 3 meses");
 	});
 
 	it("uses no internal vocabulary", () => {
@@ -93,17 +91,17 @@ describe("when work is booked for later", () => {
 
 describe("the second line of a row", () => {
 	it("names the step while it runs", () => {
-		expect(enrichmentQueueLine("running", "brand")).toBe("Fetching the logo");
+		expect(enrichmentQueueLine("running", "brand")).toBe("Buscando o logo");
 	});
 
 	it("says Waiting for a queued row, whatever the kind", () => {
-		expect(enrichmentQueueLine("queued", "brand")).toBe("Waiting");
-		expect(enrichmentQueueLine("queued", "identify")).toBe("Waiting");
+		expect(enrichmentQueueLine("queued", "brand")).toBe("Aguardando");
+		expect(enrichmentQueueLine("queued", "identify")).toBe("Aguardando");
 	});
 
 	it("says why a failed row stopped", () => {
 		expect(enrichmentQueueLine("failed", "brand")).toBe(
-			"Could not look this up",
+			"Não foi possível pesquisar",
 		);
 	});
 });

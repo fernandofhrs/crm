@@ -77,7 +77,7 @@ export function ShareChatDialog({
 				setToken(null);
 				setChoice({ conversationId: input.id, value: false });
 				await invalidate();
-				toast.success("Chat link revoked.");
+				toast.success("Link do chat revogado.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -88,7 +88,7 @@ export function ShareChatDialog({
 		await navigator.clipboard.writeText(
 			`${window.location.origin}${workspaceUrl(`/chat/${shareToken}`)}`,
 		);
-		toast.success("Chat link copied.");
+		toast.success("Link do chat copiado.");
 	};
 	const createAction = useAsyncAction({
 		action: () => create.mutateAsync({ id: conversationId }),
@@ -109,7 +109,7 @@ export function ShareChatDialog({
 		>
 			<DialogTrigger asChild>
 				<Button variant="outline" size="sm">
-					Share chat
+					Compartilhar chat
 				</Button>
 			</DialogTrigger>
 			<DialogContent
@@ -118,7 +118,7 @@ export function ShareChatDialog({
 			>
 				<DialogHeader className="relative gap-1 border-b p-5 pr-14">
 					<DialogTitle className="font-semibold text-sm">
-						Share chat
+						Compartilhar chat
 					</DialogTitle>
 					<DialogDescription>{title}</DialogDescription>
 					<DialogClose asChild>
@@ -128,7 +128,7 @@ export function ShareChatDialog({
 							className="absolute top-4 right-4"
 						>
 							<Icon icon={Close} />
-							<span className="sr-only">Close</span>
+							<span className="sr-only">Fechar</span>
 						</Button>
 					</DialogClose>
 				</DialogHeader>
@@ -139,7 +139,7 @@ export function ShareChatDialog({
 							role="status"
 							className="py-6 text-center text-muted-foreground text-sm"
 						>
-							Loading sharing status…
+							Carregando o status de compartilhamento…
 						</p>
 					) : status.isError ? (
 						<div
@@ -147,21 +147,21 @@ export function ShareChatDialog({
 							className="flex items-center justify-between gap-3 py-4"
 						>
 							<p className="text-muted-foreground text-sm">
-								Sharing status could not be loaded.
+								Não foi possível carregar o status de compartilhamento.
 							</p>
 							<Button
 								variant="outline"
 								size="sm"
 								onClick={() => status.refetch()}
 							>
-								Try again
+								Tentar de novo
 							</Button>
 						</div>
 					) : (
 						<>
 							<ShareChoice
 								selected={shared === false}
-								label="Only you"
+								label="Só você"
 								disabled={createAction.pending || revokeAction.pending}
 								onSelect={() => {
 									if (shared || status.data.enabled) {
@@ -173,8 +173,8 @@ export function ShareChatDialog({
 							/>
 							<ShareChoice
 								selected={shared === true}
-								label="Anyone in Comp AI with the link"
-								detail="Read-only"
+								label="Qualquer pessoa no Comp AI com o link"
+								detail="Somente leitura"
 								disabled={createAction.pending || revokeAction.pending}
 								onSelect={() => {
 									if (!shareToken) createAction.run();
@@ -187,7 +187,7 @@ export function ShareChatDialog({
 									<span className="min-w-0 flex-1 truncate font-mono text-xs">
 										{shareToken
 											? `${workspaceUrl(`/chat/${shareToken.slice(0, 12)}`)}…`
-											: "An active read-only link exists"}
+											: "Já existe um link ativo de somente leitura"}
 									</span>
 									<Button
 										variant="outline"
@@ -206,21 +206,22 @@ export function ShareChatDialog({
 											status={
 												shareToken ? copyAction.status : createAction.status
 											}
-											pendingLabel={shareToken ? "Copying" : "Creating link"}
-											successLabel={shareToken ? "Copied" : "Link created"}
-											errorLabel="Try again"
+											pendingLabel={shareToken ? "Copiando" : "Criando link"}
+											successLabel={shareToken ? "Copiado" : "Link criado"}
+											errorLabel="Tentar de novo"
 										>
 											{shareToken ? (
 												<Icon icon={Copy} data-icon="inline-start" />
 											) : null}
-											{shareToken ? "Copy link" : "Replace link"}
+											{shareToken ? "Copiar link" : "Substituir link"}
 										</AsyncButtonContent>
 									</Button>
 								</div>
 							) : null}
 
 							<p className="text-muted-foreground text-xs">
-								Sharing this chat does not change who can edit or run the agent.
+								Compartilhar este chat não muda quem pode editar ou executar o
+								agente.
 							</p>
 						</>
 					)}
@@ -235,19 +236,19 @@ export function ShareChatDialog({
 					>
 						<AsyncButtonContent
 							status={revokeAction.status}
-							pendingLabel="Revoking"
-							successLabel="Revoked"
-							errorLabel="Try again"
+							pendingLabel="Revogando"
+							successLabel="Revogado"
+							errorLabel="Tentar de novo"
 						>
-							Revoke link
+							Revogar link
 						</AsyncButtonContent>
 					</Button>
 					<div className="flex gap-3">
 						<DialogClose asChild>
-							<Button variant="outline">Cancel</Button>
+							<Button variant="outline">Cancelar</Button>
 						</DialogClose>
 						<DialogClose asChild>
-							<Button>Done</Button>
+							<Button>Concluir</Button>
 						</DialogClose>
 					</div>
 				</DialogFooter>

@@ -2,6 +2,7 @@
 
 import { Button } from "@crm/ui/components/button";
 import { SaveBar } from "@crm/ui/components/save-bar";
+import { formatCount } from "@crm/ui/lib/format";
 import {
 	type FileContents,
 	type FileOptions,
@@ -95,7 +96,7 @@ export function AgentCode({
 		if (failed || remaining.length > 0) return;
 
 		setEditing(false);
-		toast.success("Saved.");
+		toast.success("Salvo.");
 	}, [agentId, queryClient, save, trpc]);
 
 	const editorOptions = useMemo<EditorOptions<undefined>>(
@@ -147,8 +148,8 @@ export function AgentCode({
 		return (
 			<p className="text-muted-foreground text-sm">
 				{code.isPending
-					? "Reading the agent's files…"
-					: "This agent has no files yet. The builder writes them when it deploys."}
+					? "Lendo os arquivos do agente…"
+					: "Este agente ainda não tem arquivos. O construtor escreve os arquivos na publicação."}
 			</p>
 		);
 	}
@@ -158,9 +159,9 @@ export function AgentCode({
 			<section className="flex flex-col gap-3.5">
 				<div className="flex items-end justify-between gap-4">
 					<div>
-						<h2 className="font-semibold text-lg tracking-tight">Code</h2>
+						<h2 className="font-semibold text-lg tracking-tight">Código</h2>
 						<p className="text-muted-foreground text-sm">
-							What the agent actually runs.
+							O que o agente realmente executa.
 						</p>
 					</div>
 
@@ -171,7 +172,7 @@ export function AgentCode({
 								size="sm"
 								variant="outline"
 							>
-								{showDiff ? "Hide changes" : "Changes"}
+								{showDiff ? "Ocultar alterações" : "Alterações"}
 							</Button>
 						) : null}
 						{canManage ? (
@@ -183,7 +184,7 @@ export function AgentCode({
 								size="sm"
 								variant="outline"
 							>
-								{editing ? "Done" : "Edit"}
+								{editing ? "Concluir" : "Editar"}
 							</Button>
 						) : null}
 					</div>
@@ -228,12 +229,12 @@ export function AgentCode({
 			</section>
 
 			<SaveBar
-				description={`${changed.length} file${changed.length === 1 ? "" : "s"} changed. Saving writes a new revision.`}
+				description={`${formatCount(changed.length, "arquivo alterado", "arquivos alterados")}. Salvar grava uma nova revisão.`}
 				open={changed.length > 0}
-				title="Unsaved code"
+				title="Código não salvo"
 			>
 				<Button disabled={saving} onClick={discard} size="sm" variant="outline">
-					Discard
+					Descartar
 				</Button>
 				<Button
 					disabled={saving}
@@ -242,7 +243,7 @@ export function AgentCode({
 					}}
 					size="sm"
 				>
-					{saving ? "Saving…" : "Save"}
+					{saving ? "Salvando…" : "Salvar"}
 				</Button>
 			</SaveBar>
 		</EditProvider>

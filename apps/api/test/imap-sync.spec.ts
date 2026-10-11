@@ -266,7 +266,7 @@ describe("connecting a mailbox by IMAP", () => {
 	it("refuses a password the mail server refuses, and saves nothing", async () => {
 		server.failure = {
 			outcome: "auth-failed",
-			reason: "The mail server refused that address and password.",
+			reason: "O servidor de e-mail recusou esse endereço e essa senha.",
 		};
 
 		await expect(
@@ -395,7 +395,7 @@ describe("reading a mailbox by IMAP", () => {
 	it("asks for a reconnect when the mail server refuses the saved password", async () => {
 		server.failure = {
 			outcome: "auth-failed",
-			reason: "The mail server refused that address and password.",
+			reason: "O servidor de e-mail recusou esse endereço e essa senha.",
 		};
 
 		const outcome = await sync.sync(await row());
@@ -404,7 +404,7 @@ describe("reading a mailbox by IMAP", () => {
 		expect(outcome.status).toBe("reconnect");
 		expect(after.status).toBe(GoogleSyncStatus.NEEDS_RECONNECT);
 		expect(after.lastError).toBe(
-			"The mail server refused that address and password.",
+			"O servidor de e-mail recusou esse endereço e essa senha.",
 		);
 	});
 

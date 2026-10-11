@@ -184,10 +184,10 @@ export class MailboxMatchService {
 
 		await this.log.record({
 			companyId,
-			subject: "Company added from your inbox",
+			subject: "Empresa adicionada a partir da sua caixa de entrada",
 			body:
-				`Created because you ${request.source === "CALENDAR" ? "met" : "emailed"} ` +
-				`someone at ${domain}.`,
+				`Criada porque você ${request.source === "CALENDAR" ? "teve reunião com" : "enviou e-mail para"} ` +
+				`alguém de ${domain}.`,
 			meta: { source: request.source, domain },
 		});
 
@@ -267,8 +267,8 @@ export class MailboxMatchService {
 			await this.log.record({
 				contactId: contact.id,
 				companyId,
-				subject: "Contact added from your inbox",
-				body: `${person.email} appeared in a ${request.source === "CALENDAR" ? "meeting" : "thread"}.`,
+				subject: "Contato adicionado a partir da sua caixa de entrada",
+				body: `${person.email} apareceu em ${request.source === "CALENDAR" ? "uma reunião" : "uma conversa de e-mail"}.`,
 				meta: { source: request.source },
 			});
 		}

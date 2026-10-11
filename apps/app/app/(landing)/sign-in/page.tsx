@@ -11,7 +11,7 @@ import { SocialSignIn } from "./social-sign-in";
 import { type SsoProvider, SsoSignIn } from "./sso-sign-in";
 
 export const metadata: Metadata = {
-	title: "Sign in",
+	title: "Entrar",
 };
 
 type SignInOptions = {
@@ -49,8 +49,8 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
 			<Suspense
 				fallback={
 					<AuthHeading
-						title="Welcome back"
-						description="Sign in with your account to continue."
+						title="Que bom ver você de novo"
+						description="Entre com sua conta para continuar."
 					/>
 				}
 			>
@@ -95,15 +95,15 @@ async function SignIn({
 		return (
 			<>
 				<AuthHeading
-					title="No way in yet"
-					description="This CRM has no sign-in method configured, so nobody can get in — including you."
+					title="Ainda não há como entrar"
+					description="Este CRM não tem nenhuma forma de entrar configurada, então ninguém consegue acessar, nem você."
 				/>
 
 				<p className="text-center text-muted-foreground text-sm/5">
-					Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET — or MICROSOFT_CLIENT_ID
-					and MICROSOFT_CLIENT_SECRET, or IMAP_HOST and IMAP_SIGN_IN — in the
-					root .env file and restart. Your own identity provider can be added
-					from Settings once somebody is signed in.
+					Defina GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET (ou MICROSOFT_CLIENT_ID
+					e MICROSOFT_CLIENT_SECRET, ou IMAP_HOST e IMAP_SIGN_IN) no arquivo
+					.env da raiz e reinicie. Seu próprio provedor de identidade pode ser
+					adicionado em Configurações depois que alguém entrar.
 				</p>
 			</>
 		);
@@ -112,12 +112,12 @@ async function SignIn({
 	return (
 		<>
 			<AuthHeading
-				title="Welcome back"
-				description="Sign in with your account to continue."
+				title="Que bom ver você de novo"
+				description="Entre com sua conta para continuar."
 			/>
 
 			{showImap ? <ImapSignIn /> : null}
-			{showImap && showOthers ? <FieldSeparator>or</FieldSeparator> : null}
+			{showImap && showOthers ? <FieldSeparator>ou</FieldSeparator> : null}
 			{showSso ? <SsoSignIn providers={providers} /> : null}
 			{social.map((provider) => (
 				<SocialSignIn key={provider} provider={provider} />

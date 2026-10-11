@@ -41,7 +41,7 @@ export class MailboxApiClient {
 			return {
 				outcome: "failed",
 				reason: aborted
-					? `Timed out after ${DEFAULT_TIMEOUT_MS}ms.`
+					? `Tempo esgotado após ${DEFAULT_TIMEOUT_MS} ms.`
 					: error instanceof Error
 						? error.message
 						: String(error),

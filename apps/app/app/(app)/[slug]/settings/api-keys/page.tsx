@@ -18,7 +18,7 @@ import { ApiKeysTable } from "./api-keys-table";
 import { CreateApiKeySheet } from "./create-api-key-sheet";
 
 export const metadata: Metadata = {
-	title: "API Keys",
+	title: "Chaves de API",
 };
 
 export default function ApiKeysSettingsPage({
@@ -28,10 +28,10 @@ export default function ApiKeysSettingsPage({
 		<PageShell className="min-h-0">
 			<PageShellHeader>
 				<PageShellHeading>
-					<PageShellTitle>API Keys</PageShellTitle>
+					<PageShellTitle>Chaves de API</PageShellTitle>
 					<PageShellDescription>
-						Personal keys for calling the CRM API. Each one acts as you —
-						anything it can read or change is exactly what you can.
+						Chaves pessoais para chamar a API do CRM. Cada uma age como você: lê
+						e altera exatamente o que você pode ler e alterar.
 					</PageShellDescription>
 				</PageShellHeading>
 

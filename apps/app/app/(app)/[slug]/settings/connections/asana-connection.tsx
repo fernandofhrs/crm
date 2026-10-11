@@ -63,7 +63,7 @@ function ConnectAsana() {
 			onSuccess: async () => {
 				setToken("");
 				await cache.asana();
-				toast.success("Asana connected. Choose the project to follow.");
+				toast.success("Asana conectado. Escolha o projeto a acompanhar.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -75,12 +75,12 @@ function ConnectAsana() {
 				<CardTitle>
 					<div className="flex items-center gap-2">
 						Asana
-						<StatusIndicator size="sm" tone="neutral" label="Not connected" />
+						<StatusIndicator size="sm" tone="neutral" label="Não conectado" />
 					</div>
 				</CardTitle>
 				<CardDescription>
-					Brings the dated tasks of one Asana project into the CRM as your
-					tasks. Nothing is sent, so nothing here can change Asana.
+					Traz para o CRM, como suas tarefas, as tarefas com data de um projeto
+					do Asana. Nada é enviado. Por isso, nada aqui altera o Asana.
 				</CardDescription>
 
 				<CardAction>
@@ -95,7 +95,7 @@ function ConnectAsana() {
 						) : (
 							<AsanaLogo data-icon="inline-start" className="size-4" />
 						)}
-						Connect
+						Conectar
 					</Button>
 				</CardAction>
 			</CardHeader>
@@ -110,13 +110,13 @@ function ConnectAsana() {
 				>
 					<FieldGroup>
 						<Field>
-							<FieldLabel htmlFor={tokenId}>Personal access token</FieldLabel>
+							<FieldLabel htmlFor={tokenId}>Token de acesso pessoal</FieldLabel>
 							<Input
 								id={tokenId}
 								type="password"
 								value={token}
 								onChange={(event) => setToken(event.target.value)}
-								placeholder="Paste the token"
+								placeholder="Cole o token"
 								autoComplete="off"
 								autoCapitalize="off"
 								autoCorrect="off"
@@ -124,16 +124,16 @@ function ConnectAsana() {
 								disabled={connect.isPending}
 							/>
 							<FieldDescription>
-								Create one in the{" "}
+								Crie um no{" "}
 								<a
 									href={TOKEN_URL}
 									target="_blank"
 									rel="noreferrer"
 									className="underline underline-offset-4 hover:text-foreground"
 								>
-									Asana developer console
+									console de desenvolvedor do Asana
 								</a>
-								. It is stored encrypted and never shown again.
+								. Ele fica guardado com criptografia e nunca mais é exibido.
 							</FieldDescription>
 						</Field>
 					</FieldGroup>
@@ -174,18 +174,18 @@ function ChooseProject({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Which project is your agenda?</CardTitle>
+				<CardTitle>Qual projeto é a sua agenda?</CardTitle>
 				<CardDescription>
-					Asana cannot tell the CRM which project holds your commitments, so
-					this is asked once. Tasks with a due date in that project become your
-					tasks here.
+					O Asana não informa ao CRM qual projeto guarda seus compromissos. Por
+					isso, a pergunta é feita uma vez. As tarefas com data de vencimento
+					nesse projeto viram suas tarefas aqui.
 				</CardDescription>
 
 				<CardAction>
 					<div className="flex items-center gap-2">
 						{onCancel ? (
 							<Button size="sm" variant="ghost" onClick={onCancel}>
-								Cancel
+								Cancelar
 							</Button>
 						) : null}
 						<Button
@@ -194,7 +194,7 @@ function ChooseProject({
 							onClick={() => choose.mutate({ projectGid: chosen })}
 						>
 							{choose.isPending ? <Spinner data-icon="inline-start" /> : null}
-							{picked ? `Use ${picked.name}` : "Choose a project"}
+							{picked ? `Usar ${picked.name}` : "Escolher um projeto"}
 						</Button>
 					</div>
 				</CardAction>
@@ -204,13 +204,13 @@ function ChooseProject({
 				{projects.isError ? (
 					<Alert variant="destructive">
 						<Icon icon={Warning} />
-						<AlertTitle>The project list could not be read</AlertTitle>
+						<AlertTitle>Não foi possível ler a lista de projetos</AlertTitle>
 						<AlertDescription>{projects.error.message}</AlertDescription>
 					</Alert>
 				) : (
 					<FieldGroup>
 						<Field>
-							<FieldLabel htmlFor={projectId}>Asana project</FieldLabel>
+							<FieldLabel htmlFor={projectId}>Projeto do Asana</FieldLabel>
 							<Select
 								value={chosen}
 								onValueChange={setChosen}
@@ -219,7 +219,9 @@ function ChooseProject({
 								<SelectTrigger id={projectId}>
 									<SelectValue
 										placeholder={
-											projects.isPending ? "Reading Asana…" : "Choose a project"
+											projects.isPending
+												? "Lendo o Asana…"
+												: "Escolha um projeto"
 										}
 									/>
 								</SelectTrigger>
@@ -235,8 +237,8 @@ function ChooseProject({
 							</Select>
 							<FieldDescription>
 								{projects.data?.truncated
-									? "Only the first projects the token can see are listed."
-									: "Only projects the token can see are listed."}
+									? "A lista mostra só os primeiros projetos que o token enxerga."
+									: "A lista mostra só os projetos que o token enxerga."}
 							</FieldDescription>
 						</Field>
 					</FieldGroup>
@@ -269,7 +271,11 @@ export function AsanaConnection({ slug }: { slug: string }) {
 		trpc.asana.purgeSyncedData.mutationOptions({
 			onSuccess: async (result) => {
 				await cache.asana();
-				toast.success(`Removed ${result.purged} synced tasks.`);
+				toast.success(
+					result.purged === 1
+						? "1 tarefa sincronizada removida."
+						: `${result.purged} tarefas sincronizadas removidas.`,
+				);
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -311,15 +317,16 @@ export function AsanaConnection({ slug }: { slug: string }) {
 							<StatusIndicator
 								size="sm"
 								tone={failing ? "warning" : "success"}
-								label={failing ? "Needs attention" : "Connected"}
+								label={failing ? "Requer atenção" : "Conectado"}
 							/>
 						</div>
 					</CardTitle>
 					<CardDescription>
-						{data.project.name ?? "The chosen project"}
-						{data.accountName ? `, read as ${data.accountName}` : ""}. Tasks due
-						from {data.windowDays.past} days ago to {data.windowDays.future}{" "}
-						days ahead are kept as your CRM tasks.
+						{data.project.name ?? "O projeto escolhido"}
+						{data.accountName ? `, lido pela conta de ${data.accountName}` : ""}
+						. Tarefas com vencimento entre {data.windowDays.past} dias atrás e{" "}
+						{data.windowDays.future} dias à frente ficam como suas tarefas no
+						CRM.
 					</CardDescription>
 
 					<CardAction>
@@ -329,7 +336,7 @@ export function AsanaConnection({ slug }: { slug: string }) {
 							disabled={syncNow.isPending}
 							onClick={() => syncNow.mutate()}
 						>
-							{syncNow.isPending ? "Checking…" : "Check now"}
+							{syncNow.isPending ? "Verificando…" : "Verificar agora"}
 						</Button>
 					</CardAction>
 				</CardHeader>
@@ -338,21 +345,24 @@ export function AsanaConnection({ slug }: { slug: string }) {
 					{failing ? (
 						<Alert variant="destructive">
 							<Icon icon={Warning} />
-							<AlertTitle>The agenda sync failed</AlertTitle>
+							<AlertTitle>A sincronização da agenda falhou</AlertTitle>
 							<AlertDescription>
-								{data.lastError ?? "Asana needs connecting again."}
+								{data.lastError ?? "O Asana precisa ser conectado de novo."}
 							</AlertDescription>
 						</Alert>
 					) : (
 						<p className="text-muted-foreground text-xs">
 							{data.lastSyncedAt ? (
 								<>
-									Last checked <LocalRelativeTime date={data.lastSyncedAt} />,{" "}
-									{data.openTasks} open{" "}
-									{data.openTasks === 1 ? "task" : "tasks"}
+									Última verificação:{" "}
+									<LocalRelativeTime date={data.lastSyncedAt} />,{" "}
+									{data.openTasks}{" "}
+									{data.openTasks === 1
+										? "tarefa em aberto"
+										: "tarefas em aberto"}
 								</>
 							) : (
-								"Waiting for the first check"
+								"Aguardando a primeira verificação"
 							)}
 						</p>
 					)}
@@ -364,33 +374,35 @@ export function AsanaConnection({ slug }: { slug: string }) {
 								size="xs"
 								onClick={() => setChanging(true)}
 							>
-								Change project
+								Trocar de projeto
 							</Button>
 
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
 									<Button variant="ghost" size="xs" disabled={purge.isPending}>
-										Delete synced tasks
+										Excluir tarefas sincronizadas
 									</Button>
 								</AlertDialogTrigger>
 
 								<AlertDialogContent>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Delete synced tasks?</AlertDialogTitle>
+										<AlertDialogTitle>
+											Excluir tarefas sincronizadas?
+										</AlertDialogTitle>
 										<AlertDialogDescription>
-											Every task brought in from Asana is removed from the CRM.
-											Asana itself is not touched, and the next check brings the
-											open ones back.
+											Todas as tarefas trazidas do Asana saem do CRM. O Asana em
+											si não é alterado, e a próxima verificação traz de volta
+											as que estão em aberto.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 
 									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogCancel>Cancelar</AlertDialogCancel>
 										<AlertDialogAction
 											variant="destructive"
 											onClick={() => purge.mutate()}
 										>
-											Delete
+											Excluir
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>
@@ -403,27 +415,28 @@ export function AsanaConnection({ slug }: { slug: string }) {
 										size="xs"
 										disabled={disconnect.isPending}
 									>
-										Disconnect Asana
+										Desconectar o Asana
 									</Button>
 								</AlertDialogTrigger>
 
 								<AlertDialogContent>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Disconnect Asana?</AlertDialogTitle>
+										<AlertDialogTitle>Desconectar o Asana?</AlertDialogTitle>
 										<AlertDialogDescription>
-											The agenda stops updating and the saved token is deleted.
-											Tasks already synced stay. To withdraw the token itself,
-											delete it in the Asana developer console.
+											A agenda para de ser atualizada e o token salvo é
+											excluído. As tarefas já sincronizadas ficam. Para
+											invalidar o token em si, exclua-o no console de
+											desenvolvedor do Asana.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 
 									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogCancel>Cancelar</AlertDialogCancel>
 										<AlertDialogAction
 											variant="destructive"
 											onClick={() => disconnect.mutate()}
 										>
-											Disconnect
+											Desconectar
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>

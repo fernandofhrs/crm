@@ -4,6 +4,7 @@ import Checkmark from "@carbon/icons-react/es/Checkmark";
 import Renew from "@carbon/icons-react/es/Renew";
 import { Button } from "@crm/ui/components/button";
 import { Icon } from "@crm/ui/components/icon";
+import { formatCount } from "@crm/ui/lib/format";
 import { File, MultiFileDiff } from "@pierre/diffs/react";
 import {
 	FileTree,
@@ -84,12 +85,12 @@ function AgentCodeWorkspaceSurface({
 	if (!hydrated || (resolvedTheme !== "light" && resolvedTheme !== "dark")) {
 		return (
 			<section
-				aria-label="Generated agent files"
+				aria-label="Arquivos gerados do agente"
 				aria-busy="true"
 				className="h-[412px] overflow-hidden rounded-lg bg-muted/40"
 			>
 				<span role="status" className="sr-only">
-					Loading agent code
+					Carregando o código do agente
 				</span>
 			</section>
 		);
@@ -105,7 +106,7 @@ function AgentCodeWorkspaceSurface({
 
 	return (
 		<section
-			aria-label="Generated agent files"
+			aria-label="Arquivos gerados do agente"
 			className="overflow-hidden rounded-lg bg-muted/40"
 		>
 			<header className="flex min-h-11 flex-wrap items-center gap-2 px-3 py-2">
@@ -121,15 +122,15 @@ function AgentCodeWorkspaceSurface({
 						motion="none"
 					/>
 					<span className="truncate font-medium text-sm">
-						{working ? "Writing agent code" : "Agent code"}
+						{working ? "Escrevendo o código do agente" : "Código do agente"}
 					</span>
 					<span className="hidden shrink-0 text-muted-foreground text-xs sm:inline">
-						{paths.length} {paths.length === 1 ? "file" : "files"}
+						{formatCount(paths.length, "arquivo")}
 					</span>
 				</span>
 				<fieldset
 					className="flex min-w-0 items-center gap-1 border-0 p-0"
-					aria-label="Code view"
+					aria-label="Visualização do código"
 				>
 					<Button
 						variant={mode === "code" ? "secondary" : "ghost"}
@@ -137,7 +138,7 @@ function AgentCodeWorkspaceSurface({
 						aria-pressed={mode === "code"}
 						onClick={() => setMode("code")}
 					>
-						Code
+						Código
 					</Button>
 					<Button
 						variant={mode === "changes" ? "secondary" : "ghost"}
@@ -146,7 +147,7 @@ function AgentCodeWorkspaceSurface({
 						aria-pressed={mode === "changes"}
 						onClick={() => setMode("changes")}
 					>
-						Changes
+						Alterações
 					</Button>
 				</fieldset>
 			</header>
@@ -155,7 +156,7 @@ function AgentCodeWorkspaceSurface({
 				<div className="h-36 min-w-0 border-b border-border/60 bg-muted/15 p-2 md:h-[360px] md:border-r md:border-b-0">
 					<FileTree
 						model={model}
-						aria-label="Agent files"
+						aria-label="Arquivos do agente"
 						style={{ colorScheme: themeType, height: "100%", width: "100%" }}
 					/>
 				</div>

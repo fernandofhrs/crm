@@ -7,9 +7,9 @@ import {
 type ArtifactNames = Record<string, string>;
 
 const ARTIFACT_NAMES: ArtifactNames = {
-	"agent/instructions.md": "instructions",
-	"agent/manifest.json": "the manifest",
-	"agent/README.md": "the readme",
+	"agent/instructions.md": "as instruções",
+	"agent/manifest.json": "o manifesto",
+	"agent/README.md": "o readme",
 };
 
 type LabelInput = {
@@ -28,16 +28,16 @@ const INPUT_LABELS: ToolInputLabels = {
 		const path = eveToolText.parse(input.path);
 		if (!path) return null;
 		const name = ARTIFACT_NAMES[path] ?? path;
-		return pending ? `Writing ${name}` : `Wrote ${name}`;
+		return pending ? `Escrevendo ${name}` : `Escreveu ${name}`;
 	},
 	save_agent_draft: (input, pending) => {
 		const name = eveToolText.parse(input.name).trim();
-		const verb = pending ? "Saving draft" : "Saved draft";
+		const verb = pending ? "Salvando rascunho" : "Rascunho salvo";
 		return name ? `${verb} · ${name}` : verb;
 	},
 	set_chat_title: (input, pending) => {
 		const title = eveToolText.parse(input.title).trim();
-		const verb = pending ? "Naming this chat" : "Named this chat";
+		const verb = pending ? "Dando nome ao chat" : "Deu nome ao chat";
 		return title ? `${verb} · ${title}` : verb;
 	},
 };

@@ -185,7 +185,7 @@ export class ThreadWriterService {
 				await tx.emailThread.update({ where: { id: record.id }, data });
 
 				return this.project(tx, record.id, row.userId, {
-					subject: parsed.subject ?? "(no subject)",
+					subject: parsed.subject ?? "(sem assunto)",
 					snippet: snippetOf(parsed.body),
 					lastMessageAt,
 					companyId,

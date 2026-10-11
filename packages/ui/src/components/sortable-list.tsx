@@ -109,7 +109,7 @@ export function SortableItem({
 				{...listeners}
 			>
 				<Icon icon={Draggable} />
-				<span className="sr-only">Reorder {label}</span>
+				<span className="sr-only">Reordenar {label}</span>
 			</Button>
 			{children}
 		</div>

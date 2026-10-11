@@ -21,12 +21,12 @@ export const fieldEntityInput = z.object({
 
 const fieldOptionInput = z.object({
 	id: z.string().optional(),
-	label: z.string().trim().min(1, "An option needs a label."),
+	label: z.string().trim().min(1, "A opção precisa de um rótulo."),
 });
 
 export const fieldCreateInput = z.object({
 	entity: fieldEntity,
-	label: z.string().trim().min(1, "A field needs a label."),
+	label: z.string().trim().min(1, "O campo precisa de um rótulo."),
 	type: z.enum(FIELD_TYPES),
 	options: z.array(fieldOptionInput).default([]),
 	agentFilled: z.boolean().default(true),
@@ -69,7 +69,7 @@ export type FieldReorderInput = z.infer<typeof fieldReorderInput>;
 
 const recordFieldValue = z.union(
 	[z.string(), z.number(), z.boolean(), z.null()],
-	{ error: "A field holds text, a number, true or false, or nothing at all." },
+	{ error: "Um campo guarda texto, um número, verdadeiro ou falso, ou nada." },
 );
 
 export const recordFieldValues = z.record(z.string(), recordFieldValue);

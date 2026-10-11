@@ -117,7 +117,7 @@ export function SkeletonSwap({
 				</m.div>
 				{label ? (
 					<span role="status" aria-live="polite" className="sr-only">
-						{loading ? "" : `${label} loaded`}
+						{loading ? "" : `${label}: carregamento concluído`}
 					</span>
 				) : null}
 			</div>

@@ -190,7 +190,7 @@ export class TrackingFilingService {
 			const activity = await this.db.activity.create({
 				data: {
 					type: ActivityType.NOTE,
-					subject: `Submitted a form on ${submission.host}`,
+					subject: `Enviou um formulário em ${submission.host}`,
 					body: `${submission.host}${submission.path}`,
 					contactId,
 					occurredAt: new Date(),

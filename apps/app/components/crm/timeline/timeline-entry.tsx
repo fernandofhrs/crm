@@ -74,7 +74,7 @@ export function TimelineEntry({
 	const synced = entry.meta?.synced === true;
 	const origin = syncOriginLabel(syncSource.parse(entry.meta).source);
 	const author = synced
-		? (origin ?? (entry.emailThread ? "via Gmail" : "via Calendar"))
+		? (origin ?? (entry.emailThread ? "via Gmail" : "via Agenda"))
 		: entry.createdBy.name;
 
 	const headline = change
@@ -97,7 +97,9 @@ export function TimelineEntry({
 					<Checkbox
 						checked={done}
 						disabled={complete.isPending}
-						aria-label={done ? "Mark as not done" : "Mark as done"}
+						aria-label={
+							done ? "Marcar como não concluída" : "Marcar como concluída"
+						}
 						onCheckedChange={(checked) =>
 							complete.mutate({ id: entry.id, completed: checked === true })
 						}
@@ -174,7 +176,7 @@ export function TimelineEntry({
 								tone={overdue ? "error" : "info"}
 								label={
 									<>
-										{overdue ? "Overdue" : "Due"}{" "}
+										{overdue ? "Atrasada" : "Vence"}{" "}
 										<LocalRelativeTime date={entry.dueAt} />
 									</>
 								}

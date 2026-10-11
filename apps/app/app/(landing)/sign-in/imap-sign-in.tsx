@@ -20,7 +20,7 @@ export function ImapSignIn() {
 
 	function fail(message?: string) {
 		setPending(false);
-		toast.error(message ?? "Could not reach the sign-in service.");
+		toast.error(message ?? "Não foi possível falar com o serviço de acesso.");
 	}
 
 	async function submit(form: FormData) {
@@ -49,12 +49,12 @@ export function ImapSignIn() {
 		>
 			<FieldGroup>
 				<Field>
-					<FieldLabel htmlFor={emailId}>Email</FieldLabel>
+					<FieldLabel htmlFor={emailId}>E-mail</FieldLabel>
 					<Input
 						id={emailId}
 						name="email"
 						type="email"
-						placeholder="you@company.com"
+						placeholder="voce@empresa.com"
 						autoComplete="username"
 						autoCapitalize="off"
 						autoCorrect="off"
@@ -65,7 +65,7 @@ export function ImapSignIn() {
 				</Field>
 
 				<Field>
-					<FieldLabel htmlFor={passwordId}>Mailbox password</FieldLabel>
+					<FieldLabel htmlFor={passwordId}>Senha da caixa de e-mail</FieldLabel>
 					<Input
 						id={passwordId}
 						name="password"
@@ -75,15 +75,15 @@ export function ImapSignIn() {
 						required
 					/>
 					<FieldDescription>
-						Checked against your mail server, then stored encrypted. Signing in
-						connects this mailbox to the CRM.
+						Conferida no seu servidor de e-mail e depois guardada com
+						criptografia. Ao entrar, esta caixa de e-mail fica conectada ao CRM.
 					</FieldDescription>
 				</Field>
 			</FieldGroup>
 
 			<Button type="submit" disabled={pending}>
 				{pending ? <Spinner data-icon="inline-start" /> : null}
-				Sign in with your mailbox
+				Entrar com a caixa de e-mail
 			</Button>
 		</form>
 	);

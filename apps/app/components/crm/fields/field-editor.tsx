@@ -59,8 +59,10 @@ import {
 	KEY_HELP,
 	KEY_LABEL,
 	LABEL_LABEL,
+	OPTION_FALLBACK,
 	OPTIONS_LABEL,
 	optionLabel,
+	removeOptionLabel,
 	SAVE,
 	sheetPlacement,
 	TYPE_LABEL,
@@ -69,10 +71,10 @@ import {
 import { type FieldEntity, kindOf } from "./fields-entity";
 
 const COVERAGE_NOUN = {
-	COMPANY: "companies",
-	CONTACT: "contacts",
-	DEAL: "deals",
-} satisfies Record<FieldEntity, string>;
+	COMPANY: { one: "empresa", many: "empresas" },
+	CONTACT: { one: "contato", many: "contatos" },
+	DEAL: { one: "negócio", many: "negócios" },
+} satisfies Record<FieldEntity, { one: string; many: string }>;
 
 type FieldRecord = RouterOutputs["fields"]["list"][number];
 
@@ -88,16 +90,16 @@ type Draft = {
 };
 
 const TYPE_HINTS = {
-	TEXT: "Text — a short line",
-	LONG_TEXT: "Long text — a paragraph",
-	NUMBER: "Number",
-	DATE: "Date",
-	CHECKBOX: "Checkbox — yes or no",
-	SELECT: "Select — one of a fixed list",
+	TEXT: "Texto: uma linha curta",
+	LONG_TEXT: "Texto longo: um parágrafo",
+	NUMBER: "Número",
+	DATE: "Data",
+	CHECKBOX: "Caixa de seleção: sim ou não",
+	SELECT: "Seleção: uma opção de uma lista fixa",
 	URL: "URL",
-	EMAIL: "Email",
-	PHONE: "Phone",
-	USER: "User — someone in the workspace",
+	EMAIL: "E-mail",
+	PHONE: "Telefone",
+	USER: "Usuário: alguém do espaço de trabalho",
 } satisfies Record<(typeof FIELD_TYPES)[number], string>;
 
 function optionId(option: { id?: string }, index: number): string {
@@ -133,7 +135,7 @@ function Coverage({ field }: { field: FieldRecord }) {
 	const backfill = useMutation(
 		trpc.fields.backfill.mutationOptions({
 			onSuccess: async () => {
-				toast.success("Your agents will pick this up.");
+				toast.success("Seus agentes vão cuidar disso.");
 				await cache.fieldCoverage(field.id);
 			},
 			onError: (error) => toast.error(error.message),
@@ -143,8 +145,10 @@ function Coverage({ field }: { field: FieldRecord }) {
 	if (!field.agentFilled || !coverage.data) return null;
 
 	const { filled, total } = coverage.data;
-	const noun = COVERAGE_NOUN[field.entity as FieldEntity];
+	const nouns = COVERAGE_NOUN[field.entity as FieldEntity];
+	const noun = total === 1 ? nouns.one : nouns.many;
 	const covered = filled >= total;
+	const missing = total - filled;
 
 	return (
 		<div className="shrink-0 border-t px-5 py-3">
@@ -153,10 +157,14 @@ function Coverage({ field }: { field: FieldRecord }) {
 					<StatusIndicator
 						tone="primary"
 						className="font-medium text-foreground"
-						label={`Filled on ${filled} of ${total} ${noun}`}
+						label={`Preenchido em ${filled} de ${total} ${noun}`}
 					/>
 					<span className="pl-4 text-muted-foreground text-xs">
-						{covered ? ALL_FILLED : `${total - filled} still to go`}
+						{covered
+							? ALL_FILLED
+							: missing === 1
+								? "Falta 1"
+								: `Faltam ${missing}`}
 					</span>
 				</div>
 				<Button
@@ -338,7 +346,7 @@ export function FieldEditor({
 										<SortableItem
 											key={optionId(option, index)}
 											id={optionId(option, index)}
-											label={option.label || "option"}
+											label={option.label || OPTION_FALLBACK}
 										>
 											<Input
 												aria-label={optionLabel(index)}
@@ -366,7 +374,7 @@ export function FieldEditor({
 											>
 												<Icon icon={Close} />
 												<span className="sr-only">
-													Remove {optionLabel(index)}
+													{removeOptionLabel(index)}
 												</span>
 											</Button>
 										</SortableItem>
@@ -442,9 +450,9 @@ export function FieldEditor({
 				<AlertDialog open={confirming} onOpenChange={setConfirming}>
 					<AlertDialogContent>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Archive {field.label}?</AlertDialogTitle>
+							<AlertDialogTitle>Arquivar {field.label}?</AlertDialogTitle>
 							<AlertDialogDescription>
-								Hidden everywhere. Its values are kept.
+								O campo some de todo lugar. Os valores ficam guardados.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						<AlertDialogFooter>
@@ -453,7 +461,7 @@ export function FieldEditor({
 								variant="destructive"
 								onClick={() => archive.mutate({ id: field.id })}
 							>
-								Archive field
+								Arquivar campo
 							</AlertDialogAction>
 						</AlertDialogFooter>
 					</AlertDialogContent>

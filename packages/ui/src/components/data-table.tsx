@@ -200,13 +200,13 @@ function FacetSubmenu({
 						className="max-h-72"
 					>
 						<CommandInput
-							placeholder={`Search ${facet.label.toLowerCase()}…`}
+							placeholder={`Buscar ${facet.label.toLowerCase()}…`}
 							value={facet.search}
 							onValueChange={facet.onSearchChange}
 							onKeyDown={(event) => event.stopPropagation()}
 						/>
 						<CommandList>
-							<CommandEmpty>{facet.empty ?? "Nothing matches."}</CommandEmpty>
+							<CommandEmpty>{facet.empty ?? "Nada encontrado."}</CommandEmpty>
 							<CommandGroup>
 								{facet.options.map((option) => {
 									const checked = selected.includes(option.value);
@@ -236,7 +236,7 @@ function FacetSubmenu({
 						{selected.length > 0 && (
 							<>
 								<DropdownMenuItem onSelect={() => onChange([])}>
-									Clear
+									Limpar
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 							</>
@@ -314,7 +314,7 @@ export function DataTable<TRow, TSub = unknown>({
 			: tabs?.options.find((option) => option.value === query.tab);
 	const activeTabLabel = activeTabOption
 		? activeTabOption.label
-		: (tabs?.allLabel ?? "All");
+		: (tabs?.allLabel ?? "Todos");
 
 	const deferredRows = useDeferredValue(rows);
 	const anyExpandable =
@@ -358,7 +358,9 @@ export function DataTable<TRow, TSub = unknown>({
 						<span className="font-medium text-foreground tabular-nums">
 							{selection.state.count}
 						</span>{" "}
-						selected
+						{selection.state.count === 1
+							? "item selecionado"
+							: "itens selecionados"}
 					</span>
 					<div className="ml-auto flex items-center gap-2">
 						{selection.actions}
@@ -367,7 +369,7 @@ export function DataTable<TRow, TSub = unknown>({
 							size="sm"
 							onClick={() => selection.state.clear()}
 						>
-							Clear
+							Limpar
 						</Button>
 					</div>
 				</div>
@@ -391,7 +393,7 @@ export function DataTable<TRow, TSub = unknown>({
 					>
 						<span className="flex items-center gap-2">
 							<Filter />
-							Filters
+							Filtros
 							{activeFilterCount > 0 && (
 								<span className="tabular-nums opacity-60">
 									({activeFilterCount})
@@ -435,7 +437,7 @@ export function DataTable<TRow, TSub = unknown>({
 									onValueChange={(value) => query.setTab(value)}
 								>
 									<DropdownMenuRadioItem value="all">
-										<span className="flex-1">{tabs.allLabel ?? "All"}</span>
+										<span className="flex-1">{tabs.allLabel ?? "Todos"}</span>
 									</DropdownMenuRadioItem>
 									{tabs.options.map((option) => {
 										if (tabCounts?.[option.value] === 0) return null;
@@ -465,7 +467,7 @@ export function DataTable<TRow, TSub = unknown>({
 										className="justify-start sm:justify-center"
 									>
 										<Filter data-icon="inline-start" />
-										Filters
+										Filtros
 										{activeFacetFilterCount > 0 && (
 											<span className="tabular-nums opacity-60">
 												({activeFacetFilterCount})
@@ -494,18 +496,18 @@ export function DataTable<TRow, TSub = unknown>({
 										className="justify-start sm:justify-center"
 									>
 										<ArrowsVertical data-icon="inline-start" />
-										Sort
+										Ordenar
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="min-w-48">
-									<DropdownMenuLabel>Sort by</DropdownMenuLabel>
+									<DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
 									<DropdownMenuRadioGroup
 										value={query.sort}
 										onValueChange={query.setSort}
 									>
 										{anyExpandable && (
 											<DropdownMenuRadioItem value="detail">
-												Detail
+												Detalhes
 											</DropdownMenuRadioItem>
 										)}
 										{sortableColumns.map((column) => (
@@ -522,10 +524,10 @@ export function DataTable<TRow, TSub = unknown>({
 										}
 									>
 										<DropdownMenuRadioItem value="asc">
-											Ascending
+											Crescente
 										</DropdownMenuRadioItem>
 										<DropdownMenuRadioItem value="desc">
-											Descending
+											Decrescente
 										</DropdownMenuRadioItem>
 									</DropdownMenuRadioGroup>
 								</DropdownMenuContent>
@@ -540,14 +542,14 @@ export function DataTable<TRow, TSub = unknown>({
 										className="justify-start sm:justify-center"
 									>
 										<Column data-icon="inline-start" />
-										Columns
+										Colunas
 										<span className="tabular-nums opacity-60">
 											({visibleColumns.length})
 										</span>
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent align="end" className="min-w-48">
-									<DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+									<DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
 									{hideable.map((column) => (
 										<DropdownMenuCheckboxItem
 											key={column.id}
@@ -581,7 +583,7 @@ export function DataTable<TRow, TSub = unknown>({
 				overlay={
 					deferredRows.length === 0 ? (
 						<div className="absolute inset-x-0 top-11 bottom-0 flex items-center justify-center px-4 py-8 text-center text-muted-foreground">
-							{loading ? <Spinner /> : (empty ?? "No results found.")}
+							{loading ? <Spinner /> : (empty ?? "Nenhum resultado encontrado.")}
 						</div>
 					) : null
 				}
@@ -602,13 +604,13 @@ export function DataTable<TRow, TSub = unknown>({
 										selection.state.toggleAll(checked === true)
 									}
 									disabled={deferredRows.length === 0}
-									aria-label="Select every row on this page"
+									aria-label="Selecionar todas as linhas desta página"
 								/>
 							</TableHead>
 						)}
 						{anyExpandable && (
 							<TableHead className="h-11 w-10 px-3">
-								<span className="sr-only">Detail</span>
+								<span className="sr-only">Detalhes</span>
 							</TableHead>
 						)}
 						{visibleColumns.map((column) => {
@@ -700,8 +702,8 @@ export function DataTable<TRow, TSub = unknown>({
 												}
 												aria-label={
 													selection.rowLabel
-														? `Select ${selection.rowLabel(row)}`
-														: "Select row"
+														? `Selecionar ${selection.rowLabel(row)}`
+														: "Selecionar linha"
 												}
 											/>
 										</TableCell>

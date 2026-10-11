@@ -44,7 +44,8 @@ import { isSyncing, SYNC_POLL_MS } from "@/lib/sync-status";
 import { useCrmCache } from "@/lib/trpc/cache";
 import { useTRPC } from "@/lib/trpc/client";
 
-const AUTO_CREATE = "Add the company and contact when you reply to someone new";
+const AUTO_CREATE =
+	"Adicionar a empresa e o contato quando você responder a alguém novo";
 
 const IMPORT_MAX_ROUNDS = 40;
 
@@ -64,13 +65,13 @@ function ImapUnavailable() {
 			<CardHeader>
 				<CardTitle>
 					<div className="flex items-center gap-2">
-						Email by IMAP
-						<StatusIndicator size="sm" tone="neutral" label="Not configured" />
+						E-mail por IMAP
+						<StatusIndicator size="sm" tone="neutral" label="Não configurado" />
 					</div>
 				</CardTitle>
 				<CardDescription>
-					Set IMAP_HOST in the root .env file to your mail server, for example
-					imap.hostinger.com, and restart.
+					Defina IMAP_HOST no arquivo .env da raiz com o seu servidor de e-mail,
+					por exemplo imap.hostinger.com, e reinicie.
 				</CardDescription>
 			</CardHeader>
 		</Card>
@@ -106,7 +107,7 @@ function ConnectImap({
 			onSuccess: async () => {
 				setPassword("");
 				await cache.imap();
-				toast.success("Mailbox connected.");
+				toast.success("Caixa de e-mail conectada.");
 				onConnected();
 			},
 			onError: (error) => toast.error(error.message),
@@ -120,15 +121,17 @@ function ConnectImap({
 			<CardHeader>
 				<CardTitle>
 					<div className="flex items-center gap-2">
-						{reconnecting ? "Connect the mailbox again" : "Email by IMAP"}
+						{reconnecting
+							? "Conectar a caixa de e-mail de novo"
+							: "E-mail por IMAP"}
 						{reconnecting ? null : (
-							<StatusIndicator size="sm" tone="neutral" label="Not connected" />
+							<StatusIndicator size="sm" tone="neutral" label="Não conectado" />
 						)}
 					</div>
 				</CardTitle>
 				<CardDescription>
-					Read-only mail from {host ?? "your mail server"}. Only conversations
-					with companies in the CRM are stored.
+					E-mails de {host ?? "seu servidor de e-mail"}, somente para leitura.
+					Só as conversas com empresas do CRM são guardadas.
 				</CardDescription>
 
 				<CardAction>
@@ -143,7 +146,7 @@ function ConnectImap({
 						) : (
 							<Icon icon={Email} data-icon="inline-start" />
 						)}
-						Connect
+						Conectar
 					</Button>
 				</CardAction>
 			</CardHeader>
@@ -162,13 +165,13 @@ function ConnectImap({
 				>
 					<FieldGroup>
 						<Field>
-							<FieldLabel htmlFor={addressId}>Email address</FieldLabel>
+							<FieldLabel htmlFor={addressId}>Endereço de e-mail</FieldLabel>
 							<Input
 								id={addressId}
 								type="email"
 								value={address}
 								onChange={(event) => setAddress(event.target.value)}
-								placeholder="you@company.com"
+								placeholder="voce@empresa.com.br"
 								autoComplete="username"
 								autoCapitalize="off"
 								autoCorrect="off"
@@ -178,7 +181,9 @@ function ConnectImap({
 						</Field>
 
 						<Field>
-							<FieldLabel htmlFor={passwordId}>Mailbox password</FieldLabel>
+							<FieldLabel htmlFor={passwordId}>
+								Senha da caixa de e-mail
+							</FieldLabel>
 							<Input
 								id={passwordId}
 								type="password"
@@ -191,8 +196,9 @@ function ConnectImap({
 								disabled={connect.isPending}
 							/>
 							<FieldDescription>
-								Checked against the mail server, then stored encrypted. It is
-								never shown again and nothing is ever sent from this mailbox.
+								É conferida no servidor de e-mail e depois guardada com
+								criptografia. Ela nunca mais é exibida, e nada é enviado por
+								esta caixa de e-mail.
 							</FieldDescription>
 						</Field>
 
@@ -202,11 +208,11 @@ function ConnectImap({
 								className="flex flex-col items-start gap-1"
 							>
 								<span className="text-sm">
-									Import the last {historyDays} days
+									Importar os últimos {historyDays} dias
 								</span>
 								<span className="font-normal text-muted-foreground text-xs">
-									{AUTO_CREATE}. Turn this off to file only mail from people
-									already in the CRM.
+									{AUTO_CREATE}. Desative para registrar só os e-mails de
+									pessoas que já estão no CRM.
 								</span>
 							</Label>
 
@@ -271,7 +277,11 @@ export function ImapConnection({ slug }: { slug: string }) {
 		trpc.imap.purgeSyncedData.mutationOptions({
 			onSuccess: async (result) => {
 				await cache.imap();
-				toast.success(`Removed ${result.purged} synced items.`);
+				toast.success(
+					result.purged === 1
+						? "1 item sincronizado removido."
+						: `${result.purged} itens sincronizados removidos.`,
+				);
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -317,17 +327,17 @@ export function ImapConnection({ slug }: { slug: string }) {
 				<CardHeader>
 					<CardTitle>
 						<div className="flex items-center gap-2">
-							Email by IMAP
+							E-mail por IMAP
 							<StatusIndicator
 								size="sm"
 								tone={failing ? "warning" : "success"}
-								label={failing ? "Needs attention" : "Connected"}
+								label={failing ? "Requer atenção" : "Conectado"}
 							/>
 						</div>
 					</CardTitle>
 					<CardDescription>
-						{data.address} on {data.host}. Email threads land on the matching
-						company each time the mailbox is checked.
+						{data.address} em {data.host}. As conversas de e-mail entram na
+						empresa correspondente a cada verificação da caixa de e-mail.
 					</CardDescription>
 
 					<CardAction>
@@ -337,7 +347,7 @@ export function ImapConnection({ slug }: { slug: string }) {
 							disabled={working}
 							onClick={check}
 						>
-							{working ? "Checking…" : "Check now"}
+							{working ? "Verificando…" : "Verificar agora"}
 						</Button>
 					</CardAction>
 				</CardHeader>
@@ -346,23 +356,25 @@ export function ImapConnection({ slug }: { slug: string }) {
 					{failing ? (
 						<Alert variant="destructive">
 							<Icon icon={Warning} />
-							<AlertTitle>Email sync failed</AlertTitle>
+							<AlertTitle>A sincronização de e-mails falhou</AlertTitle>
 							<AlertDescription>
-								{data.lastError ?? "The mailbox needs connecting again."}
+								{data.lastError ??
+									"A caixa de e-mail precisa ser conectada de novo."}
 							</AlertDescription>
 						</Alert>
 					) : (
 						<p className="text-muted-foreground text-xs">
 							{working && data.importing ? (
-								`Importing the last ${data.historyDays} days. Keep this page open.`
+								`Importando os últimos ${data.historyDays} dias. Mantenha esta página aberta.`
 							) : paused ? (
-								`The import of the last ${data.historyDays} days is not finished. Check now to continue.`
+								`A importação dos últimos ${data.historyDays} dias não terminou. Verifique agora para continuar.`
 							) : data.lastSyncedAt ? (
 								<>
-									Last checked <LocalRelativeTime date={data.lastSyncedAt} />
+									Última verificação:{" "}
+									<LocalRelativeTime date={data.lastSyncedAt} />
 								</>
 							) : (
-								"Waiting for the first check"
+								"Aguardando a primeira verificação"
 							)}
 						</p>
 					)}
@@ -372,7 +384,7 @@ export function ImapConnection({ slug }: { slug: string }) {
 							htmlFor={autoCreateId}
 							className="flex flex-col items-start gap-1"
 						>
-							<span className="text-sm">Email</span>
+							<span className="text-sm">E-mail</span>
 							<span className="font-normal text-muted-foreground text-xs">
 								{AUTO_CREATE}
 							</span>
@@ -394,34 +406,36 @@ export function ImapConnection({ slug }: { slug: string }) {
 								disabled={working}
 								onClick={() => reimport.mutate()}
 							>
-								Import the last {data.historyDays} days again
+								Importar os últimos {data.historyDays} dias de novo
 							</Button>
 
 							<AlertDialog>
 								<AlertDialogTrigger asChild>
 									<Button variant="ghost" size="xs" disabled={purge.isPending}>
-										Delete synced data
+										Excluir dados sincronizados
 									</Button>
 								</AlertDialogTrigger>
 
 								<AlertDialogContent>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Delete synced data?</AlertDialogTitle>
+										<AlertDialogTitle>
+											Excluir dados sincronizados?
+										</AlertDialogTitle>
 										<AlertDialogDescription>
-											Every email brought in from this mailbox is removed from
-											the CRM. The mailbox itself is not touched. Nothing
-											deleted here comes back unless you import the last{" "}
-											{data.historyDays} days again.
+											Todos os e-mails trazidos desta caixa de e-mail saem do
+											CRM. A caixa de e-mail em si não é alterada. Nada do que
+											for excluído aqui volta, a menos que você importe os
+											últimos {data.historyDays} dias de novo.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 
 									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogCancel>Cancelar</AlertDialogCancel>
 										<AlertDialogAction
 											variant="destructive"
 											onClick={() => purge.mutate()}
 										>
-											Delete
+											Excluir
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>
@@ -434,29 +448,29 @@ export function ImapConnection({ slug }: { slug: string }) {
 										size="xs"
 										disabled={disconnect.isPending}
 									>
-										Disconnect mailbox
+										Desconectar caixa de e-mail
 									</Button>
 								</AlertDialogTrigger>
 
 								<AlertDialogContent>
 									<AlertDialogHeader>
 										<AlertDialogTitle>
-											Disconnect this mailbox?
+											Desconectar esta caixa de e-mail?
 										</AlertDialogTitle>
 										<AlertDialogDescription>
-											New email stops arriving and the saved password is
-											deleted. Everything already synced stays, and you can
-											connect the mailbox again from this page.
+											Novos e-mails param de chegar e a senha salva é excluída.
+											Tudo o que já foi sincronizado fica, e você pode conectar
+											a caixa de e-mail de novo por esta página.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 
 									<AlertDialogFooter>
-										<AlertDialogCancel>Cancel</AlertDialogCancel>
+										<AlertDialogCancel>Cancelar</AlertDialogCancel>
 										<AlertDialogAction
 											variant="destructive"
 											onClick={() => disconnect.mutate()}
 										>
-											Disconnect
+											Desconectar
 										</AlertDialogAction>
 									</AlertDialogFooter>
 								</AlertDialogContent>

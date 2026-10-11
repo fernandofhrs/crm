@@ -82,7 +82,7 @@ export class RatesService {
 				base,
 				written: 0,
 				asOf: null,
-				reason: `Could not reach ${RATES_PROVIDER}. Rates entered by hand are unaffected.`,
+				reason: `Não foi possível acessar ${RATES_PROVIDER}. As taxas informadas à mão não mudam.`,
 			};
 		}
 

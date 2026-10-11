@@ -39,7 +39,7 @@ export function ArchiveRetention() {
 		trpc.settings.setArchiveRetention.mutationOptions({
 			onSuccess: async () => {
 				await cache.settings();
-				toast.success("Archive retention saved.");
+				toast.success("Prazo dos registros arquivados salvo.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -53,9 +53,10 @@ export function ArchiveRetention() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Archived records</CardTitle>
+				<CardTitle>Registros arquivados</CardTitle>
 				<CardDescription>
-					Deleted records are archived and hidden, then pruned for good.
+					Registros excluídos ficam arquivados e ocultos, depois são apagados de
+					vez.
 				</CardDescription>
 
 				<CardAction>
@@ -70,7 +71,7 @@ export function ArchiveRetention() {
 						}
 					>
 						{save.isPending ? <Spinner data-icon="inline-start" /> : null}
-						Save
+						Salvar
 					</Button>
 				</CardAction>
 			</CardHeader>
@@ -81,7 +82,7 @@ export function ArchiveRetention() {
 					onSubmit={(event) => {
 						event.preventDefault();
 						if (!Number.isFinite(days)) {
-							toast.error("Enter a number of days.");
+							toast.error("Informe um número de dias.");
 							return;
 						}
 						save.mutate({ days });
@@ -90,7 +91,7 @@ export function ArchiveRetention() {
 					<FieldGroup>
 						<Field>
 							<FieldLabel htmlFor={daysId}>
-								Prune archived records after
+								Apagar de vez os registros arquivados após
 							</FieldLabel>
 							<Input
 								id={daysId}
@@ -99,7 +100,7 @@ export function ArchiveRetention() {
 								disabled={save.isPending}
 								onChange={(event) => setDraft(event.target.value)}
 							/>
-							<FieldDescription>Days. 180 is the default.</FieldDescription>
+							<FieldDescription>Dias. O padrão é 180.</FieldDescription>
 						</Field>
 					</FieldGroup>
 				</form>

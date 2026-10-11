@@ -155,7 +155,7 @@ describe("assigning an owner to a selection", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/does not work here/);
+		expect(refused?.message).toMatch(/não trabalha mais aqui/);
 
 		expect(
 			await db.contact.findUnique({
@@ -202,7 +202,7 @@ describe("purging a selection", () => {
 
 		expect(result.succeeded).toBe(1);
 		expect(result.failed).toBe(1);
-		expect(result.message).toMatch(/No contact with id/);
+		expect(result.message).toMatch(/Nenhum contato com o id/);
 		expect(
 			await db.contact.findUnique({ where: { id: survivor.id } }),
 		).toBeNull();
@@ -248,7 +248,7 @@ describe("moving a selection of deals to a stage", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/teaches nobody anything/);
+		expect(refused?.message).toMatch(/não ensina nada a ninguém/);
 
 		expect(
 			await db.deal.findUnique({

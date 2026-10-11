@@ -171,11 +171,11 @@ export class ActivitiesService {
 		});
 
 		if (!activity) {
-			throw new NotFoundException(`No activity with id ${id}.`);
+			throw new NotFoundException(`Nenhuma atividade com o id ${id}.`);
 		}
 
 		if (activity.type !== ActivityType.TASK) {
-			throw new BadRequestException("Only tasks can be completed.");
+			throw new BadRequestException("Só tarefas podem ser concluídas.");
 		}
 
 		const updated = await this.db.activity.update({
@@ -221,7 +221,7 @@ export class ActivitiesService {
 		if (input.contactId) return { contactId: input.contactId };
 		if (input.companyId) return { companyId: input.companyId };
 		throw new BadRequestException(
-			"A timeline needs a company, a contact or a deal.",
+			"O histórico precisa de uma empresa, um contato ou um negócio.",
 		);
 	}
 
@@ -236,7 +236,7 @@ export class ActivitiesService {
 				select: { companyId: true },
 			});
 			if (!deal) {
-				throw new NotFoundException(`No deal with id ${input.dealId}.`);
+				throw new NotFoundException(`Nenhum negócio com o id ${input.dealId}.`);
 			}
 			return deal.companyId;
 		}
@@ -247,7 +247,9 @@ export class ActivitiesService {
 				select: { companyId: true },
 			});
 			if (!contact) {
-				throw new NotFoundException(`No contact with id ${input.contactId}.`);
+				throw new NotFoundException(
+					`Nenhum contato com o id ${input.contactId}.`,
+				);
 			}
 			return contact.companyId;
 		}
@@ -312,7 +314,7 @@ function parseDate(value: string | null | undefined): Date | null {
 	if (value === null || value === undefined || value === "") return null;
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) {
-		throw new BadRequestException(`"${value}" is not a date.`);
+		throw new BadRequestException(`"${value}" não é uma data.`);
 	}
 	return date;
 }

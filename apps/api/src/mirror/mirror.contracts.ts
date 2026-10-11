@@ -40,7 +40,10 @@ const mirrorField = z.object({
 	key: z
 		.string()
 		.max(MIRROR.text.fieldKey)
-		.regex(/^[a-z][a-z0-9_]*$/, "A field key is lower case with underscores."),
+		.regex(
+			/^[a-z][a-z0-9_]*$/,
+			"A chave do campo usa letras minúsculas e sublinhados.",
+		),
 	label: z.string().trim().min(1).max(MIRROR.text.fieldLabel),
 	type: z.enum(MIRROR_FIELD_TYPES),
 	showOnTable: z.boolean().default(false),
@@ -111,14 +114,16 @@ const mirrorActivity = z
 					activity.companyExternalId ??
 					activity.contactExternalId,
 			),
-		{ error: "An activity belongs to a deal, a company or a contact." },
+		{
+			error: "Uma atividade pertence a um negócio, uma empresa ou um contato.",
+		},
 	);
 
 export const mirrorPushInput = z.object({
 	source: z
 		.string()
 		.max(MIRROR.text.source)
-		.regex(/^[a-z][a-z0-9-]*$/, "A source is a lower-case slug."),
+		.regex(/^[a-z][a-z0-9-]*$/, "A origem é um slug em letras minúsculas."),
 	fields: z.array(mirrorField).max(MIRROR.batch.fields).default([]),
 	companies: records(mirrorCompany),
 	contacts: records(mirrorContact),

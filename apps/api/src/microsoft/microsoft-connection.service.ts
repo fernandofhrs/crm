@@ -165,7 +165,7 @@ export class MicrosoftConnectionService {
 	): Promise<void> {
 		const row = await this.state.get(userId, source);
 		if (!row) {
-			throw new NotFoundException(`${source} is not connected.`);
+			throw new NotFoundException(`${source} não está conectado.`);
 		}
 
 		await this.state.setAutoCreate(userId, source, enabled);

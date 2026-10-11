@@ -12,7 +12,7 @@ export type SavedViewListInput = z.infer<typeof savedViewListInput>;
 
 export const savedViewCreateInput = z.object({
 	entity: savedViewEntity,
-	name: z.string().trim().min(1, "A view needs a name.").max(120),
+	name: z.string().trim().min(1, "A visão precisa de um nome.").max(120),
 	shared: z.boolean().default(false),
 	filters: savedViewFilters,
 });

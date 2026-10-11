@@ -183,11 +183,11 @@ export class AgentRunsService {
 				`;
 
 			if (!agent || agent.status === "DELETED") {
-				throw new NotFoundException(`No agent with id ${input.id}.`);
+				throw new NotFoundException(`Nenhum agente com o id ${input.id}.`);
 			}
 
 			if (agent.status !== "LIVE" || !agent.currentVersionId) {
-				throw new BadRequestException("This agent is not live yet.");
+				throw new BadRequestException("Este agente ainda não está ativo.");
 			}
 
 			const active = await tx.agentRun.findFirst({
@@ -199,7 +199,7 @@ export class AgentRunsService {
 			});
 			if (active) {
 				throw new ConflictException(
-					"This agent already has an active run. Stop it or wait for it to finish.",
+					"Este agente já tem uma execução em andamento. Interrompa a execução ou espere ela terminar.",
 				);
 			}
 
@@ -226,7 +226,7 @@ export class AgentRunsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "run.requested",
-					summary: "Requested a manual run",
+					summary: "Pediu uma execução manual",
 					requestId: input.clientRequestId,
 				},
 			});
@@ -264,10 +264,12 @@ export class AgentRunsService {
 				},
 			});
 			if (!previous || previous.agentId !== input.id) {
-				throw new NotFoundException(`No run with id ${input.runId}.`);
+				throw new NotFoundException(
+					`Nenhuma execução com o id ${input.runId}.`,
+				);
 			}
 			if (CANCELLABLE_STATUSES.includes(previous.status)) {
-				throw new ConflictException("This run has not finished yet.");
+				throw new ConflictException("Esta execução ainda não terminou.");
 			}
 
 			const [agent] = await tx.$queryRaw<
@@ -279,10 +281,10 @@ export class AgentRunsService {
 					FOR UPDATE
 				`;
 			if (!agent || agent.status === "DELETED") {
-				throw new NotFoundException(`No agent with id ${input.id}.`);
+				throw new NotFoundException(`Nenhum agente com o id ${input.id}.`);
 			}
 			if (agent.status !== "LIVE" || !agent.currentVersionId) {
-				throw new BadRequestException("This agent is not live yet.");
+				throw new BadRequestException("Este agente ainda não está ativo.");
 			}
 
 			const active = await tx.agentRun.findFirst({
@@ -291,7 +293,7 @@ export class AgentRunsService {
 			});
 			if (active) {
 				throw new ConflictException(
-					"This agent already has an active run. Stop it or wait for it to finish.",
+					"Este agente já tem uma execução em andamento. Interrompa a execução ou espere ela terminar.",
 				);
 			}
 
@@ -318,7 +320,7 @@ export class AgentRunsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "run.requested",
-					summary: `Retried run ${input.runId}`,
+					summary: `Repetiu a execução ${input.runId}`,
 					requestId: input.clientRequestId,
 				},
 			});
@@ -351,12 +353,14 @@ export class AgentRunsService {
 			`;
 
 			if (!run || run.agentId !== input.id) {
-				throw new NotFoundException(`No run with id ${input.runId}.`);
+				throw new NotFoundException(
+					`Nenhuma execução com o id ${input.runId}.`,
+				);
 			}
 
 			if (!agent.canManage && run.initiatedById !== userId) {
 				throw new ForbiddenException(
-					"Only the person who started this run, or a workspace admin, can stop it.",
+					"Só quem iniciou esta execução ou um administrador do espaço de trabalho pode interrompê-la.",
 				);
 			}
 
@@ -414,7 +418,7 @@ export class AgentRunsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "run.cancelled",
-					summary: "Stopped a run",
+					summary: "Interrompeu uma execução",
 					requestId: run.id,
 				},
 				update: {},
@@ -439,7 +443,7 @@ export class AgentRunsService {
 		requestedAgentId: string,
 	) {
 		if (existingAgentId !== requestedAgentId) {
-			throw new BadRequestException("That run request has already been used.");
+			throw new BadRequestException("Esse pedido de execução já foi usado.");
 		}
 	}
 }

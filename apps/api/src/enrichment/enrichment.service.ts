@@ -151,7 +151,7 @@ export class EnrichmentService {
 					name:
 						[contact.firstName, contact.lastName].filter(Boolean).join(" ") ||
 						contact.email ||
-						"Unnamed contact",
+						"Contato sem nome",
 					email: contact.email,
 					imageUrl: contact.imageUrl,
 				},

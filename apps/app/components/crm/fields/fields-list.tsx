@@ -31,6 +31,7 @@ import {
 import { Icon } from "@crm/ui/components/icon";
 import { SortableItem, SortableList } from "@crm/ui/components/sortable-list";
 import { Spinner } from "@crm/ui/components/spinner";
+import { formatCount } from "@crm/ui/lib/format";
 import { FIELD_TEMPLATES } from "@crm/validation/field-templates";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -72,12 +73,12 @@ function summaryOf(field: Field): string {
 		parts.push(
 			field.agentBrief ??
 				(field.options.length > 0
-					? `${field.options.length} options`
+					? formatCount(field.options.length, "opção", "opções")
 					: field.label),
 		);
 	} else {
 		parts.push(MANUAL_ONLY);
-		if (field.required) parts.push("required");
+		if (field.required) parts.push("obrigatório");
 	}
 
 	if (field.showOnTable) parts.push(TABLE_NOTE);
@@ -357,19 +358,19 @@ export function FieldsList({
 													<Button variant="ghost" size="icon-xs">
 														<Icon icon={OverflowMenuVertical} />
 														<span className="sr-only">
-															More for {field.label}
+															Mais ações de {field.label}
 														</span>
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end">
 													<DropdownMenuItem onSelect={() => onEdit(field.key)}>
-														Edit
+														Editar
 													</DropdownMenuItem>
 													<DropdownMenuSeparator />
 													<DropdownMenuItem
 														onSelect={() => archive.mutate({ id: field.id })}
 													>
-														Archive
+														Arquivar
 													</DropdownMenuItem>
 												</DropdownMenuContent>
 											</DropdownMenu>
@@ -398,7 +399,7 @@ export function FieldsList({
 												size="xs"
 												onClick={() => restore.mutate({ id: field.id })}
 											>
-												Restore
+												Restaurar
 											</Button>
 										</li>
 									))}

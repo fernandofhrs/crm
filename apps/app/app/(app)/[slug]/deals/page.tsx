@@ -18,7 +18,7 @@ import { dealsSearchParams } from "./deals-search-params";
 import { DealsTable } from "./deals-table";
 
 export const metadata: Metadata = {
-	title: "Deals",
+	title: "Negócios",
 };
 
 export default function DealsPage({
@@ -28,9 +28,9 @@ export default function DealsPage({
 		<PageShell className="min-h-0">
 			<PageShellHeader>
 				<PageShellHeading>
-					<PageShellTitle>Deals</PageShellTitle>
+					<PageShellTitle>Negócios</PageShellTitle>
 					<PageShellDescription>
-						The pipeline, and everything that has already closed.
+						O funil e tudo o que já fechou.
 					</PageShellDescription>
 				</PageShellHeading>
 				<PageShellActions>

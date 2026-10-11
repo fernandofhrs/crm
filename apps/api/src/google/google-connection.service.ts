@@ -169,7 +169,7 @@ export class GoogleConnectionService {
 	): Promise<void> {
 		const row = await this.state.get(userId, source);
 		if (!row) {
-			throw new NotFoundException(`${source} is not connected.`);
+			throw new NotFoundException(`${source} não está conectado.`);
 		}
 
 		await this.state.setAutoCreate(userId, source, enabled);
@@ -181,13 +181,13 @@ export class GoogleConnectionService {
 	): Promise<SuppressDomainOutput> {
 		const normalised = normalizeDomain(domain);
 		if (!normalised) {
-			throw new NotFoundException(`"${domain}" is not a domain.`);
+			throw new NotFoundException(`"${domain}" não é um domínio.`);
 		}
 
 		const ours = await this.match.internalIdentity();
 		if (ours.domains.has(normalised)) {
 			throw new NotFoundException(
-				"That is our own domain — it is already excluded.",
+				"Esse é o nosso próprio domínio. Ele já é ignorado.",
 			);
 		}
 

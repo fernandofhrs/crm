@@ -88,7 +88,7 @@ export class MailboxTokenService {
 			if (!accessToken) {
 				return {
 					outcome: "needs-reconnect",
-					reason: `${label(providerId)} returned no access token.`,
+					reason: `${label(providerId)} não devolveu um token de acesso.`,
 				};
 			}
 
@@ -104,7 +104,7 @@ export class MailboxTokenService {
 
 			return {
 				outcome: "needs-reconnect",
-				reason: `${label(providerId)} would not refresh the access token.`,
+				reason: `${label(providerId)} não renovou o token de acesso.`,
 			};
 		}
 	}
@@ -165,5 +165,5 @@ export class MailboxTokenService {
 }
 
 function label(providerId: MailboxProviderId): string {
-	return providerId === GOOGLE_PROVIDER_ID ? "Google" : "Microsoft";
+	return providerId === GOOGLE_PROVIDER_ID ? "O Google" : "A Microsoft";
 }

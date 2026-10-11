@@ -223,7 +223,7 @@ describe("ConversationsService", () => {
 			recordError = error;
 		}
 		expect(recordError).toBeInstanceOf(Error);
-		expect((recordError as Error).message).toContain("cannot be moved");
+		expect((recordError as Error).message).toContain("não pode ser movida");
 	});
 
 	it("deduplicates concurrent saves of the same record session", async () => {
@@ -617,7 +617,9 @@ describe("ConversationsService", () => {
 			submitError = error;
 		}
 		expect(submitError).toBeInstanceOf(Error);
-		expect((submitError as Error).message).toContain("no longer available");
+		expect((submitError as Error).message).toContain(
+			"não estão mais disponíveis",
+		);
 	});
 
 	it("deduplicates concurrent builder creation retries", async () => {
@@ -782,7 +784,7 @@ describe("ConversationsService", () => {
 			error = caught as Error;
 		}
 		expect(error?.message).toBe(
-			"The agent is no longer waiting for that answer.",
+			"O agente não está mais esperando essa resposta.",
 		);
 	});
 

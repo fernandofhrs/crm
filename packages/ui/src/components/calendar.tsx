@@ -7,9 +7,11 @@ import {
   type DayButton,
   type Locale,
 } from "react-day-picker"
+import { ptBR } from "react-day-picker/locale/pt-BR"
 
 import { cn } from "@crm/ui/lib/utils"
 import { toDay } from "@crm/ui/lib/format"
+import { LOCALE } from "@crm/ui/lib/locale"
 import { Button, buttonVariants } from "@crm/ui/components/button"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
 
@@ -19,7 +21,7 @@ function Calendar({
   showOutsideDays = true,
   captionLayout = "label",
   buttonVariant = "ghost",
-  locale,
+  locale = ptBR,
   formatters,
   components,
   ...props
@@ -41,7 +43,11 @@ function Calendar({
       locale={locale}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString(locale?.code, { month: "short" }),
+          date.toLocaleString(locale.code ?? LOCALE, { month: "short" }),
+        formatWeekdayName: (date) =>
+          date
+            .toLocaleString(locale.code ?? LOCALE, { weekday: "short" })
+            .replace(".", ""),
         ...formatters,
       }}
       classNames={{

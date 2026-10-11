@@ -10,20 +10,20 @@ import { requireSession, signInAccounts } from "@/lib/session";
 import { GrantAccess } from "./grant-access";
 
 export const metadata: Metadata = {
-	title: "Grant access",
+	title: "Conceder acesso",
 };
 
 export const instant = false;
 
 const DESCRIPTION = {
 	google:
-		"This CRM reads your Gmail and Calendar so meetings and email threads show up on the right company. It is read-only — nothing is ever sent on your behalf.",
+		"Este CRM lê seu Gmail e sua agenda para que reuniões e conversas de e-mail apareçam na empresa certa. O acesso é só de leitura: nada é enviado em seu nome.",
 	microsoft:
-		"This CRM reads your Outlook mail so email threads show up on the right company. It is read-only — nothing is ever sent on your behalf.",
+		"Este CRM lê seu e-mail do Outlook para que as conversas de e-mail apareçam na empresa certa. O acesso é só de leitura: nada é enviado em seu nome.",
 } satisfies Record<MailboxProviderId, string>;
 
 const BOTH =
-	"This CRM reads your mail and calendar so meetings and email threads show up on the right company. It is read-only — nothing is ever sent on your behalf.";
+	"Este CRM lê seu e-mail e sua agenda para que reuniões e conversas de e-mail apareçam na empresa certa. O acesso é só de leitura: nada é enviado em seu nome.";
 
 export default async function GrantAccessPage() {
 	const { user } = await requireSession();
@@ -43,15 +43,15 @@ export default async function GrantAccessPage() {
 	return (
 		<AuthShell>
 			<AuthHeading
-				title="One more step"
+				title="Só mais um passo"
 				description={(only ? DESCRIPTION[only] : undefined) ?? BOTH}
 			/>
 
 			<GrantAccess providers={providers} />
 
 			<p className="text-center text-muted-foreground text-sm/5">
-				Only conversations with companies in the CRM are stored. Personal mail
-				is discarded without being saved.
+				Só as conversas com empresas que estão no CRM são guardadas. E-mails
+				pessoais são descartados sem serem salvos.
 			</p>
 		</AuthShell>
 	);

@@ -41,16 +41,16 @@ const COLUMNS = {
 } as const satisfies Record<FieldTypeName, FieldValueColumn>;
 
 const TYPE_LABELS = {
-	TEXT: "Text",
-	LONG_TEXT: "Long text",
-	NUMBER: "Number",
-	DATE: "Date",
-	CHECKBOX: "Checkbox",
-	SELECT: "Select",
+	TEXT: "Texto",
+	LONG_TEXT: "Texto longo",
+	NUMBER: "Número",
+	DATE: "Data",
+	CHECKBOX: "Caixa de seleção",
+	SELECT: "Lista de opções",
 	URL: "URL",
-	EMAIL: "Email",
-	PHONE: "Phone",
-	USER: "User",
+	EMAIL: "E-mail",
+	PHONE: "Telefone",
+	USER: "Usuário",
 } as const satisfies Record<FieldTypeName, string>;
 
 export function columnFor(type: FieldTypeName): FieldValueColumn {

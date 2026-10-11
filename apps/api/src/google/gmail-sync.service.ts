@@ -79,7 +79,10 @@ export class GmailSyncService {
 
 		const mailbox = profile.data.emailAddress?.toLowerCase() ?? null;
 		if (!mailbox) {
-			await this.state.markFailed(row.id, "Gmail returned no mailbox address.");
+			await this.state.markFailed(
+				row.id,
+				"O Gmail não informou o endereço da caixa de e-mail.",
+			);
 			return {
 				source: "gmail",
 				userId: row.userId,
@@ -100,7 +103,7 @@ export class GmailSyncService {
 		historyId: string | null,
 	): Promise<GmailSyncOutcome> {
 		if (!historyId) {
-			await this.state.markFailed(row.id, "Gmail returned no historyId.");
+			await this.state.markFailed(row.id, "O Gmail não informou o historyId.");
 			return {
 				source: "gmail",
 				userId: row.userId,

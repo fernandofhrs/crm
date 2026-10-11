@@ -18,7 +18,7 @@ import { ResearchKey } from "./research-key";
 import { WorkspaceForm } from "./workspace-form";
 
 export const metadata: Metadata = {
-	title: "General",
+	title: "Geral",
 };
 
 export default function GeneralSettingsPage() {
@@ -26,9 +26,9 @@ export default function GeneralSettingsPage() {
 		<PageShell>
 			<PageShellHeader>
 				<PageShellHeading>
-					<PageShellTitle>General</PageShellTitle>
+					<PageShellTitle>Geral</PageShellTitle>
 					<PageShellDescription>
-						Who you are, and the model the research agent thinks with.
+						Quem você é e o modelo que o agente de pesquisa usa para pensar.
 					</PageShellDescription>
 				</PageShellHeading>
 			</PageShellHeader>

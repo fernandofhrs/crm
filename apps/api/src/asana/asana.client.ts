@@ -61,7 +61,8 @@ const TASK_FIELDS = [
 	"permalink_url",
 ].join(",");
 
-const UNEXPECTED = "Asana returned a response this CRM could not read.";
+const UNEXPECTED =
+	"O Asana devolveu uma resposta que este CRM não conseguiu ler.";
 
 @Injectable()
 export class AsanaClient {

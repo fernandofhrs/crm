@@ -39,15 +39,21 @@ const PRIVATE_CHANNEL_SCOPES = [
 ];
 
 const never = [
-	"Send anything at all until you build an automation and switch it on",
-	"Post anywhere except the destination approved in that automation",
-	"Read a direct message between two people",
+	"Enviar qualquer coisa antes de você criar uma automação e ativá-la",
+	"Publicar em qualquer lugar que não seja o destino aprovado nessa automação",
+	"Ler uma mensagem direta entre duas pessoas",
 ];
 
 const suggestions = [
-	["When a deal is created", "Post the deal to an approved sales channel."],
-	["When a deal is won", "Tell an approved channel that the deal closed."],
-	["When a deal reopens", "Notify one approved channel or teammate."],
+	[
+		"Quando um negócio é criado",
+		"Publica o negócio em um canal de vendas aprovado.",
+	],
+	[
+		"Quando um negócio é ganho",
+		"Avisa um canal aprovado que o negócio foi fechado.",
+	],
+	["Quando um negócio é reaberto", "Avisa um canal ou colega aprovado."],
 ];
 
 type SlackConnectionPageProps = {
@@ -82,22 +88,21 @@ async function SlackConnectionPageContent({
 					<SlackLogo className="size-6" />
 					<h1 className="font-medium text-xl">Slack</h1>
 					<span className="ml-auto text-muted-foreground text-sm">
-						Not connected
+						Não conectado
 					</span>
 				</div>
 				<p className="text-muted-foreground text-sm leading-relaxed">
-					Connecting Slack gives the CRM a way in and a way out. What it
-					actually does with that is up to you afterwards, one automation at a
-					time.
+					Conectar o Slack dá ao CRM uma entrada e uma saída. O que ele faz com
+					isso fica por sua conta depois, uma automação de cada vez.
 				</p>
 			</header>
 			<SlackScopeGroups
 				groups={groupScopes([...SLACK_REQUESTED_SCOPES])}
-				title="What you are handing over"
+				title="O que você está concedendo"
 				withheld={[]}
 			/>
 			<PlainList
-				title="What it will never do"
+				title="O que ele nunca vai fazer"
 				items={never}
 				icon={Close}
 				tone="text-muted-foreground"
@@ -109,18 +114,18 @@ async function SlackConnectionPageContent({
 					connectError={connectErrorOf(query, "slack")}
 				/>
 				<p className="text-muted-foreground text-xs">
-					You approve the workspace in Slack. You can disconnect it here at any
-					time.
+					Você aprova o workspace no Slack. Dá para desconectar aqui a qualquer
+					momento.
 				</p>
 			</div>
 			<section className="flex flex-col gap-3 px-(--spacing-block-inline)">
 				<div>
 					<h2 className="font-medium text-sm">
-						Afterwards, most teams start with one of these
+						Depois, a maioria dos times começa por uma destas
 					</h2>
 					<p className="text-muted-foreground text-xs">
-						Suggestions, not settings. None of them exist until you pick one and
-						switch it on.
+						São sugestões, não configurações. Nenhuma existe até você escolher
+						uma e ativá-la.
 					</p>
 				</div>
 				<div className="grid gap-3 md:grid-cols-3">
@@ -188,7 +193,7 @@ function ConnectedSlack({
 					<SlackLogo className="size-6" />
 					<h1 className="font-medium text-xl">Slack</h1>
 					<span className="ml-auto text-muted-foreground text-sm">
-						{status.workspace ?? "Connected"}
+						{status.workspace ?? "Conectado"}
 					</span>
 					<SlackDisconnectButton
 						canManage={status.canManage}
@@ -197,33 +202,33 @@ function ConnectedSlack({
 				</div>
 				<p className="text-muted-foreground text-sm">
 					{status.canManage
-						? "Here is what Slack gave us. Agents only post where their automation says."
-						: "Here is what Slack gave us. Only an owner or an admin can disconnect it."}
+						? "Veja o que o Slack nos concedeu. Os agentes só publicam onde a automação deles indica."
+						: "Veja o que o Slack nos concedeu. Só um dono ou administrador pode desconectar."}
 				</p>
 			</header>
 			<MissingGrant missing={missing} slug={slug} />
 			<SlackScopeGroups
 				groups={groupScopes(status.scopes)}
-				title="What this workspace granted"
+				title="O que este workspace concedeu"
 				withheld={missing.map(toLine)}
 			/>
 			<SlackChannels />
 			<section className="flex flex-col gap-3 border-y px-(--spacing-block-inline) py-5">
 				<div className="flex items-end justify-between gap-4">
 					<div>
-						<h2 className="font-medium text-sm">Agents that use Slack</h2>
+						<h2 className="font-medium text-sm">Agentes que usam o Slack</h2>
 						<p className="text-muted-foreground text-xs">
-							Built in chat, not here. Open one to change it.
+							São criados no chat, não aqui. Abra um para alterar.
 						</p>
 					</div>
 					<NewAgentDialog>
-						<Button size="sm">New agent</Button>
+						<Button size="sm">Novo agente</Button>
 					</NewAgentDialog>
 				</div>
 				<div className="flex flex-col divide-y rounded-lg border">
 					{agents.length === 0 ? (
 						<p className="px-(--spacing-block-inline) py-4 text-muted-foreground text-sm">
-							No deployed agents use Slack yet.
+							Nenhum agente publicado usa o Slack ainda.
 						</p>
 					) : null}
 					{agents.map(
@@ -248,7 +253,7 @@ function ConnectedSlack({
 									<span
 										className={`size-2 rounded-full ${agent.status === "LIVE" ? "bg-success" : "bg-muted-foreground"}`}
 									/>
-									{agent.status === "LIVE" ? "Running" : "Paused"}
+									{agent.status === "LIVE" ? "Ativo" : "Pausado"}
 								</span>
 							</Link>
 						),
@@ -257,19 +262,19 @@ function ConnectedSlack({
 						className="px-(--spacing-block-inline) py-4 font-medium text-sm hover:bg-muted/50"
 						href={`/${slug}/chat`}
 					>
-						Describe another agent in chat
+						Descrever outro agente no chat
 					</Link>
 				</div>
 			</section>
 			<div className="flex items-center justify-between gap-4 px-(--spacing-block-inline)">
 				<p className="text-sm">
 					{status.people.reviewed === 0
-						? "No workspace people have been reviewed yet."
-						: `${status.people.matched} of ${status.people.reviewed} reviewed people are matched.`}
+						? "Nenhuma pessoa do espaço de trabalho foi revisada ainda."
+						: `Correspondência encontrada para ${status.people.matched} de ${status.people.reviewed} ${status.people.reviewed === 1 ? "pessoa revisada" : "pessoas revisadas"}.`}
 				</p>
 				<Button asChild variant="outline" size="sm">
 					<Link href={`/${slug}/settings/connections/slack/people`}>
-						Review
+						Revisar
 					</Link>
 				</Button>
 			</div>
@@ -296,11 +301,11 @@ function MissingGrant({
 				<Icon icon={Warning} />
 				<AlertTitle>
 					{privateChannels
-						? "Comp AI cannot reach private channels"
-						: `Slack held back ${missing.length} permission${missing.length === 1 ? "" : "s"}`}
+						? "O Comp AI não alcança canais privados"
+						: `O Slack não concedeu ${missing.length} ${missing.length === 1 ? "permissão" : "permissões"}`}
 				</AlertTitle>
 				<AlertDescription>
-					<span>Reconnect to ask again. You lose nothing.</span>
+					<span>Reconecte para pedir de novo. Você não perde nada.</span>
 					<ul className="mt-2 flex flex-col gap-1.5">
 						{missing.map((entry) => (
 							<li className="flex items-start gap-2" key={entry.scope}>

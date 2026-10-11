@@ -20,6 +20,12 @@ import { DeleteChatAction } from "./delete-chat-action";
 
 type Conversation = RouterOutputs["conversations"]["builderList"][number];
 type TeamAgent = RouterOutputs["agents"]["list"][number];
+const CHAT_DATE_GROUP_LABELS = {
+	Today: "Hoje",
+	Yesterday: "Ontem",
+	"Last 7 days": "Últimos 7 dias",
+} satisfies Record<ChatDateGroup, string>;
+
 type SidebarData = {
 	conversations: Conversation[];
 	agents: TeamAgent[];
@@ -82,7 +88,7 @@ export function AgentBuilderSidebar({
 				<Button asChild variant="ghost" size="icon-xs">
 					<Link
 						href={workspaceUrl("/chat")}
-						aria-label="New agent chat"
+						aria-label="Novo chat com o agente"
 						onClick={onNavigate}
 					>
 						<Icon icon={Add} />
@@ -90,16 +96,19 @@ export function AgentBuilderSidebar({
 				</Button>
 			</div>
 
-			<nav aria-label="Agent chats" className="min-h-0 flex-1 overflow-y-auto">
+			<nav
+				aria-label="Chats com o agente"
+				className="min-h-0 flex-1 overflow-y-auto"
+			>
 				{groups.map((group) => (
-					<div key={group.label}>
+					<div key={group.id}>
 						<div className="flex h-8 items-end pb-1 pl-2 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.08em]">
 							{group.label}
 						</div>
 						{group.items.map((conversation) => {
 							const href = workspaceUrl(`/chat/${conversation.id}`);
 							const active = pathname === href;
-							const title = conversation.title ?? "Untitled chat";
+							const title = conversation.title ?? "Chat sem título";
 							return (
 								<div
 									key={conversation.id}
@@ -141,7 +150,7 @@ export function AgentBuilderSidebar({
 
 				{groups.length === 0 ? (
 					<p className="px-2 py-3 text-muted-foreground text-xs">
-						No chats in the last 7 days.
+						Nenhum chat nos últimos 7 dias.
 					</p>
 				) : null}
 
@@ -174,7 +183,7 @@ function TeamAgents({
 				onClick={onNavigate}
 				className="flex h-8 items-end gap-2 rounded-sm px-2 pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-[0.08em] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
 			>
-				<span className="min-w-0 flex-1">Team agents</span>
+				<span className="min-w-0 flex-1">Agentes do time</span>
 				<span className="shrink-0 font-mono">{agents.length}</span>
 			</Link>
 			{agents.map((agent) => {
@@ -244,6 +253,10 @@ function groupConversations(conversations: Conversation[], now: number) {
 	}
 
 	return labels
-		.map((label) => ({ label, items: items.get(label) ?? [] }))
+		.map((label) => ({
+			id: label,
+			label: CHAT_DATE_GROUP_LABELS[label],
+			items: items.get(label) ?? [],
+		}))
 		.filter((group) => group.items.length > 0);
 }

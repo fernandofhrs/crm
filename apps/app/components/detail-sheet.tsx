@@ -106,10 +106,10 @@ export function DetailSheetHeader({
 						<TooltipTrigger asChild>
 							<Button variant="ghost" size="icon-sm" onClick={onBack}>
 								<Icon icon={ArrowLeft} />
-								<span className="sr-only">Back</span>
+								<span className="sr-only">Voltar</span>
 							</Button>
 						</TooltipTrigger>
-						<TooltipContent>Back</TooltipContent>
+						<TooltipContent>Voltar</TooltipContent>
 					</Tooltip>
 				) : null}
 
@@ -138,7 +138,7 @@ export function DetailSheetHeader({
 					) : null}
 					<Button variant="ghost" size="icon-sm" onClick={onClose}>
 						<Icon icon={Close} />
-						<span className="sr-only">Close</span>
+						<span className="sr-only">Fechar</span>
 					</Button>
 				</div>
 			</div>
@@ -319,7 +319,7 @@ export function DetailSheetPending({
 					)}
 				/>
 				<span className="font-medium text-xs">
-					{running ? "Agent is researching" : "Not known yet"}
+					{running ? "O agente está pesquisando" : "Ainda não se sabe"}
 				</span>
 			</div>
 			<p className="text-pretty text-muted-foreground text-xs/5">

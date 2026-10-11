@@ -12,7 +12,7 @@ describe("toolLabel", () => {
 				input: { path: "agent/instructions.md" },
 				pending: true,
 			}),
-		).toBe("Writing instructions");
+		).toBe("Escrevendo as instruções");
 	});
 
 	it("switches to the past tense once the write finished", () => {
@@ -22,7 +22,7 @@ describe("toolLabel", () => {
 				tool: "write_agent_file",
 				input: { path: "agent/manifest.json" },
 			}),
-		).toBe("Wrote the manifest");
+		).toBe("Escreveu o manifesto");
 	});
 
 	it("falls back to the raw path for an unmapped artifact", () => {
@@ -32,7 +32,7 @@ describe("toolLabel", () => {
 				tool: "write_agent_file",
 				input: { path: "agent/other.md" },
 			}),
-		).toBe("Wrote agent/other.md");
+		).toBe("Escreveu agent/other.md");
 	});
 
 	it("labels the draft save under the tool the builder actually calls", () => {
@@ -42,7 +42,7 @@ describe("toolLabel", () => {
 				tool: "save_agent_draft",
 				input: { name: "Collections nudge" },
 			}),
-		).toBe("Saved draft · Collections nudge");
+		).toBe("Rascunho salvo · Collections nudge");
 	});
 
 	it("keeps the generic label when the tool has no mapping", () => {

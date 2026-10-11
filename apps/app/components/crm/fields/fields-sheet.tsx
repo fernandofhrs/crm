@@ -59,7 +59,7 @@ function FieldsSheetBody({
 					title={editing?.label ?? (editingKey ? "" : NEW_FIELD)}
 					description={
 						filled
-							? `${entityLabel} · ${filled.filled} of ${filled.total} filled`
+							? `${entityLabel} · preenchido em ${filled.filled} de ${filled.total}`
 							: entityLabel
 					}
 					onBack={() => onEdit(null)}

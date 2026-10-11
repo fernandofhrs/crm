@@ -14,7 +14,7 @@ export const ASANA = {
 		futureMs: 180 * DAY_MS,
 	},
 	task: {
-		untitled: "(untitled task)",
+		untitled: "(tarefa sem título)",
 		bodyMax: 2_000,
 		dateOnlyDueTime: "T23:59:59.000Z",
 	},

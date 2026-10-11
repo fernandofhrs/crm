@@ -86,7 +86,7 @@ type PendingSubmission = {
 const CREATE_AGENT_COMMAND = {
 	commandType: "CREATE_AGENT" as const,
 	invocation: "/Create agent",
-	label: "Create agent",
+	label: "Criar agente",
 };
 
 type ComposerCommand = typeof CREATE_AGENT_COMMAND;
@@ -535,7 +535,7 @@ export function AgentComposer({
 					disabled={!canSend}
 					aria-busy={submitAction.pending || state.attachmentsReading}
 					aria-label={
-						state.attachmentsReading ? "Preparing attachments" : "Send message"
+						state.attachmentsReading ? "Preparando anexos" : "Enviar mensagem"
 					}
 					onClick={submit}
 					className="rounded-full"
@@ -544,11 +544,11 @@ export function AgentComposer({
 						status={state.attachmentsReading ? "pending" : submitAction.status}
 						pendingLabel={
 							<span className="sr-only">
-								{state.attachmentsReading ? "Preparing attachments" : "Sending"}
+								{state.attachmentsReading ? "Preparando anexos" : "Enviando"}
 							</span>
 						}
-						successLabel={<span className="sr-only">Sent</span>}
-						errorLabel={<span className="sr-only">Send failed</span>}
+						successLabel={<span className="sr-only">Enviado</span>}
+						errorLabel={<span className="sr-only">Falha no envio</span>}
 					>
 						<Icon icon={ArrowUp} />
 					</AsyncButtonContent>
@@ -592,8 +592,8 @@ function ComposerEditor({
 	const parts = composerEditorParts(state);
 	const placeholder =
 		mode === "home"
-			? "Ask about your CRM or automate a task…"
-			: "Send a message";
+			? "Pergunte sobre o CRM ou automatize uma tarefa…"
+			: "Envie uma mensagem";
 	const commit = () => {
 		const root = editorRef.current;
 		if (!root || composingRef.current) return;
@@ -610,7 +610,7 @@ function ComposerEditor({
 			ref={editorRef}
 			role="textbox"
 			tabIndex={disabled ? -1 : 0}
-			aria-label="Message the agent builder"
+			aria-label="Mensagem para o construtor de agentes"
 			aria-multiline="true"
 			aria-disabled={disabled}
 			data-empty={state.draft.length === 0 && state.anchors.length === 0}
@@ -1253,7 +1253,7 @@ function ResourcePicker({
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					aria-label="Tag CRM records and integrations"
+					aria-label="Marcar registros do CRM e integrações"
 					disabled={disabled}
 				>
 					<Icon icon={Add} />
@@ -1270,8 +1270,8 @@ function ResourcePicker({
 									value: event.target.value,
 								})
 							}
-							placeholder="Search CRM"
-							aria-label="Search CRM"
+							placeholder="Buscar no CRM"
+							aria-label="Buscar no CRM"
 							disabled={disabled}
 						/>
 						<InputGroupAddon>
@@ -1303,7 +1303,7 @@ function ResourcePicker({
 					})}
 					<SkeletonSwap
 						loading={loading}
-						label="CRM records"
+						label="Registros do CRM"
 						skeleton={<ResourceResultsSkeleton />}
 					>
 						{resources.map((resource) => (
@@ -1318,7 +1318,7 @@ function ResourcePicker({
 						))}
 						{ready && connectedGoogle.length === 0 && resources.length === 0 ? (
 							<p className="px-3 py-5 text-center text-muted-foreground text-xs">
-								No matching records.
+								Nenhum registro encontrado.
 							</p>
 						) : null}
 					</SkeletonSwap>
@@ -1358,7 +1358,7 @@ function AttachmentPicker({
 				onPicked(attachmentContextKey(lastAccepted));
 			}
 		} catch {
-			toast.error("Those files could not be attached. Try again.");
+			toast.error("Não foi possível anexar esses arquivos. Tente de novo.");
 		} finally {
 			dispatch({ type: "attachments.reading.finished" });
 		}
@@ -1380,7 +1380,7 @@ function AttachmentPicker({
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				aria-label="Attach files"
+				aria-label="Anexar arquivos"
 				disabled={disabled}
 				onClick={() => input.current?.click()}
 			>
@@ -1414,7 +1414,7 @@ function CommandPicker({
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					aria-label="Open slash commands"
+					aria-label="Abrir comandos de barra"
 					disabled={disabled}
 					className="font-mono text-sm"
 				>
@@ -1507,19 +1507,19 @@ async function readFiles(
 
 	for (const file of Array.from(files).slice(0, 5)) {
 		if (file.size === 0) {
-			toast.error(`${file.name} is empty.`);
+			toast.error(`${file.name} está vazio.`);
 			continue;
 		}
 		if (file.size > 2_000_000) {
-			toast.error(`${file.name} is larger than 2 MB.`);
+			toast.error(`${file.name} tem mais de 2 MB.`);
 			continue;
 		}
 		if (file.name.length > 180) {
-			toast.error("That file name is too long.");
+			toast.error("O nome desse arquivo é longo demais.");
 			continue;
 		}
 		if (file.type.length > 120) {
-			toast.error(`${file.name} has an unsupported file type.`);
+			toast.error(`${file.name} tem um tipo de arquivo não aceito.`);
 			continue;
 		}
 		acceptedFiles.push(file);
@@ -1537,7 +1537,7 @@ async function readFiles(
 					),
 				};
 			} catch {
-				toast.error(`${file.name} could not be read.`);
+				toast.error(`Não foi possível ler ${file.name}.`);
 				return null;
 			}
 		}),

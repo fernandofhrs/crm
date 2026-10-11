@@ -23,12 +23,12 @@ type ProviderGrant = {
 
 const PROVIDERS = {
 	google: {
-		label: "Grant Google access",
+		label: "Conceder acesso ao Google",
 		scopes: [...SYNC_SCOPES],
 		Logo: GoogleLogo,
 	},
 	microsoft: {
-		label: "Grant Microsoft access",
+		label: "Conceder acesso à Microsoft",
 		scopes: [...MICROSOFT_SYNC_SCOPES],
 		Logo: MicrosoftLogo,
 	},
@@ -43,7 +43,7 @@ export function GrantAccess({
 
 	function fail(message?: string) {
 		setPending(null);
-		toast.error(message ?? "Could not reach the provider.");
+		toast.error(message ?? "Não foi possível falar com o provedor.");
 	}
 
 	async function handleGrant(provider: MailboxProviderId) {
@@ -83,7 +83,7 @@ export function GrantAccess({
 						) : (
 							<Logo data-icon="inline-start" className="size-4" />
 						)}
-						{single ? "Grant access" : label}
+						{single ? "Conceder acesso" : label}
 					</Button>
 				);
 			})}
@@ -91,12 +91,14 @@ export function GrantAccess({
 			<Button
 				className="w-full"
 				onClick={() => {
-					signOutAndRedirect().catch(() => toast.error("Could not sign out."));
+					signOutAndRedirect().catch(() =>
+						toast.error("Não foi possível sair."),
+					);
 				}}
 				type="button"
 				variant="ghost"
 			>
-				Sign out
+				Sair
 			</Button>
 		</div>
 	);

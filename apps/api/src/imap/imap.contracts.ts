@@ -10,7 +10,7 @@ export const connectImapInput = z.object({
 		.trim()
 		.toLowerCase()
 		.max(ADDRESS_MAX)
-		.pipe(z.email("That is not an email address.")),
+		.pipe(z.email("Isso não é um endereço de e-mail.")),
 	username: z.string().trim().max(ADDRESS_MAX).optional(),
 	password: z.string().min(1).max(SECRET_MAX),
 	autoCreate: z.boolean(),

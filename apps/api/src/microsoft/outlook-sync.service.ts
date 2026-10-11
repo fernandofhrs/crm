@@ -99,7 +99,7 @@ export class OutlookSyncService {
 		if (!mailbox) {
 			await this.state.markFailed(
 				row.id,
-				"Microsoft returned no mailbox address.",
+				"A Microsoft não informou o endereço da caixa de e-mail.",
 			);
 			return {
 				source: "outlook",

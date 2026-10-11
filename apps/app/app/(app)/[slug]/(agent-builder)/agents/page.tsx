@@ -13,16 +13,17 @@ import {
 import { HydrateClient } from "@/lib/trpc/hydrate";
 import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
 
-export const metadata: Metadata = { title: "Agents" };
+export const metadata: Metadata = { title: "Agentes" };
 
 export default function AgentsPage() {
 	return (
 		<PageShell className="min-h-0">
 			<PageShellHeader>
 				<PageShellHeading>
-					<PageShellTitle>Team agents</PageShellTitle>
+					<PageShellTitle>Agentes do time</PageShellTitle>
 					<PageShellDescription>
-						Durable automations created from private agent-builder chats.
+						Automações permanentes criadas a partir de chats privados com o
+						construtor de agentes.
 					</PageShellDescription>
 				</PageShellHeading>
 			</PageShellHeader>

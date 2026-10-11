@@ -22,8 +22,8 @@ export const handoffChannel = z.object({
 });
 
 export const handoff = z.object({
-	name: z.string().trim().min(1, "Give the agent a name.").max(120),
-	job: z.string().trim().min(1, "Say what the agent should do.").max(20_000),
+	name: z.string().trim().min(1, "Dê um nome ao agente.").max(120),
+	job: z.string().trim().min(1, "Diga o que o agente deve fazer.").max(20_000),
 	channel: handoffChannel.nullable(),
 	allowed: z.array(permission).max(permissions.length),
 });

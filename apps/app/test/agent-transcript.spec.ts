@@ -342,7 +342,7 @@ describe("eventStreamSettled", () => {
 describe("describe", () => {
 	it("says what happened in a rep's words, not the tool's", () => {
 		expect(describeStep(tool("read_crm_history") as never)).toBe(
-			"Read our emails and meetings with them",
+			"Leu nossos e-mails e reuniões com o contato",
 		);
 	});
 

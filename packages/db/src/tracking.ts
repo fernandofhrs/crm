@@ -7,9 +7,9 @@ export const SITE_ID_PREFIX = "cmp_";
 export const COOKIE_NAME = "_crm_v";
 
 export const COOKIE_LIFETIMES = [
-	{ days: 395, label: "13 months" },
-	{ days: 180, label: "6 months" },
-	{ days: 0, label: "Session only" },
+	{ days: 395, label: "13 meses" },
+	{ days: 180, label: "6 meses" },
+	{ days: 0, label: "Só a sessão" },
 ] as const;
 
 export const MAX_EVENTS_PER_BATCH = 20;

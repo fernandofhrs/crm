@@ -6,7 +6,7 @@ import { PageShellFallback } from "@/components/page-shell";
 import { getServerTrpcClient } from "@/lib/trpc/server";
 import { nullIfMissing } from "../../missing-record";
 
-export const metadata: Metadata = { title: "Team agent" };
+export const metadata: Metadata = { title: "Agente do time" };
 
 export default function TeamAgentPage({
 	params,

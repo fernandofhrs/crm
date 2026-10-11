@@ -264,7 +264,7 @@ export const auth = betterAuth({
 					if (!hasSignInAllowList()) {
 						throw new APIError("FORBIDDEN", {
 							message:
-								'No one can sign in yet: set ALLOWED_SIGN_IN in .env to your email domain (for example ALLOWED_SIGN_IN="acme.com") and restart.',
+								'Ninguém consegue entrar ainda: defina ALLOWED_SIGN_IN no .env com o seu domínio de e-mail (por exemplo ALLOWED_SIGN_IN="acme.com") e reinicie.',
 						});
 					}
 
@@ -272,8 +272,8 @@ export const auth = betterAuth({
 						const domain = primaryWorkspaceDomain();
 						throw new APIError("FORBIDDEN", {
 							message: domain
-								? `This CRM is private. Sign in with your @${domain} account.`
-								: "This CRM is private. That address is not on the allow-list.",
+								? `Este CRM é privado. Entre com a sua conta @${domain}.`
+								: "Este CRM é privado. Esse endereço não está na lista de permitidos.",
 						});
 					}
 

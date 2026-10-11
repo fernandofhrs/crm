@@ -8,23 +8,23 @@ import { toast } from "sonner";
 const CONNECT_ERRORS = new Map([
 	[
 		"access_denied",
-		"Slack installation was cancelled before access was granted.",
+		"A instalação do Slack foi cancelada antes de o acesso ser concedido.",
 	],
 	[
 		"account_already_linked_to_different_user",
-		"That Slack installer is already linked to another CRM account.",
+		"Essa conta do Slack já está vinculada a outra conta do CRM.",
 	],
 	[
 		"email_doesn't_match",
-		"The Slack installer's email must match the CRM account you are signed in with.",
+		"O e-mail de quem instala o Slack precisa ser o mesmo da conta do CRM em que você entrou.",
 	],
 	[
 		"oauth_code_verification_failed",
-		"Slack rejected the app credentials or redirect URL. Check the client ID, client secret, and OAuth redirect URL, then try again.",
+		"O Slack recusou as credenciais do app ou a URL de redirecionamento. Confira o client ID, o client secret e a URL de redirecionamento do OAuth e tente de novo.",
 	],
 	[
 		"user_info_is_missing",
-		"Slack did not return the installer's profile. Confirm the app has users:read and users:read.email, reinstall it, then try again.",
+		"O Slack não devolveu o perfil de quem instalou. Confirme que o app tem users:read e users:read.email, reinstale e tente de novo.",
 	],
 ]);
 
@@ -35,10 +35,13 @@ async function startSlackOAuth(slug: string) {
 			callbackURL: `${window.location.origin}/${slug}/settings/connections/slack/people`,
 			errorCallbackURL: `${window.location.origin}/${slug}/settings/connections/slack?provider=slack`,
 		});
-		if (error) toast.error(error.message || "Could not connect Slack.");
+		if (error)
+			toast.error(error.message || "Não foi possível conectar o Slack.");
 	} catch (error) {
 		toast.error(
-			error instanceof Error ? error.message : "Could not connect Slack.",
+			error instanceof Error
+				? error.message
+				: "Não foi possível conectar o Slack.",
 		);
 	}
 }
@@ -57,7 +60,7 @@ export function SlackReconnectButton({ slug }: { slug: string }) {
 			size="xs"
 			variant="contrast"
 		>
-			{pending ? "Opening Slack…" : "Reconnect"}
+			{pending ? "Abrindo o Slack…" : "Reconectar"}
 		</Button>
 	);
 }
@@ -81,15 +84,15 @@ export function SlackConnectButton({
 		<div className="flex min-w-0 flex-col gap-2">
 			<Button onClick={() => void connect()} disabled={!configured || pending}>
 				{pending
-					? "Opening Slack…"
+					? "Abrindo o Slack…"
 					: configured
-						? "Connect Slack"
-						: "Slack is not configured"}
+						? "Conectar o Slack"
+						: "O Slack não está configurado"}
 			</Button>
 			{connectError ? (
 				<p role="alert" className="max-w-sm text-destructive text-xs">
 					{CONNECT_ERRORS.get(connectError) ??
-						`Slack could not be connected (${connectError.replaceAll("_", " ")}).`}
+						`Não foi possível conectar o Slack (${connectError.replaceAll("_", " ")}).`}
 				</p>
 			) : null}
 		</div>

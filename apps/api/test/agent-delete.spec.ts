@@ -264,6 +264,8 @@ describe("deleting an agent", () => {
 		} catch (error) {
 			lookupError = error;
 		}
-		expect((lookupError as Error).message).toBe(`No agent with id ${agentId}.`);
+		expect((lookupError as Error).message).toBe(
+			`Nenhum agente com o id ${agentId}.`,
+		);
 	});
 });

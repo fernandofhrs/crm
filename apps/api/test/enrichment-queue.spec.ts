@@ -116,7 +116,7 @@ describe("what the enrichment widget reads", () => {
 		const queue = await enrichment.queue();
 		const booked = queue.scheduled.find((row) => row.id === scheduledId);
 
-		expect(booked?.due).toBe("In 3 months");
+		expect(booked?.due).toBe("Em 3 meses");
 		expect(booked?.subject.id).toBe(contactId);
 		expect(booked?.subject.name).toBe("Queue Split");
 	});
@@ -126,7 +126,7 @@ describe("what the enrichment widget reads", () => {
 		const row = queue.rows.find((entry) => entry.id === dueId);
 
 		expect(row?.subject.id).toBe(companyId);
-		expect(row?.line).toBe("Waiting");
+		expect(row?.line).toBe("Aguardando");
 	});
 
 	it("hands back exactly the number of rows asked for", async () => {

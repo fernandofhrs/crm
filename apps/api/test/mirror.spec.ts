@@ -417,7 +417,7 @@ describe("mirroring records in from another system", () => {
 		expect(result.deals.failed).toEqual([
 			{
 				externalId: "9999",
-				reason: "The company d:00000000000000 has not been mirrored.",
+				reason: "A empresa d:00000000000000 não foi espelhada.",
 			},
 		]);
 	});

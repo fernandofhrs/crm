@@ -37,7 +37,7 @@ export function SlackDisconnectButton({
 			onSuccess: async () => {
 				await cache.slack();
 				setConfirming(false);
-				toast.success("Slack disconnected.");
+				toast.success("Slack desconectado.");
 				router.refresh();
 			},
 			onError: (error) => toast.error(error.message),
@@ -55,7 +55,7 @@ export function SlackDisconnectButton({
 				onClick={() => setConfirming(true)}
 				disabled={!canManage || disconnectAction.pending}
 			>
-				Disconnect
+				Desconectar
 			</Button>
 
 			<AlertDialog
@@ -67,18 +67,19 @@ export function SlackDisconnectButton({
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							Disconnect {workspace ?? "Slack"}?
+							Desconectar {workspace ?? "o Slack"}?
 						</AlertDialogTitle>
 						<AlertDialogDescription>
-							Agents stop sending to Slack immediately, and the cached channel
-							list is cleared so a new app re-reads it. Who is matched to which
-							Slack account is kept, so reconnecting the same workspace does not
-							ask you to match everyone again.
+							Os agentes param de enviar para o Slack na hora, e a lista de
+							canais em cache é limpa para que um novo app a leia de novo. A
+							correspondência entre pessoas e contas do Slack é mantida. Por
+							isso, reconectar o mesmo workspace não pede que você refaça a
+							correspondência de todo mundo.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={disconnectAction.pending}>
-							Cancel
+							Cancelar
 						</AlertDialogCancel>
 						<Button
 							variant="destructive"
@@ -87,9 +88,9 @@ export function SlackDisconnectButton({
 						>
 							<AsyncButtonContent
 								status={disconnectAction.status}
-								pendingLabel="Disconnecting…"
+								pendingLabel="Desconectando…"
 							>
-								Disconnect
+								Desconectar
 							</AsyncButtonContent>
 						</Button>
 					</AlertDialogFooter>

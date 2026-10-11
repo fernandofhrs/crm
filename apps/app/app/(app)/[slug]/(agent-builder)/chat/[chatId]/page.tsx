@@ -7,7 +7,7 @@ import { isSharedChatToken } from "@/lib/chat-route";
 import { getServerTrpcClient } from "@/lib/trpc/server";
 import { nullIfMissing } from "../../missing-record";
 
-export const metadata: Metadata = { title: "Agent chat" };
+export const metadata: Metadata = { title: "Chat com o agente" };
 
 export default function AgentChatPage({
 	params,

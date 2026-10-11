@@ -7,8 +7,11 @@ export const MAX_BULK_IDS = 100;
 export const bulkIdsInput = z.object({
 	ids: z
 		.array(z.string())
-		.min(1, "Nothing was selected.")
-		.max(MAX_BULK_IDS, "Too many records at once — select a page at a time."),
+		.min(1, "Nada foi selecionado.")
+		.max(
+			MAX_BULK_IDS,
+			"Registros demais de uma vez. Selecione uma página por vez.",
+		),
 });
 
 export type BulkResult = {
@@ -31,7 +34,7 @@ export async function requireOwner(
 	});
 
 	if (!owner) {
-		throw new BadRequestException("That owner does not work here any more.");
+		throw new BadRequestException("Esse responsável não trabalha mais aqui.");
 	}
 }
 
@@ -53,8 +56,7 @@ export async function runBulk(
 				succeeded += 1;
 			}
 		} catch (error) {
-			message ??=
-				error instanceof Error ? error.message : "Something went wrong.";
+			message ??= error instanceof Error ? error.message : "Algo deu errado.";
 		}
 	}
 

@@ -186,7 +186,7 @@ describe("field definitions", () => {
 				showOnTable: false,
 				showOnFilter: false,
 			}),
-		).rejects.toThrow(/already a field/);
+		).rejects.toThrow(/Já existe um campo/);
 	});
 
 	it("keeps the same key when the label is renamed", async () => {
@@ -211,7 +211,7 @@ describe("field definitions", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/cannot change/);
+		expect(refused?.message).toMatch(/não pode mudar/);
 	});
 
 	it("will not turn a field into a select with nothing to choose", async () => {
@@ -234,7 +234,7 @@ describe("field definitions", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/at least one option/);
+		expect(refused?.message).toMatch(/pelo menos uma opção/);
 	});
 
 	it("archives without losing values, and restores them", async () => {
@@ -256,9 +256,9 @@ describe("field definitions", () => {
 	it("says a field is missing without swallowing other failures", async () => {
 		const missing = `missing-${suffix}`;
 
-		await expect(fields.archive(missing)).rejects.toThrow(/does not exist/);
-		await expect(fields.restore(missing)).rejects.toThrow(/does not exist/);
-		await expect(fields.delete(missing)).rejects.toThrow(/does not exist/);
+		await expect(fields.archive(missing)).rejects.toThrow(/não existe/);
+		await expect(fields.restore(missing)).rejects.toThrow(/não existe/);
+		await expect(fields.delete(missing)).rejects.toThrow(/não existe/);
 	});
 
 	it("reorders inside one entity only", async () => {
@@ -295,7 +295,7 @@ describe("field definitions", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/not on this record type/);
+		expect(refused?.message).toMatch(/não é deste tipo de registro/);
 	});
 });
 

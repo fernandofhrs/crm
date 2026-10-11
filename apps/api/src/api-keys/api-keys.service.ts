@@ -163,7 +163,7 @@ export class ApiKeysService {
 					STATUS_BY_CODE.get(error.body?.code ?? "") ?? error.statusCode;
 
 				throw new HttpException(
-					error.body?.message ?? "The API key could not be saved.",
+					error.body?.message ?? "Não foi possível salvar a chave de API.",
 					status,
 				);
 			}
@@ -174,7 +174,7 @@ export class ApiKeysService {
 			);
 
 			throw new InternalServerErrorException(
-				"Could not reach the auth service.",
+				"Não foi possível acessar o serviço de autenticação.",
 			);
 		}
 	}

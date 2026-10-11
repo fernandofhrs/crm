@@ -45,7 +45,7 @@ export function EmailThreadEntry({
 		>
 			<AccordionItem value={threadId}>
 				<AccordionTrigger variant="subtle">
-					{messageCount === 1 ? "1 message" : `${messageCount} messages`}
+					{messageCount === 1 ? "1 mensagem" : `${messageCount} mensagens`}
 				</AccordionTrigger>
 
 				<AccordionContent>
@@ -82,7 +82,7 @@ export function EmailThreadEntry({
 												rel="noreferrer"
 												className="text-muted-foreground underline underline-offset-3 hover:text-foreground"
 											>
-												Open in {message.mailboxName}
+												Abrir no {message.mailboxName}
 											</a>
 										) : null
 									}

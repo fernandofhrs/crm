@@ -1,5 +1,6 @@
 "use client";
 
+import { LOCALE } from "@crm/ui/lib/locale";
 import { cn } from "@crm/ui/lib/utils";
 import * as React from "react";
 import type { TooltipValueType } from "recharts";
@@ -246,7 +247,7 @@ function ChartTooltipContent({
 													typeof item.value === "string"
 														? (valueFormatter?.(item.value) ??
 															(typeof item.value === "number"
-																? item.value.toLocaleString()
+																? item.value.toLocaleString(LOCALE)
 																: item.value))
 														: String(item.value)}
 												</span>

@@ -143,7 +143,7 @@ export class AgentDefinitionsService {
 			},
 		});
 
-		if (!row) throw new NotFoundException(`No agent with id ${id}.`);
+		if (!row) throw new NotFoundException(`Nenhum agente com o id ${id}.`);
 		const { versions, ...agent } = row;
 		const draft = versions[0];
 
@@ -194,7 +194,7 @@ export class AgentDefinitionsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "agent.updated",
-					summary: "Changed agent details",
+					summary: "Alterou os dados do agente",
 					before: { name: agent.name, description: agent.description },
 					after: { name: input.name, description },
 				},
@@ -253,7 +253,7 @@ export class AgentDefinitionsService {
 			if (replay) return { saved: false, versionId: replay.versionId };
 
 			if (!agent.currentVersionId) {
-				throw new BadRequestException("This agent has no deployed version.");
+				throw new BadRequestException("Este agente não tem versão publicada.");
 			}
 
 			const current = await tx.agentVersion.findFirstOrThrow({
@@ -276,7 +276,8 @@ export class AgentDefinitionsService {
 				where: { versionId: agent.currentVersionId, path: input.path },
 				orderBy: { revision: "desc" },
 			});
-			if (!file) throw new NotFoundException(`No file at ${input.path}.`);
+			if (!file)
+				throw new NotFoundException(`Nenhum arquivo em ${input.path}.`);
 			if (file.content === input.content) {
 				return { saved: false, versionId: agent.currentVersionId };
 			}
@@ -328,7 +329,7 @@ export class AgentDefinitionsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "agent.file.saved",
-					summary: `Edited ${input.path}`,
+					summary: `Editou ${input.path}`,
 					before: { path: input.path, bytes: file.content.length },
 					after: {
 						path: input.path,
@@ -359,7 +360,7 @@ export class AgentDefinitionsService {
 			if (replay) return replay.versionId;
 
 			if (!agent.currentVersionId) {
-				throw new BadRequestException("This agent has no deployed version.");
+				throw new BadRequestException("Este agente não tem versão publicada.");
 			}
 
 			const current = await tx.agentVersion.findFirstOrThrow({
@@ -381,7 +382,7 @@ export class AgentDefinitionsService {
 			const parsed = agentManifest.safeParse(current.manifest);
 			if (!parsed.success) {
 				throw new BadRequestException(
-					"This version's manifest cannot be read, so it cannot be changed.",
+					"O manifesto desta versão não pode ser lido, então ela não pode ser alterada.",
 				);
 			}
 
@@ -396,7 +397,9 @@ export class AgentDefinitionsService {
 				const keep = new Set(input.actions);
 				actions = actions.filter((action) => keep.has(action.type));
 				if (actions.length === 0) {
-					throw new BadRequestException("An agent needs at least one action.");
+					throw new BadRequestException(
+						"Um agente precisa de pelo menos uma ação.",
+					);
 				}
 			}
 
@@ -405,7 +408,7 @@ export class AgentDefinitionsService {
 			if (channel) {
 				if (!actions.some((action) => action.destination !== undefined)) {
 					throw new BadRequestException(
-						"None of this agent's actions post to a channel, so its channel cannot be changed.",
+						"Nenhuma ação deste agente publica em um canal, então o canal não pode ser alterado.",
 					);
 				}
 
@@ -520,7 +523,7 @@ export class AgentDefinitionsService {
 			if (existing) {
 				if (existing.versionId !== input.versionId) {
 					throw new BadRequestException(
-						"That deployment request has already been used.",
+						"Esse pedido de publicação já foi usado.",
 					);
 				}
 
@@ -533,12 +536,14 @@ export class AgentDefinitionsService {
 			});
 
 			if (!version) {
-				throw new NotFoundException(`No version with id ${input.versionId}.`);
+				throw new NotFoundException(
+					`Nenhuma versão com o id ${input.versionId}.`,
+				);
 			}
 
 			if (version.status !== "READY" && version.status !== "DEPLOYED") {
 				throw new BadRequestException(
-					"Only a validated agent version can be deployed.",
+					"Só uma versão validada do agente pode ser publicada.",
 				);
 			}
 			const metadata = versionMetadata(version.manifest);
@@ -590,7 +595,7 @@ export class AgentDefinitionsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "agent.deployed",
-					summary: `Made version ${version.number} live for the team`,
+					summary: `Ativou a versão ${version.number} para o time`,
 					before: { status: agent.status },
 					after: { status: "LIVE", version: version.number, ...metadata },
 					requestId: input.clientRequestId,
@@ -608,8 +613,8 @@ export class AgentDefinitionsService {
 			["LIVE"],
 			"PAUSED",
 			"agent.paused",
-			"Paused agent",
-			"Only a live agent can be paused.",
+			"Pausou o agente",
+			"Só um agente ativo pode ser pausado.",
 		);
 	}
 
@@ -620,8 +625,8 @@ export class AgentDefinitionsService {
 			["PAUSED"],
 			"LIVE",
 			"agent.resumed",
-			"Resumed agent",
-			"Only a paused agent can be resumed.",
+			"Retomou o agente",
+			"Só um agente pausado pode ser retomado.",
 		);
 	}
 
@@ -632,8 +637,8 @@ export class AgentDefinitionsService {
 			["LIVE", "PAUSED"],
 			"ARCHIVED",
 			"agent.archived",
-			"Archived agent",
-			"Only a live or paused agent can be archived.",
+			"Arquivou o agente",
+			"Só um agente ativo ou pausado pode ser arquivado.",
 			{ archivedAt: new Date() },
 		);
 	}
@@ -645,8 +650,8 @@ export class AgentDefinitionsService {
 			["ARCHIVED"],
 			"PAUSED",
 			"agent.restored",
-			"Restored agent",
-			"Only an archived agent can be restored.",
+			"Restaurou o agente",
+			"Só um agente arquivado pode ser restaurado.",
 			{ archivedAt: null },
 		);
 	}
@@ -666,7 +671,7 @@ export class AgentDefinitionsService {
 			`;
 
 			if (!current || current.status === "DELETED") {
-				throw new NotFoundException(`No agent with id ${id}.`);
+				throw new NotFoundException(`Nenhum agente com o id ${id}.`);
 			}
 
 			const disabledTriggers = await tx.agentTrigger.updateMany({
@@ -723,7 +728,7 @@ export class AgentDefinitionsService {
 					actorType: "USER",
 					actorId: userId,
 					type: "agent.deleted",
-					summary: "Deleted agent",
+					summary: "Excluiu o agente",
 					before: { status: current.status },
 					after: {
 						status: "DELETED",
@@ -799,7 +804,7 @@ export class AgentDefinitionsService {
 		`;
 
 		if (!agent || agent.status === "DELETED") {
-			throw new NotFoundException(`No agent with id ${id}.`);
+			throw new NotFoundException(`Nenhum agente com o id ${id}.`);
 		}
 
 		return agent;
@@ -862,10 +867,22 @@ function reviseSummary(input: {
 	resources?: unknown[];
 }): string {
 	const parts: string[] = [];
-	if (input.channel) parts.push(`moved to #${input.channel.name}`);
-	if (input.actions) parts.push(`${input.actions.length} actions`);
-	if (input.resources) parts.push(`${input.resources.length} records`);
-	return parts.length > 0 ? `Changed ${parts.join(", ")}` : "Changed settings";
+	if (input.channel) parts.push(`canal #${input.channel.name}`);
+	if (input.actions) {
+		parts.push(
+			input.actions.length === 1 ? "1 ação" : `${input.actions.length} ações`,
+		);
+	}
+	if (input.resources) {
+		parts.push(
+			input.resources.length === 1
+				? "1 registro"
+				: `${input.resources.length} registros`,
+		);
+	}
+	return parts.length > 0
+		? `Alterou: ${parts.join(", ")}`
+		: "Alterou as configurações";
 }
 
 function reviseValidation(

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ConnectionPage, ConnectionPageLoading } from "../connection-page";
 import { ImapConnection } from "../imap-connection";
 
-export const metadata: Metadata = { title: "Email by IMAP" };
+export const metadata: Metadata = { title: "E-mail por IMAP" };
 
 export default function ImapConnectionPage(props: {
 	params: Promise<{ slug: string }>;

@@ -64,7 +64,7 @@ export class ImapConnectionService {
 
 		if (!server) {
 			throw new ServiceUnavailableException(
-				"IMAP is not configured on this install.",
+				"O IMAP não está configurado nesta instalação.",
 			);
 		}
 
@@ -183,7 +183,7 @@ export class ImapConnectionService {
 		const row = await this.state.get(userId, IMAP_SOURCE);
 
 		if (!row) {
-			throw new NotFoundException("No mailbox is connected.");
+			throw new NotFoundException("Nenhuma caixa de e-mail está conectada.");
 		}
 
 		return row;

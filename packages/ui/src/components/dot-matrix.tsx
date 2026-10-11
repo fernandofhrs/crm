@@ -14,7 +14,7 @@ function delayFor(index: number): number {
 
 export function DotMatrix({
 	className,
-	label = "Loading",
+	label = "Carregando",
 	decorative = false,
 }: {
 	className?: string;

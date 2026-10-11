@@ -136,7 +136,7 @@ export class AsanaSyncService {
 			const result = await this.client.openTasks(token, projectGid, offset);
 
 			if (result.outcome === "unauthorized") {
-				const reason = "Asana no longer accepts the saved token.";
+				const reason = "O Asana não aceita mais o token salvo.";
 				await this.state.markNeedsReconnect(row.id, reason);
 				return this.stopped(row, "reconnect", reason);
 			}
@@ -147,7 +147,7 @@ export class AsanaSyncService {
 			}
 
 			if (result.outcome === "cursor-invalid") {
-				const reason = "The chosen Asana project can no longer be found.";
+				const reason = "O projeto escolhido no Asana não foi mais encontrado.";
 				await this.state.markFailed(row.id, reason);
 				return this.stopped(row, "failed", reason);
 			}

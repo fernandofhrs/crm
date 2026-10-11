@@ -32,6 +32,13 @@ import { handoffBrief, handoffResources } from "@/lib/agent-handoff";
 import { useTRPC } from "@/lib/trpc/client";
 import { useWorkspaceUrl } from "@/lib/use-workspace-url";
 
+const PERMISSION_LABELS = {
+	post: "Enviar uma mensagem",
+	mention: "Mencionar o responsável pelo negócio",
+	thread: "Responder em uma thread",
+	history: "Ler o histórico do canal",
+} satisfies Record<Permission, string>;
+
 export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 	const router = useRouter();
 	const trpc = useTRPC();
@@ -81,7 +88,7 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 						: null,
 					allowed,
 				},
-				"This agent",
+				"Este agente",
 			);
 
 			create.mutate({
@@ -95,7 +102,7 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 			toast.error(
 				error instanceof InvalidInput
 					? error.message
-					: "Could not hand this to the builder.",
+					: "Não foi possível passar isto para o construtor.",
 			);
 		}
 	};
@@ -106,40 +113,40 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 
 			<DialogContent className="sm:max-w-(--container-sheet)">
 				<DialogHeader>
-					<DialogTitle>New agent</DialogTitle>
+					<DialogTitle>Novo agente</DialogTitle>
 					<DialogDescription>
-						Say what it is and where it lives. The builder writes the rest. You
-						can change all of this later.
+						Diga o que ele é e onde fica. O construtor escreve o resto. Você
+						pode mudar tudo isso depois.
 					</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex flex-col gap-4">
 					<div className="flex flex-col gap-1.5">
-						<Label htmlFor="agent-name">Name</Label>
+						<Label htmlFor="agent-name">Nome</Label>
 						<Input
 							id="agent-name"
 							onChange={(event) => setName(event.target.value)}
-							placeholder="Renewal prep brief"
+							placeholder="Resumo para renovação"
 							value={name}
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<Label htmlFor="agent-job">What it should do</Label>
+						<Label htmlFor="agent-job">O que ele deve fazer</Label>
 						<Textarea
 							id="agent-job"
 							onChange={(event) => setJob(event.target.value)}
-							placeholder="A week before a renewal, gather the account history and post a short brief for whoever owns the deal."
+							placeholder="Uma semana antes de uma renovação, reúna o histórico da conta e publique um resumo curto para o responsável pelo negócio."
 							rows={3}
 							value={job}
 						/>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<Label htmlFor="agent-channel">Lives in</Label>
+						<Label htmlFor="agent-channel">Onde fica</Label>
 						<Select onValueChange={setChannelId} value={channelId}>
 							<SelectTrigger id="agent-channel">
-								<SelectValue placeholder="Pick a Slack channel" />
+								<SelectValue placeholder="Escolha um canal do Slack" />
 							</SelectTrigger>
 							<SelectContent>
 								{rows.map((row) => (
@@ -152,14 +159,14 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 						<p className="text-muted-foreground text-xs">
 							{channel
 								? channel.isMember
-									? `Comp AI is already in #${channel.name}.`
-									: `Comp AI is not in #${channel.name} yet. It joins when you create this.`
-								: "Leave this empty and the builder will ask."}
+									? `O Comp AI já está em #${channel.name}.`
+									: `O Comp AI ainda não está em #${channel.name}. Ele entra quando você criar o agente.`
+								: "Deixe vazio e o construtor pergunta."}
 						</p>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<Label>Allowed to</Label>
+						<Label>Tem permissão para</Label>
 						<div className="flex flex-wrap gap-2">
 							{schemas.agents.permissions.map((entry) => {
 								const on = allowed.includes(entry.id);
@@ -185,7 +192,7 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 												motion="none"
 											/>
 										) : null}
-										{entry.label}
+										{PERMISSION_LABELS[entry.id]}
 									</Button>
 								);
 							})}
@@ -195,17 +202,17 @@ export function NewAgentDialog({ children }: { children: React.ReactNode }) {
 
 				<DialogFooter className="items-center">
 					<p className="mr-auto text-muted-foreground text-xs">
-						Nothing sends until you turn it on.
+						Nada é enviado até você ligar.
 					</p>
 					<Button
 						disabled={create.isPending}
 						onClick={() => setOpen(false)}
 						variant="outline"
 					>
-						Cancel
+						Cancelar
 					</Button>
 					<Button disabled={!ready || create.isPending} onClick={hand}>
-						{create.isPending ? "Handing over…" : "Hand to the builder"}
+						{create.isPending ? "Passando…" : "Passar para o construtor"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

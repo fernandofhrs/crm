@@ -2,6 +2,7 @@ import { ActivityType, type Db, DealStage } from "@crm/db";
 import { OPEN_DEAL_STAGES } from "@crm/db/deal-stage";
 import { activityMeta } from "@crm/validation/activity-meta";
 import { Injectable } from "@nestjs/common";
+import { LOCALE } from "../config/locale";
 import { toCents } from "../crm/values";
 import { ConversionService } from "../currency/conversion.service";
 import { InjectDatabase } from "../database/database.constants";
@@ -20,7 +21,7 @@ const RATE_WINDOW_DAYS = 90;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const MONTH_LABEL = new Intl.DateTimeFormat("en-US", { month: "short" });
+const MONTH_LABEL = new Intl.DateTimeFormat(LOCALE, { month: "short" });
 
 function monthStart(from: Date, offset: number): Date {
 	return new Date(from.getFullYear(), from.getMonth() + offset, 1);

@@ -401,7 +401,7 @@ describe("syncing the Asana agenda", () => {
 
 		expect(outcome.status).toBe("reconnect");
 		expect(after.status).toBe(GoogleSyncStatus.NEEDS_RECONNECT);
-		expect(after.lastError).toBe("Asana no longer accepts the saved token.");
+		expect(after.lastError).toBe("O Asana não aceita mais o token salvo.");
 	});
 });
 

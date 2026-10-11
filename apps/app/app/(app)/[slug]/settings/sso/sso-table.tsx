@@ -35,7 +35,7 @@ function columns(
 	return [
 		{
 			id: "providerId",
-			header: "Provider",
+			header: "Provedor",
 			sortable: true,
 			hideable: false,
 			width: "w-[30%]",
@@ -44,14 +44,14 @@ function columns(
 					<span className="truncate font-medium">{row.name}</span>
 					<span className="truncate text-muted-foreground text-xs">
 						{row.type === "saml" ? "SAML" : "OpenID Connect"}
-						{row.clientIdLastFour ? ` · client …${row.clientIdLastFour}` : ""}
+						{row.clientIdLastFour ? ` · cliente …${row.clientIdLastFour}` : ""}
 					</span>
 				</span>
 			),
 		},
 		{
 			id: "domain",
-			header: "Email domain",
+			header: "Domínio de e-mail",
 			sortable: true,
 			width: "w-[22%]",
 			hideBelow: "sm",
@@ -63,7 +63,7 @@ function columns(
 		},
 		{
 			id: "issuer",
-			header: "Issuer",
+			header: "Emissor",
 			sortable: true,
 			width: "w-[22%]",
 			hideBelow: "md",
@@ -73,20 +73,20 @@ function columns(
 		},
 		{
 			id: "callbackURL",
-			header: "Redirect URI",
+			header: "URI de redirecionamento",
 			width: "w-[20%]",
 			hideBelow: "lg",
 			cell: (row) => (
 				<span className="flex min-w-0 items-center gap-1 text-muted-foreground">
 					<span className="truncate">{row.callbackURL}</span>
-					<CopyValue value={row.callbackURL} label="Redirect URI" />
+					<CopyValue value={row.callbackURL} label="URI de redirecionamento" />
 				</span>
 			),
 		},
 		{
 			id: "actions",
-			header: <span className="sr-only">Actions</span>,
-			label: "Actions",
+			header: <span className="sr-only">Ações</span>,
+			label: "Ações",
 			hideable: false,
 			align: "right",
 			width: "w-[6%]",
@@ -96,26 +96,26 @@ function columns(
 						<AlertDialogTrigger asChild>
 							<Button variant="ghost" size="icon" disabled={pending}>
 								<Icon icon={TrashCan} />
-								<span className="sr-only">Remove {row.name}</span>
+								<span className="sr-only">Remover {row.name}</span>
 							</Button>
 						</AlertDialogTrigger>
 
 						<AlertDialogContent>
 							<AlertDialogHeader>
-								<AlertDialogTitle>Remove {row.name}?</AlertDialogTitle>
+								<AlertDialogTitle>Remover {row.name}?</AlertDialogTitle>
 								<AlertDialogDescription>
-									Nobody can sign in through it again. If this is the only
-									provider, the sign-in page goes back to Google.
+									Ninguém mais consegue entrar por este provedor. Se for o
+									único, a página de entrada volta a usar o Google.
 								</AlertDialogDescription>
 							</AlertDialogHeader>
 
 							<AlertDialogFooter>
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogCancel>Cancelar</AlertDialogCancel>
 								<AlertDialogAction
 									variant="destructive"
 									onClick={() => onRemove(row)}
 								>
-									Remove
+									Remover
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
@@ -140,7 +140,7 @@ export function SsoTable() {
 		trpc.sso.remove.mutationOptions({
 			onSuccess: async () => {
 				await cache.sso();
-				toast.success("Identity provider removed.");
+				toast.success("Provedor de identidade removido.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -149,7 +149,7 @@ export function SsoTable() {
 	return (
 		<DataTable
 			query={query}
-			search={<ListSearch placeholder="Search by name, domain or issuer…" />}
+			search={<ListSearch placeholder="Buscar por nome, domínio ou emissor…" />}
 			columns={columns(
 				settings.data?.canConfigure ?? false,
 				(provider) => remove.mutate({ providerId: provider.providerId }),
@@ -159,7 +159,7 @@ export function SsoTable() {
 			total={providers.data?.total ?? 0}
 			getRowId={(row) => row.providerId}
 			loading={providers.isFetching}
-			empty="No identity provider yet — everyone signs in with Google."
+			empty="Nenhum provedor de identidade ainda. Todos entram com o Google."
 		/>
 	);
 }

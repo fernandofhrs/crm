@@ -1,5 +1,5 @@
 export const ACTIVITY_FACET_OPTIONS = [
-	{ value: "7", label: "Active within 7 days" },
-	{ value: "30", label: "Active within 30 days" },
-	{ value: "90", label: "Active within 90 days" },
+	{ value: "7", label: "Atividade nos últimos 7 dias" },
+	{ value: "30", label: "Atividade nos últimos 30 dias" },
+	{ value: "90", label: "Atividade nos últimos 90 dias" },
 ];

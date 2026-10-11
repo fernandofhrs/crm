@@ -59,7 +59,7 @@ export class ResearchKeyService {
 			if (body.outcome === "invalid") {
 				return {
 					outcome: "invalid",
-					reason: body.reason || "Context did not recognise that API key.",
+					reason: body.reason || "O Context não reconheceu essa chave de API.",
 				};
 			}
 

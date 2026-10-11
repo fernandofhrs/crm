@@ -15,7 +15,7 @@ import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
 import { CurrencySettings } from "./currency-settings";
 
 export const metadata: Metadata = {
-	title: "Currencies",
+	title: "Moedas",
 };
 
 export default function CurrenciesSettingsPage() {
@@ -23,10 +23,10 @@ export default function CurrenciesSettingsPage() {
 		<PageShell>
 			<PageShellHeader>
 				<PageShellHeading>
-					<PageShellTitle>Currencies</PageShellTitle>
+					<PageShellTitle>Moedas</PageShellTitle>
 					<PageShellDescription>
-						What your numbers are reported in, and how the other currencies get
-						there.
+						A moeda em que seus números aparecem e como as outras moedas são
+						convertidas para ela.
 					</PageShellDescription>
 				</PageShellHeading>
 			</PageShellHeader>

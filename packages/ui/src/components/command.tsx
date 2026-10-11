@@ -34,8 +34,8 @@ function Command({
 }
 
 function CommandDialog({
-	title = "Command Palette",
-	description = "Search for a command to run...",
+	title = "Paleta de comandos",
+	description = "Busque um comando para executar…",
 	children,
 	className,
 	showCloseButton = false,
@@ -95,6 +95,7 @@ function CommandList({
 	return (
 		<CommandPrimitive.List
 			data-slot="command-list"
+			label="Sugestões"
 			className={cn(
 				"no-scrollbar max-h-72 scroll-py-0 overflow-x-hidden overflow-y-auto outline-none",
 				className,

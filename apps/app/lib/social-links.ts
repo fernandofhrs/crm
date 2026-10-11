@@ -25,8 +25,8 @@ const COMPANY_LINKS: SocialLink<CompanyLinks>[] = [
 	{ key: "linkedinUrl", label: "LinkedIn", icon: LogoLinkedin },
 	{ key: "twitterUrl", label: "X", icon: LogoX },
 	{ key: "githubUrl", label: "GitHub", icon: LogoGithub },
-	{ key: "pricingUrl", label: "Pricing", icon: Money },
-	{ key: "careersUrl", label: "Careers", icon: UserMultiple },
+	{ key: "pricingUrl", label: "Preços", icon: Money },
+	{ key: "careersUrl", label: "Carreiras", icon: UserMultiple },
 ];
 
 const CONTACT_LINKS: SocialLink<ContactLinks>[] = [

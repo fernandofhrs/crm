@@ -197,7 +197,7 @@ describe("conversation sharing", () => {
 			revokedError = error;
 		}
 		expect((revokedError as Error).message).toBe(
-			"That attachment is unavailable.",
+			"Esse anexo não está disponível.",
 		);
 	});
 

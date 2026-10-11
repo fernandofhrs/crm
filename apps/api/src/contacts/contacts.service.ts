@@ -218,7 +218,7 @@ export class ContactsService {
 		});
 
 		if (!contact) {
-			throw new NotFoundException(`No contact with id ${id}.`);
+			throw new NotFoundException(`Nenhum contato com o id ${id}.`);
 		}
 
 		const relationship = await this.relationship(
@@ -273,7 +273,7 @@ export class ContactsService {
 			});
 			if (existing) {
 				throw new ConflictException(
-					`${[existing.firstName, existing.lastName].filter(Boolean).join(" ")} already uses ${email}.`,
+					`${[existing.firstName, existing.lastName].filter(Boolean).join(" ")} já usa ${email}.`,
 				);
 			}
 		}
@@ -402,7 +402,7 @@ export class ContactsService {
 
 				if (!row) {
 					if (guard) return null;
-					throw new NotFoundException(`No contact with id ${id}.`);
+					throw new NotFoundException(`Nenhum contato com o id ${id}.`);
 				}
 				if (
 					guard &&
@@ -556,7 +556,7 @@ export class ContactsService {
 				select: { id: true },
 			});
 			if (!company) {
-				throw new NotFoundException(`No company with id ${companyId}.`);
+				throw new NotFoundException(`Nenhuma empresa com o id ${companyId}.`);
 			}
 		}
 
@@ -678,7 +678,7 @@ export class ContactsService {
 		});
 
 		if (!contact) {
-			throw new NotFoundException(`No contact with id ${id}.`);
+			throw new NotFoundException(`Nenhum contato com o id ${id}.`);
 		}
 
 		const queued = await this.agent.contactCreated(
@@ -715,11 +715,11 @@ export class ContactsService {
 		});
 
 		if (!fact) {
-			throw new NotFoundException(`No fact with id ${input.factId}.`);
+			throw new NotFoundException(`Nenhum fato com o id ${input.factId}.`);
 		}
 
 		if (fact.status !== FactStatus.PROPOSED) {
-			throw new ConflictException("That suggestion has already been settled.");
+			throw new ConflictException("Essa sugestão já foi resolvida.");
 		}
 
 		const accepted = input.decision === "accept";
@@ -909,11 +909,11 @@ export class ContactsService {
 	private translate(cause: unknown, id: string): never {
 		if (cause instanceof PrismaNamespace.PrismaClientKnownRequestError) {
 			if (cause.code === "P2025") {
-				throw new NotFoundException(`No contact with id ${id}.`);
+				throw new NotFoundException(`Nenhum contato com o id ${id}.`);
 			}
 			if (cause.code === "P2002") {
 				throw new ConflictException(
-					"Another contact already uses that email address.",
+					"Outro contato já usa esse endereço de e-mail.",
 				);
 			}
 		}

@@ -21,7 +21,7 @@ import { AsanaCredentialsService } from "./asana-credentials.service";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 
-const REFUSED = "Asana did not accept that token.";
+const REFUSED = "O Asana não aceitou esse token.";
 
 @Injectable()
 export class AsanaConnectionService {
@@ -129,7 +129,7 @@ export class AsanaConnectionService {
 		if (project.outcome !== "ok") {
 			throw new BadRequestException(
 				project.outcome === "cursor-invalid"
-					? "Asana has no project with that id for this token."
+					? "O Asana não tem projeto com esse id para este token."
 					: reasonOf(project),
 			);
 		}
@@ -189,8 +189,8 @@ export class AsanaConnectionService {
 function reasonOf(result: Exclude<MailboxResult<unknown>, { outcome: "ok" }>) {
 	if (result.outcome === "unauthorized") return REFUSED;
 	if (result.outcome === "rate-limited") {
-		return "Asana is rate limiting this token. Try again in a minute.";
+		return "O Asana está limitando as requisições deste token. Tente de novo em um minuto.";
 	}
 
-	return `Asana could not be read: ${result.reason}`;
+	return `Não foi possível ler o Asana: ${result.reason}`;
 }

@@ -220,7 +220,7 @@ export class DealsService {
 		});
 
 		if (!deal) {
-			throw new NotFoundException(`No deal with id ${id}.`);
+			throw new NotFoundException(`Nenhum negócio com o id ${id}.`);
 		}
 
 		const {
@@ -338,7 +338,7 @@ export class DealsService {
 			});
 
 			if (!current) {
-				throw new NotFoundException(`No deal with id ${id}.`);
+				throw new NotFoundException(`Nenhum negócio com o id ${id}.`);
 			}
 
 			const amount =
@@ -421,7 +421,7 @@ export class DealsService {
 
 				if (!row) {
 					if (guard) return null;
-					throw new NotFoundException(`No deal with id ${id}.`);
+					throw new NotFoundException(`Nenhum negócio com o id ${id}.`);
 				}
 				if (
 					guard &&
@@ -484,7 +484,7 @@ export class DealsService {
 			`;
 
 			if (!deal) {
-				throw new NotFoundException(`No deal with id ${input.id}.`);
+				throw new NotFoundException(`Nenhum negócio com o id ${input.id}.`);
 			}
 
 			if (deal.stage === input.stage) {
@@ -497,7 +497,7 @@ export class DealsService {
 			}
 			if (LOSING.has(input.stage) && !closedReason) {
 				throw new BadRequestException(
-					"Say why it was lost — a closed-lost deal with no reason teaches nobody anything.",
+					"Diga por que o negócio foi perdido. Um negócio perdido sem motivo não ensina nada a ninguém.",
 				);
 			}
 
@@ -515,7 +515,7 @@ export class DealsService {
 			await tx.activity.create({
 				data: {
 					type: ActivityType.STAGE_CHANGE,
-					subject: "Stage changed",
+					subject: "Etapa alterada",
 					body: closedReason ?? null,
 					occurredAt: now,
 					companyId: deal.companyId,
@@ -583,7 +583,7 @@ export class DealsService {
 		});
 
 		if (!deal) {
-			throw new NotFoundException(`No deal with id ${dealId}.`);
+			throw new NotFoundException(`Nenhum negócio com o id ${dealId}.`);
 		}
 
 		return this.db.contact.findMany({
@@ -605,12 +605,14 @@ export class DealsService {
 		});
 
 		if (!contact) {
-			throw new NotFoundException(`No contact with id ${input.contactId}.`);
+			throw new NotFoundException(
+				`Nenhum contato com o id ${input.contactId}.`,
+			);
 		}
 
 		if (contact.companyId !== company.id) {
 			throw new BadRequestException(
-				`That contact does not work at ${company.name}.`,
+				`Esse contato não trabalha na empresa ${company.name}.`,
 			);
 		}
 
@@ -642,7 +644,7 @@ export class DealsService {
 		});
 
 		if (count === 0) {
-			throw new NotFoundException("That contact is not on this deal.");
+			throw new NotFoundException("Esse contato não está neste negócio.");
 		}
 
 		this.logger.log({
@@ -663,7 +665,7 @@ export class DealsService {
 		});
 
 		if (count === 0) {
-			throw new NotFoundException("That contact is not on this deal.");
+			throw new NotFoundException("Esse contato não está neste negócio.");
 		}
 
 		return { dealId: input.dealId, contactId: input.contactId, role };
@@ -701,7 +703,7 @@ export class DealsService {
 
 		if (LOSING.has(input.stage) && !closedReason) {
 			throw new BadRequestException(
-				"Say why they were lost — a closed-lost deal with no reason teaches nobody anything.",
+				"Diga por que os negócios foram perdidos. Um negócio perdido sem motivo não ensina nada a ninguém.",
 			);
 		}
 
@@ -729,7 +731,7 @@ export class DealsService {
 		});
 
 		if (!deal) {
-			throw new NotFoundException(`No deal with id ${dealId}.`);
+			throw new NotFoundException(`Nenhum negócio com o id ${dealId}.`);
 		}
 
 		return deal.company;
@@ -832,7 +834,7 @@ export class DealsService {
 			cause instanceof PrismaNamespace.PrismaClientKnownRequestError &&
 			cause.code === "P2025"
 		) {
-			throw new NotFoundException(`No deal with id ${id}.`);
+			throw new NotFoundException(`Nenhum negócio com o id ${id}.`);
 		}
 		return this.translateRelations(cause);
 	}
@@ -843,7 +845,7 @@ export class DealsService {
 			(cause.code === "P2003" || cause.code === "P2025")
 		) {
 			throw new BadRequestException(
-				"That company or owner does not exist any more.",
+				"Essa empresa ou esse responsável não existe mais.",
 			);
 		}
 		throw cause;
@@ -885,7 +887,7 @@ function parseDate(value: string | null | undefined): Date | null {
 	if (value === null || value === undefined || value === "") return null;
 	const date = new Date(value);
 	if (Number.isNaN(date.getTime())) {
-		throw new BadRequestException(`"${value}" is not a date.`);
+		throw new BadRequestException(`"${value}" não é uma data.`);
 	}
 	return date;
 }

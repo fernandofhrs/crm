@@ -21,18 +21,37 @@ function Questionnaire({
 }
 
 function QuestionnaireProgress({
+	"aria-valuetext": ariaValueText,
+	children,
 	className,
+	render,
 	...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Progress>) {
 	return (
 		<QuestionnairePrimitive.Progress
 			data-slot="questionnaire-progress"
+			aria-label="Progresso do questionário"
 			className={cn(
 				"min-h-[1lh] w-fit min-w-[14ch] font-medium text-muted-foreground text-xs tabular-nums",
 				className,
 			)}
+			render={
+				render ??
+				((renderProps, state) => {
+					const label = state.total
+						? `Pergunta ${state.current} de ${state.total}`
+						: undefined;
+					return (
+						<div {...renderProps} aria-valuetext={ariaValueText ?? label}>
+							{children ?? label}
+						</div>
+					);
+				})
+			}
 			{...props}
-		/>
+		>
+			{children}
+		</QuestionnairePrimitive.Progress>
 	);
 }
 
@@ -168,6 +187,7 @@ function QuestionnaireInput({
 }
 
 function QuestionnaireError({
+	children,
 	className,
 	...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Error>) {
@@ -176,7 +196,18 @@ function QuestionnaireError({
 			data-slot="questionnaire-error"
 			className={cn("text-destructive text-sm", className)}
 			{...props}
-		/>
+		>
+			{children ?? (
+				<>
+					<span className="hidden in-data-required:inline">
+						Escolha uma resposta para continuar.
+					</span>
+					<span className="in-data-required:hidden">
+						Escolha uma resposta ou pule esta pergunta.
+					</span>
+				</>
+			)}
+		</QuestionnairePrimitive.Error>
 	);
 }
 
@@ -216,7 +247,7 @@ function QuestionnairePrevious({
 			)}
 			{...props}
 		>
-			{children ?? "Previous"}
+			{children ?? "Voltar"}
 		</QuestionnairePrimitive.Previous>
 	);
 }
@@ -241,7 +272,7 @@ function QuestionnaireSkip({
 			)}
 			{...props}
 		>
-			{children ?? "Skip"}
+			{children ?? "Pular"}
 		</QuestionnairePrimitive.Skip>
 	);
 }
@@ -266,7 +297,7 @@ function QuestionnaireNext({
 			)}
 			{...props}
 		>
-			{children ?? "Next"}
+			{children ?? "Avançar"}
 		</QuestionnairePrimitive.Next>
 	);
 }
@@ -291,7 +322,7 @@ function QuestionnaireSubmit({
 			)}
 			{...props}
 		>
-			{children ?? "Submit"}
+			{children ?? "Enviar"}
 		</QuestionnairePrimitive.Submit>
 	);
 }

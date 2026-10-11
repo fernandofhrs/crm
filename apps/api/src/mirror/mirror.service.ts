@@ -80,7 +80,7 @@ const REF_SELECT = {
 	activityId: true,
 } satisfies Prisma.MirrorRecordSelect;
 
-const SAVE_FAILED = "Could not be saved.";
+const SAVE_FAILED = "Não foi possível salvar.";
 
 const TRANSACTION = {
 	timeout: MIRROR.transaction.timeoutMs,
@@ -217,7 +217,7 @@ export class MirrorService {
 
 		if (!canManageConnections(role)) {
 			throw new ForbiddenException(
-				"Only an owner or an admin can mirror records into the CRM.",
+				"Só um dono ou um administrador pode espelhar registros no CRM.",
 			);
 		}
 	}
@@ -226,7 +226,7 @@ export class MirrorService {
 		for (const field of fields) {
 			if (fieldKeyFromLabel(field.key) !== field.key) {
 				throw new BadRequestException(
-					`"${field.key}" cannot be used as a field key.`,
+					`"${field.key}" não pode ser usada como chave de campo.`,
 				);
 			}
 
@@ -761,9 +761,7 @@ export class MirrorService {
 		)?.companyId;
 
 		if (!companyId) {
-			throw new MirrorRefusal(
-				`The company ${externalId} has not been mirrored.`,
-			);
+			throw new MirrorRefusal(`A empresa ${externalId} não foi espelhada.`);
 		}
 
 		return companyId;
@@ -777,9 +775,7 @@ export class MirrorService {
 		)?.contactId;
 
 		if (!contactId) {
-			throw new MirrorRefusal(
-				`The contact ${externalId} has not been mirrored.`,
-			);
+			throw new MirrorRefusal(`O contato ${externalId} não foi espelhado.`);
 		}
 
 		return contactId;
@@ -789,7 +785,7 @@ export class MirrorService {
 		const dealId = this.ref(push, MirrorEntity.DEAL, externalId)?.dealId;
 
 		if (!dealId) {
-			throw new MirrorRefusal(`The deal ${externalId} has not been mirrored.`);
+			throw new MirrorRefusal(`O negócio ${externalId} não foi espelhado.`);
 		}
 
 		return dealId;

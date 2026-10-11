@@ -39,19 +39,19 @@ function columns(
 	return [
 		{
 			id: "name",
-			header: "Name",
+			header: "Nome",
 			sortable: true,
 			hideable: false,
 			width: "w-[28%]",
 			cell: (row) => (
 				<span className="truncate font-medium">
-					{row.name ?? "Untitled key"}
+					{row.name ?? "Chave sem nome"}
 				</span>
 			),
 		},
 		{
 			id: "start",
-			header: "Key",
+			header: "Chave",
 			width: "w-[20%]",
 			hideBelow: "sm",
 			cell: (row) => (
@@ -60,7 +60,7 @@ function columns(
 		},
 		{
 			id: "createdAt",
-			header: "Created",
+			header: "Criação",
 			sortable: true,
 			width: "w-[16%]",
 			hideBelow: "md",
@@ -72,8 +72,8 @@ function columns(
 		},
 		{
 			id: "lastRequest",
-			header: "Last used",
-			label: "Last used date",
+			header: "Último uso",
+			label: "Data do último uso",
 			sortable: true,
 			width: "w-[16%]",
 			hideBelow: "lg",
@@ -82,14 +82,14 @@ function columns(
 					{row.lastRequest ? (
 						<LocalRelativeTime date={row.lastRequest} />
 					) : (
-						"Never"
+						"Nunca"
 					)}
 				</span>
 			),
 		},
 		{
 			id: "expiresAt",
-			header: "Expires",
+			header: "Expiração",
 			sortable: true,
 			width: "w-[14%]",
 			hideBelow: "lg",
@@ -105,13 +105,13 @@ function columns(
 						<LocalRelativeTime date={row.expiresAt} />
 					</span>
 				) : (
-					<span className="text-muted-foreground">Never</span>
+					<span className="text-muted-foreground">Nunca</span>
 				),
 		},
 		{
 			id: "actions",
-			header: <span className="sr-only">Actions</span>,
-			label: "Actions",
+			header: <span className="sr-only">Ações</span>,
+			label: "Ações",
 			hideable: false,
 			align: "right",
 			width: "w-[6%]",
@@ -121,7 +121,7 @@ function columns(
 						<Button variant="ghost" size="icon" disabled={pending}>
 							<Icon icon={TrashCan} />
 							<span className="sr-only">
-								Revoke {row.name ?? "this API key"}
+								Revogar {row.name ?? "esta chave de API"}
 							</span>
 						</Button>
 					</AlertDialogTrigger>
@@ -129,21 +129,21 @@ function columns(
 					<AlertDialogContent>
 						<AlertDialogHeader>
 							<AlertDialogTitle>
-								Revoke {row.name ?? "this API key"}?
+								Revogar {row.name ?? "esta chave de API"}?
 							</AlertDialogTitle>
 							<AlertDialogDescription>
-								Anything using it stops working immediately. This cannot be
-								undone.
+								Tudo o que usa esta chave para de funcionar na hora. Não dá para
+								desfazer.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 
 						<AlertDialogFooter>
-							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogCancel>Cancelar</AlertDialogCancel>
 							<AlertDialogAction
 								variant="destructive"
 								onClick={() => onRevoke(row)}
 							>
-								Revoke
+								Revogar
 							</AlertDialogAction>
 						</AlertDialogFooter>
 					</AlertDialogContent>
@@ -170,7 +170,7 @@ export function ApiKeysTable() {
 					await query.setPage(query.page - 1);
 				}
 				await cache.apiKeys();
-				toast.success("API key revoked.");
+				toast.success("Chave de API revogada.");
 			},
 			onError: (error) => toast.error(error.message),
 		}),
@@ -179,7 +179,7 @@ export function ApiKeysTable() {
 	return (
 		<DataTable
 			query={query}
-			search={<ListSearch placeholder="Search by name…" />}
+			search={<ListSearch placeholder="Buscar por nome…" />}
 			columns={columns(
 				(apiKey) => revoke.mutate({ id: apiKey.id }),
 				revoke.isPending,
@@ -188,7 +188,7 @@ export function ApiKeysTable() {
 			total={apiKeys.data?.total ?? 0}
 			getRowId={(row) => row.id}
 			loading={apiKeys.isFetching}
-			empty="No API keys yet."
+			empty="Nenhuma chave de API ainda."
 		/>
 	);
 }

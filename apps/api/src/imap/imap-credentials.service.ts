@@ -57,7 +57,7 @@ export class ImapCredentialsService {
 			return {
 				outcome: "needs-reconnect",
 				reason:
-					"The saved mailbox password can no longer be read. Connect the mailbox again.",
+					"Não é mais possível ler a senha salva da caixa de e-mail. Conecte a caixa de e-mail de novo.",
 			};
 		}
 

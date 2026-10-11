@@ -23,9 +23,9 @@ export const MIRROR = {
 		fieldLabel: 80,
 	},
 	lost: {
-		reason: "No reason was recorded where this deal came from.",
+		reason: "O sistema de origem deste negócio não registrou um motivo.",
 	},
 	stageChange: {
-		subject: "Stage changed",
+		subject: "Etapa alterada",
 	},
 } as const;

@@ -98,7 +98,7 @@ describe("normalizeCurrency and isCurrencyCode", () => {
 	});
 
 	it("names the currencies it knows", () => {
-		expect(currencyName("jpy")).toBe("Japanese Yen");
+		expect(currencyName("jpy")).toBe("Iene japonês");
 		expect(currencyName("ZZZ")).toBeNull();
 	});
 });

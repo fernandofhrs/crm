@@ -80,19 +80,21 @@ export const imapSignIn = () =>
 
 					if (!isImapSignInEnabled()) {
 						throw new APIError("NOT_FOUND", {
-							message: "Mailbox sign-in is not enabled on this install.",
+							message:
+								"A entrada com caixa de e-mail não está ativada nesta instalação.",
 						});
 					}
 
 					if (!acceptsImapSignIn(address)) {
 						throw new APIError("FORBIDDEN", {
-							message: `This CRM is private. Sign in with a mailbox at ${imapSignInDomains().join(" or ")}.`,
+							message: `Este CRM é privado. Entre com uma caixa de e-mail de ${imapSignInDomains().join(" ou ")}.`,
 						});
 					}
 
 					if (!host) {
 						throw new APIError("SERVICE_UNAVAILABLE", {
-							message: "Mailbox sign-in is not available right now.",
+							message:
+								"A entrada com caixa de e-mail não está disponível agora.",
 						});
 					}
 
@@ -100,13 +102,15 @@ export const imapSignIn = () =>
 
 					if (verdict === "refused") {
 						throw new APIError("UNAUTHORIZED", {
-							message: "The mail server refused that address and password.",
+							message:
+								"O servidor de e-mail recusou esse endereço e essa senha.",
 						});
 					}
 
 					if (verdict !== "accepted") {
 						throw new APIError("SERVICE_UNAVAILABLE", {
-							message: "The mail server could not be reached. Try again.",
+							message:
+								"Não foi possível acessar o servidor de e-mail. Tente de novo.",
 						});
 					}
 

@@ -18,7 +18,7 @@ const imapFault = z.object({
 
 type ImapFault = z.infer<typeof imapFault>;
 
-const UNKNOWN_FAULT = "The mail server connection failed.";
+const UNKNOWN_FAULT = "A conexão com o servidor de e-mail falhou.";
 
 export type ImapCredentials = {
 	host: string;
@@ -176,7 +176,7 @@ class FlowSession implements ImapSession {
 
 		const mailbox = this.flow.mailbox;
 		if (!mailbox) {
-			throw new Error(`The mail server did not open ${path}.`);
+			throw new Error(`O servidor de e-mail não abriu ${path}.`);
 		}
 
 		return {
@@ -274,21 +274,21 @@ function failureOf(cause: ImapFault): ImapFailure {
 	if (cause.authenticationFailed) {
 		return {
 			outcome: "auth-failed",
-			reason: "The mail server refused that address and password.",
+			reason: "O servidor de e-mail recusou esse endereço e essa senha.",
 		};
 	}
 
 	if (cause.code && UNREACHABLE_CODES.has(cause.code)) {
 		return {
 			outcome: "unreachable",
-			reason: `The mail server could not be reached (${cause.code}).`,
+			reason: `Não foi possível acessar o servidor de e-mail (${cause.code}).`,
 		};
 	}
 
 	if (cause.tlsFailed) {
 		return {
 			outcome: "failed",
-			reason: "The mail server did not offer an encrypted connection.",
+			reason: "O servidor de e-mail não ofereceu uma conexão criptografada.",
 		};
 	}
 
