@@ -1,9 +1,13 @@
 import { syncError } from "@crm/telemetry";
 import { Injectable, Logger } from "@nestjs/common";
+import { AsanaSyncService } from "../asana/asana-sync.service";
 import { GoogleConnectionService } from "../google/google-connection.service";
 import { GoogleSyncService } from "../google/google-sync.service";
+import { ImapSyncService } from "../imap/imap-sync.service";
 import {
+	isAsanaSyncSource,
 	isGoogleSyncSource,
+	isImapSyncSource,
 	isMicrosoftSyncSource,
 } from "../mailbox/mailbox.constants";
 import { SyncStateService } from "../mailbox/sync-state.service";
@@ -31,6 +35,8 @@ export class MailboxSyncService {
 		private readonly microsoft: MicrosoftSyncService,
 		private readonly googleConnections: GoogleConnectionService,
 		private readonly microsoftConnections: MicrosoftConnectionService,
+		private readonly imap: ImapSyncService,
+		private readonly asana: AsanaSyncService,
 	) {}
 
 	async runDue(): Promise<TickSummary> {
@@ -118,6 +124,10 @@ export class MailboxSyncService {
 		if (isMicrosoftSyncSource(source)) {
 			return this.microsoft.runOne(userId, source);
 		}
+
+		if (isImapSyncSource(source)) return this.imap.runOne(userId);
+
+		if (isAsanaSyncSource(source)) return this.asana.runOne(userId);
 
 		return null;
 	}

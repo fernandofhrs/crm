@@ -1,3 +1,5 @@
+import Email from "@carbon/icons-react/es/Email";
+import AsanaLogo from "@crm/ui/components/brand-logos/asana";
 import GoogleLogo from "@crm/ui/components/brand-logos/google";
 import MicrosoftLogo from "@crm/ui/components/brand-logos/microsoft";
 import SlackLogo from "@crm/ui/components/brand-logos/slack";
@@ -30,10 +32,12 @@ async function ConnectionsSettingsPageContent({
 	const [{ slug }, query] = await Promise.all([params, searchParams]);
 	const queryClient = getServerQueryClient();
 	const trpc = getServerTrpc();
-	const [google, microsoft, slack] = await Promise.all([
+	const [google, microsoft, slack, imap, asana] = await Promise.all([
 		queryClient.fetchQuery(trpc.google.status.queryOptions()),
 		queryClient.fetchQuery(trpc.microsoft.status.queryOptions()),
 		queryClient.fetchQuery(trpc.slack.status.queryOptions()),
+		queryClient.fetchQuery(trpc.imap.status.queryOptions()),
+		queryClient.fetchQuery(trpc.asana.status.queryOptions()),
 	]);
 	const rows = [
 		...(google.linked
@@ -71,6 +75,32 @@ async function ConnectionsSettingsPageContent({
 						sends: "Nothing yet",
 						href: `/${slug}/settings/connections/microsoft`,
 						logo: MicrosoftLogo,
+					},
+				]
+			: []),
+		...(imap.connected
+			? [
+					{
+						name: "Email by IMAP",
+						status: imap.address ? `Connected to ${imap.address}` : "Connected",
+						bringsIn: "Email and the people on it",
+						sends: "Nothing, so nothing here can change the mailbox",
+						href: `/${slug}/settings/connections/imap`,
+						logo: Email,
+					},
+				]
+			: []),
+		...(asana.connected
+			? [
+					{
+						name: "Asana",
+						status: asana.project?.name
+							? `Following ${asana.project.name}`
+							: "Connected, no project chosen",
+						bringsIn: "Dated tasks from one project, as your tasks",
+						sends: "Nothing, so nothing here can change Asana",
+						href: `/${slug}/settings/connections/asana`,
+						logo: AsanaLogo,
 					},
 				]
 			: []),
@@ -133,6 +163,20 @@ async function ConnectionsSettingsPageContent({
 							description="File Outlook email against the right company"
 							href={`/${slug}/settings/connections/microsoft`}
 						/>
+						{imap.configured ? (
+							<StarterRow
+								logo={Email}
+								name="Email by IMAP"
+								description="File email from your own mail server against the right company"
+								href={`/${slug}/settings/connections/imap`}
+							/>
+						) : null}
+						<StarterRow
+							logo={AsanaLogo}
+							name="Asana"
+							description="Keep the dated tasks of one project as your agenda"
+							href={`/${slug}/settings/connections/asana`}
+						/>
 					</div>
 					<p className="px-(--spacing-block-inline) text-muted-foreground text-sm">
 						Looking for something else?{" "}
@@ -149,6 +193,7 @@ async function ConnectionsSettingsPageContent({
 				slug={slug}
 				open={first(query.add) === "1"}
 				connected={rows.map((row) => row.name)}
+				imapConfigured={imap.configured}
 			/>
 		</main>
 	);

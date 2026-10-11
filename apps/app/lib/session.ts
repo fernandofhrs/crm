@@ -1,4 +1,9 @@
-import { auth, needsMailboxGrant, type Session } from "@crm/auth";
+import {
+	auth,
+	isIdentityOnlySignIn,
+	needsMailboxGrant,
+	type Session,
+} from "@crm/auth";
 import { db } from "@crm/db";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -28,6 +33,8 @@ export const signInAccounts = cache(async (userId: string) =>
 
 export async function requireMailboxAccess(): Promise<Session> {
 	const session = await requireSession();
+
+	if (isIdentityOnlySignIn()) return session;
 
 	if (needsMailboxGrant(await signInAccounts(session.user.id))) {
 		redirect("/grant-access");

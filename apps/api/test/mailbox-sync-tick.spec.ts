@@ -3,8 +3,10 @@ import {
 	GoogleSyncStatus,
 	type MailboxSyncModel as MailboxSync,
 } from "@crm/db";
+import type { AsanaSyncService } from "../src/asana/asana-sync.service";
 import type { GoogleConnectionService } from "../src/google/google-connection.service";
 import type { GoogleSyncService } from "../src/google/google-sync.service";
+import type { ImapSyncService } from "../src/imap/imap-sync.service";
 import {
 	SYNC_LEASE_MS,
 	type SyncStateService,
@@ -123,7 +125,16 @@ function build(
 		provider as unknown as MicrosoftSyncService,
 		noConnections as unknown as GoogleConnectionService,
 		noConnections as unknown as MicrosoftConnectionService,
+		single(runOne, "imap") as unknown as ImapSyncService,
+		single(runOne, "asana") as unknown as AsanaSyncService,
 	);
+}
+
+function single(
+	runOne: (userId: string, source: string) => Promise<Outcome | null>,
+	source: string,
+) {
+	return { runOne: (userId: string) => runOne(userId, source) };
 }
 
 let state: FakeState;

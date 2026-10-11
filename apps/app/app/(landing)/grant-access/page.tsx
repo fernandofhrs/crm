@@ -1,4 +1,8 @@
-import { type MailboxProviderId, mailboxGrantsNeeded } from "@crm/auth";
+import {
+	isIdentityOnlySignIn,
+	type MailboxProviderId,
+	mailboxGrantsNeeded,
+} from "@crm/auth";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthHeading, AuthShell } from "@/components/auth-shell";
@@ -23,6 +27,10 @@ const BOTH =
 
 export default async function GrantAccessPage() {
 	const { user } = await requireSession();
+
+	if (isIdentityOnlySignIn()) {
+		redirect("/");
+	}
 
 	const providers = mailboxGrantsNeeded(await signInAccounts(user.id));
 

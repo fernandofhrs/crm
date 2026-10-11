@@ -34,6 +34,8 @@ export type CrmCache = {
 	activity(options?: Options): Promise<void>;
 	google(options?: Options): Promise<void>;
 	microsoft(options?: Options): Promise<void>;
+	imap(options?: Options): Promise<void>;
+	asana(options?: Options): Promise<void>;
 	settings(options?: Options): Promise<void>;
 	currency(options?: Options): Promise<void>;
 	workspace(options?: Options): Promise<void>;
@@ -268,6 +270,26 @@ export function useCrmCache(): CrmCache {
 					trpc.contacts.byId.queryKey(),
 					trpc.dashboard.summary.queryKey(),
 				],
+				options,
+			),
+
+		imap: (options) =>
+			run(
+				[trpc.imap.status.queryKey()],
+				[
+					...activityKeys(),
+					...listKeys(),
+					trpc.companies.byId.queryKey(),
+					trpc.contacts.byId.queryKey(),
+					trpc.dashboard.summary.queryKey(),
+				],
+				options,
+			),
+
+		asana: (options) =>
+			run(
+				[trpc.asana.status.queryKey()],
+				[...activityKeys(), trpc.dashboard.summary.queryKey()],
 				options,
 			),
 

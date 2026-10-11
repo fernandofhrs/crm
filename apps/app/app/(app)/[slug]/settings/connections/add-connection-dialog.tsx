@@ -1,6 +1,8 @@
 "use client";
 
+import Email from "@carbon/icons-react/es/Email";
 import Plug from "@carbon/icons-react/es/Plug";
+import AsanaLogo from "@crm/ui/components/brand-logos/asana";
 import DocusignLogo from "@crm/ui/components/brand-logos/docusign";
 import GoogleLogo from "@crm/ui/components/brand-logos/google";
 import MicrosoftLogo from "@crm/ui/components/brand-logos/microsoft";
@@ -20,10 +22,12 @@ export function AddConnectionDialog({
 	slug,
 	open,
 	connected,
+	imapConfigured,
 }: {
 	slug: string;
 	open: boolean;
 	connected: string[];
+	imapConfigured: boolean;
 }) {
 	const router = useRouter();
 	return (
@@ -63,6 +67,22 @@ export function AddConnectionDialog({
 							name="Microsoft 365"
 							description="Bring in Outlook email and the people on it"
 							href={`/${slug}/settings/connections/microsoft`}
+						/>
+					) : null}
+					{imapConfigured && !connected.includes("Email by IMAP") ? (
+						<CatalogRow
+							logo={Email}
+							name="Email by IMAP"
+							description="Bring in email from your own mail server"
+							href={`/${slug}/settings/connections/imap`}
+						/>
+					) : null}
+					{!connected.includes("Asana") ? (
+						<CatalogRow
+							logo={AsanaLogo}
+							name="Asana"
+							description="Bring in the dated tasks of one project as your agenda"
+							href={`/${slug}/settings/connections/asana`}
 						/>
 					) : null}
 					<CatalogRow

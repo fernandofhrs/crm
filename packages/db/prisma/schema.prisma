@@ -23,15 +23,17 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  ownedCompanies Company[]           @relation("CompanyOwner")
-  ownedContacts  Contact[]           @relation("ContactOwner")
-  ownedDeals     Deal[]              @relation("DealOwner")
-  activities     Activity[]          @relation("ActivityAuthor")
-  mailboxSyncs   MailboxSync[]
-  factDecisions  ContactFact[]       @relation("FactDecider")
-  conversations  AgentConversation[] @relation("ConversationOwner")
-  fieldValues    FieldValue[]        @relation("FieldValueUser")
-  savedViews     SavedView[]         @relation("SavedViewOwner")
+  ownedCompanies  Company[]           @relation("CompanyOwner")
+  ownedContacts   Contact[]           @relation("ContactOwner")
+  ownedDeals      Deal[]              @relation("DealOwner")
+  activities      Activity[]          @relation("ActivityAuthor")
+  mailboxSyncs    MailboxSync[]
+  imapConnection  ImapConnection?
+  asanaConnection AsanaConnection?
+  factDecisions   ContactFact[]       @relation("FactDecider")
+  conversations   AgentConversation[] @relation("ConversationOwner")
+  fieldValues     FieldValue[]        @relation("FieldValueUser")
+  savedViews      SavedView[]         @relation("SavedViewOwner")
 
   createdAgentDefinitions AgentDefinition[]             @relation("AgentDefinitionCreator")
   createdAgentVersions    AgentVersion[]                @relation("AgentVersionCreator")
@@ -1131,6 +1133,7 @@ model Activity {
   emailThread     EmailThread?   @relation(fields: [emailThreadId], references: [id], onDelete: Cascade)
   calendarEventId String?        @unique
   calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  asanaTaskGid    String?        @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1176,6 +1179,37 @@ model MailboxSync {
   @@map("mailboxSync")
 }
 
+model ImapConnection {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  address  String
+  username String
+  secret   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("imapConnection")
+}
+
+model AsanaConnection {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  secret      String
+  accountName String?
+  projectGid  String?
+  projectName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("asanaConnection")
+}
+
 model EmailThread {
   id            String  @id @default(cuid())
   rootMessageId String  @unique
@@ -1211,6 +1245,7 @@ model EmailMessage {
   gmailMessageId   String?
   outlookMessageId String?
   outlookWebLink   String?
+  imapMessageRef   String?
 
   direction  EmailDirection
   fromEmail  String

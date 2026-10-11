@@ -60,6 +60,22 @@ sign in on different paths and never reach the guard.
 A workspace with no owner and no admin lets any member connect. There is nobody
 left to ask, and a fresh install must not be locked out of its first connection.
 
+## A connection that takes a secret seals it and never shows it again
+
+IMAP takes a mailbox password and Asana a personal access token. Neither has an
+OAuth flow to lean on, so the form is the grant.
+
+- The secret goes from the form to `imap.connect` / `asana.connect`, is checked
+  against the service, and is sealed by `CredentialVaultService`. A refused secret
+  saves nothing.
+- Status procedures return whether a connection exists, never the secret and never a
+  hint of it. The field is empty on every later visit.
+- Both are **per rep**. Disconnecting removes only that rep's row, so it needs no
+  `canManageConnections`: nobody else's work stops.
+- When the saved secret stops working the page says so and puts the same form under
+  the status card. Reconnecting keeps the cursor, so nothing is imported twice.
+- `Sends` is "Nothing" for both, and says what that guarantees.
+
 ## Direction is the organising idea
 
 Every connection declares what it **brings in** and what it **sends**. Use those

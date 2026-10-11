@@ -36,6 +36,10 @@ const QUOTE_MARKERS: RegExp[] = [
 	/^\s*From:\s.+$/m,
 	/^\s*Begin forwarded message:\s*$/im,
 	/^\s*-{3,}\s*Forwarded message\s*-{3,}\s*$/im,
+	/^\s*Em .+ escreveu:\s*$/m,
+	/^\s*-{2,}\s*Mensagem original\s*-{2,}\s*$/im,
+	/^\s*De:\s.+$/m,
+	/^\s*-{3,}\s*Mensagem encaminhada\s*-{3,}\s*$/im,
 ];
 
 export function stripQuotedHistory(body: string): string {

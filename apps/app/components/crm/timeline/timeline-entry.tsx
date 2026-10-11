@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { RecordLink } from "@/components/crm/record-sheet/record-link";
 import { LocalDateTime, LocalRelativeTime } from "@/components/local-date-time";
-import { activityLabel } from "@/lib/activity-presentation";
+import { activityLabel, syncOriginLabel } from "@/lib/activity-presentation";
 import { dealStageLabel } from "@/lib/deal-stage";
 import { useCrmCache } from "@/lib/trpc/cache";
 import { useTRPC } from "@/lib/trpc/client";
@@ -31,6 +31,10 @@ const stageChange = z
 	.object({ from: z.enum(DealStage), to: z.enum(DealStage) })
 	.nullable()
 	.catch(null);
+
+const syncSource = z
+	.object({ source: z.string().nullable().catch(null) })
+	.catch({ source: null });
 
 function anchorId(anchor: TimelineAnchor): string {
 	if ("companyId" in anchor) return anchor.companyId;
@@ -68,10 +72,9 @@ export function TimelineEntry({
 	const when = entry.occurredAt ?? entry.createdAt;
 
 	const synced = entry.meta?.synced === true;
+	const origin = syncOriginLabel(syncSource.parse(entry.meta).source);
 	const author = synced
-		? entry.emailThread
-			? "via Gmail"
-			: "via Calendar"
+		? (origin ?? (entry.emailThread ? "via Gmail" : "via Calendar"))
 		: entry.createdBy.name;
 
 	const headline = change

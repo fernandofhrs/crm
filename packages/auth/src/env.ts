@@ -3,6 +3,7 @@ import "@crm/env/load";
 const DEFAULT_API_URL = "http://localhost:3001";
 const DEFAULT_APP_URL = "http://localhost:3000";
 const DEFAULT_MICROSOFT_TENANT = "common";
+const IDENTITY_ONLY = "identity";
 
 const optional = (key: string): string | undefined => {
 	const value = process.env[key];
@@ -63,6 +64,7 @@ export const env = {
 	microsoft: microsoftCredentials(),
 	slack: slackCredentials(),
 	cookieDomain: optional("AUTH_COOKIE_DOMAIN"),
+	identityOnly: optional("SIGN_IN_SCOPES") === IDENTITY_ONLY,
 	trustedOrigins: [...new Set([...appUrls, apiUrl])],
 	isProduction: process.env.NODE_ENV === "production",
 } as const;
@@ -77,6 +79,10 @@ export function isMicrosoftConfigured(): boolean {
 
 export function isSlackConfigured(): boolean {
 	return env.slack !== undefined;
+}
+
+export function isIdentityOnlySignIn(): boolean {
+	return env.identityOnly;
 }
 
 export { apiUrl, appUrl };

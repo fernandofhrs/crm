@@ -9,9 +9,9 @@ import { Injectable, Logger } from "@nestjs/common";
 import { InjectDatabase } from "../database/database.constants";
 import {
 	GOOGLE_PROVIDER_ID,
+	type OAuthSyncSource,
 	PROVIDER_FOR_SOURCE,
 	SCOPE_FOR_SOURCE,
-	type SyncSource,
 } from "./mailbox.constants";
 
 export type TokenFailure =
@@ -40,7 +40,7 @@ export class MailboxTokenService {
 		return parseScopes(account?.scope);
 	}
 
-	async isConnected(userId: string, source: SyncSource): Promise<boolean> {
+	async isConnected(userId: string, source: OAuthSyncSource): Promise<boolean> {
 		const scopes = await this.grantedScopes(
 			userId,
 			PROVIDER_FOR_SOURCE[source],
@@ -69,7 +69,7 @@ export class MailboxTokenService {
 
 	async accessTokenFor(
 		userId: string,
-		source: SyncSource,
+		source: OAuthSyncSource,
 	): Promise<TokenResult> {
 		const providerId = PROVIDER_FOR_SOURCE[source];
 

@@ -40,13 +40,13 @@ if (env.google) {
 	const google: NonNullable<typeof socialProviders.google> = {
 		...env.google,
 
-		scope: [...SYNC_SCOPES],
+		scope: env.identityOnly ? [] : [...SYNC_SCOPES],
 
 		accessType: "offline",
 	};
 
 	const hostedDomain = primaryWorkspaceDomain();
-	if (hostedDomain) google.hd = hostedDomain;
+	if (hostedDomain && !env.identityOnly) google.hd = hostedDomain;
 
 	socialProviders.google = google;
 }
@@ -57,7 +57,7 @@ if (env.microsoft) {
 		clientSecret: env.microsoft.clientSecret,
 		tenantId: env.microsoft.tenantId,
 
-		scope: [...MICROSOFT_SYNC_SCOPES],
+		scope: env.identityOnly ? [] : [...MICROSOFT_SYNC_SCOPES],
 
 		prompt: "select_account",
 

@@ -30,3 +30,15 @@ export function activityLabel(type: ActivityType): string {
 export function activityIcon(type: ActivityType): CarbonIcon {
 	return PRESENTATION[type].icon;
 }
+
+const SYNC_ORIGIN = new Map([
+	["gmail", "via Gmail"],
+	["outlook", "via Outlook"],
+	["imap", "via email"],
+	["calendar", "via Calendar"],
+	["asana", "via Asana"],
+]);
+
+export function syncOriginLabel(source: string | null): string | null {
+	return source ? (SYNC_ORIGIN.get(source) ?? null) : null;
+}

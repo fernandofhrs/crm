@@ -182,8 +182,8 @@ Two rules follow for the serverless build:
   `internetMessageHeaders` when `$select`ed and not for every message, so Outlook falls
   back to `outlook-conversation:<conversationId>` — threading that still holds inside
   Outlook, just not across to Gmail.
-- **`MailboxSync.source` is the discriminator** — `calendar`, `gmail`, `outlook`. Each
-  provider's module only ever sees its own, and `sync/mailbox-sync.service.ts` is the
+- **`MailboxSync.source` is the discriminator** — `calendar`, `gmail`, `outlook`,
+  `imap`, `asana`. Each provider's module only ever sees its own, and `sync/mailbox-sync.service.ts` is the
   one place that dispatches. One cron, one budget:
   `POST /internal/sync/mailboxes` (`/google` is kept as an alias so an existing
   deployment's cron keeps working).
@@ -194,6 +194,67 @@ Two rules follow for the serverless build:
 - **Microsoft has no token-revocation endpoint.** `revoke` clears the columns and the
   UI says the consent itself is removed in the user's Microsoft account. Google's still
   posts to `oauth2.googleapis.com/revoke` and refuses to clear if that fails.
+
+## IMAP is a third mail source, and it is configured, not typed
+
+`apps/api/src/imap` reads a mailbox no OAuth provider owns — a hosting company's
+mail server, an on-premise one. It hands `ThreadWriterService` the same
+`IncomingMessage` Gmail and Outlook do, so nothing downstream knows the difference.
+
+- **The host is the install's, never the rep's.** `IMAP_HOST` (and `IMAP_PORT`,
+  default 993) are environment variables. A rep supplies an address and a password
+  and nothing else, so the API only ever opens a socket to one known server. A host
+  field on the form is an SSRF primitive for every signed-in member.
+- **Implicit TLS on 993, STARTTLS required anywhere else.** `ImapClient` sets
+  `doSTARTTLS: true` off 993, so a server that offers neither is refused rather than
+  sent a password in cleartext. Loopback is the one exception, for a local test server.
+- **The password is sealed, not stored.** `CredentialVaultService` (`mailbox/`) is
+  AES-256-GCM under a key derived from `BETTER_AUTH_SECRET` with HKDF. `open` returns
+  `null` for anything it cannot read, and a `null` is `NEEDS_RECONNECT`, never a throw:
+  rotating the auth secret asks reps to reconnect, it does not break the tick.
+- **`ImapCredentialsService` is the only reader of `imapConnection`.** Nothing returns
+  the secret, and no log line carries it.
+- **The cursor is a UID per folder, with its `UIDVALIDITY`**, as JSON in
+  `MailboxSync.cursor` (`imap-cursor.ts`, parsed with Zod). A changed `UIDVALIDITY`
+  restarts that folder from the window; `rfcMessageId` is unique, so a restart costs
+  fetches and never rows.
+- **Sent is read before the inbox.** `store` only creates a company for somebody the
+  rep has replied to, so the reply has to exist before the message it answers is
+  judged. Reading the inbox first files an import as a list of strangers.
+- **IMAP is the one source that looks back.** The first check starts
+  `IMAP.backfill.windowMs` (30 days) before now, because a mailbox connected to an
+  empty CRM is otherwise empty for a month. Gmail and Outlook stay forward-only.
+- **One tick reads at most `IMAP.tick.maxMessages` in `IMAP.tick.budgetMs`.** The
+  cursor's `importing` flag says more is waiting; `imap.status` returns it and the
+  connection page keeps calling `imap.syncNow` from the click that started it. The
+  cron finishes whatever a closed tab left.
+- **Bodies are one part, not the message.** `textPartOf` picks `text/plain`, else
+  `text/html`, and `download` fetches only that part, capped at `IMAP.body.maxBytes`.
+  Attachments are never downloaded.
+
+## Asana is the agenda where there is no calendar
+
+`apps/api/src/asana` is the calendar's counterpart for a team whose mail server has
+none. It is a sync, like the mailbox — not enrichment — which is why it may live here.
+
+- **One project per rep, chosen once.** A personal access token, sealed in the same
+  vault, and the gid of the project that holds their commitments
+  (`asanaConnection`). Per rep and not per workspace: a shared token would let any
+  member read any project its owner can.
+- **A dated open task is a `TASK` activity**, owned by the rep, keyed by
+  `activity.asanaTaskGid`. `due_at` wins; a bare `due_on` ends with its day
+  (`ASANA.task.dateOnlyDueTime`). Undated tasks are not agenda and are skipped.
+- **Only the window is brought in** — `ASANA.window`, 30 days back to 180 ahead — but
+  a task already tracked is followed wherever it is rescheduled to.
+- **Completion is read from absence.** Each check lists every open task; a tracked
+  task that is no longer in that list is completed here. When the list was cut short
+  (`ASANA.api.maxTaskPages`) nothing is completed, because absence proves nothing.
+- **Nothing is sent.** Completing a task in the CRM does not complete it in Asana.
+- **A task is filed on a contact only by an address written in it.** The name and
+  notes are searched for email addresses and matched exactly against `contact.email`.
+  No name matching, no guessing — that would be the agent's job, not the API's.
+- **Asana payloads are parsed with Zod in `asana.client.ts`**, and a payload that does
+  not parse is a failed check with a plain reason, not a half-read task.
 
 ## Not every address on a thread is a person
 

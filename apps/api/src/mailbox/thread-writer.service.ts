@@ -29,6 +29,7 @@ export type IncomingMessage = {
 	gmailMessageId?: string | null;
 	outlookMessageId?: string | null;
 	outlookWebLink?: string | null;
+	imapMessageRef?: string | null;
 };
 
 @Injectable()
@@ -148,6 +149,7 @@ export class ThreadWriterService {
 							gmailMessageId: parsed.gmailMessageId ?? null,
 							outlookMessageId: parsed.outlookMessageId ?? null,
 							outlookWebLink: parsed.outlookWebLink ?? null,
+							imapMessageRef: parsed.imapMessageRef ?? null,
 							direction: outbound
 								? EmailDirection.OUTBOUND
 								: EmailDirection.INBOUND,
