@@ -386,6 +386,46 @@ Below is `purge`'s contract — everything that used to be `delete`'s:
 - **Recompute after commit, logging rather than throwing** — the row is already gone,
   and a raised error makes the browser skip invalidation and retry into a 404.
 
+## A mirror is pushed in, and the other system stays the master
+
+`mirror.push` (`POST /rest/mirror/push`, with the API key of an owner or an admin)
+is how a system that already holds the customer base — an order portal, an ERP —
+keeps a copy of it here. `mirror.status` reports what each source has sent.
+`apps/api/src/mirror` is the whole feature and `MIRROR` (`mirror-config.ts`) holds
+its limits.
+
+- **The API does not match identities here either.** The sender names every record
+  with its own `externalId`, and `MirrorRecord` (`source`, `entity`, `externalId`)
+  is the only link. The two adoptions are exact-key reads, not matching: a company
+  at the same normalised domain, a contact with the same address.
+- **Pushed again, a record is updated, never duplicated.** `hash` is the SHA-256 of
+  the record as sent, and an equal hash returns `unchanged` without a write.
+- **Every record is saved under `pg_advisory_xact_lock` and re-read inside its
+  transaction** (`claim`). A sender that times out retries while the first request
+  is still running; without the lock both requests create the company.
+- **One record is one transaction, and a bad record does not fail the batch.** It
+  comes back in `failed` with a reason and the rest are saved.
+- **Mirrored companies and contacts are `source: IMPORT`,
+  `enrichmentStatus: SKIPPED`, and write no `AgentTask` and no CRM event.** The base
+  is already known, and researching a few hundred customers on arrival spends
+  credits nobody asked to spend.
+- **History keeps its own dates.** `createdAt`, `closedAt`, `stageChangedAt` and an
+  activity's `occurredAt` come from the push, so a deal won in March counts in
+  March.
+- **A stage that moves writes a `STAGE_CHANGE` activity**, dated at the close when
+  there is one.
+- **The sender owns what it sends.** A push overwrites it, so an edit made in the CRM
+  lasts only until that record changes at the source. On a company or a contact an
+  empty value never blanks what is there; a deal is written whole. A record that
+  disappears at the source is not removed here.
+- **Owners are named by e-mail.** An unknown address leaves a deal with the key's
+  user, `MirrorRecord.ownerEmail` remembers whose it is, and `reconcileOwners` hands
+  the records over on the first push after that person signs in.
+- **`fields` creates the custom fields it names** with `agentFilled: false`, so the
+  agent never researches a value the source system owns.
+- **A second company at a domain is stored without the domain.** Two customers share
+  a mail address more often than two companies share a site.
+
 ## Money
 
 A deal is sold in one currency and reported in another, and **only `baseAmount` may

@@ -330,6 +330,7 @@ model Company {
   emailThreads   EmailThread[]
   calendarEvents CalendarEvent[]
   fieldValues    FieldValue[]
+  mirrorRecords  MirrorRecord[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
@@ -394,6 +395,7 @@ model Contact {
   fieldValues     FieldValue[]
   visitors        TrackedVisitor[]   @relation("VisitorContact")
   submissions     FormSubmission[]   @relation("SubmissionContact")
+  mirrorRecords   MirrorRecord[]
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
 
@@ -941,11 +943,12 @@ model Deal {
   lastActivityAt DateTime?
   archivedAt     DateTime?
 
-  contacts    DealContact[]
-  activities  Activity[]
-  fieldValues FieldValue[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  contacts      DealContact[]
+  activities    Activity[]
+  fieldValues   FieldValue[]
+  mirrorRecords MirrorRecord[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([companyId])
   @@index([ownerId])
@@ -1135,6 +1138,8 @@ model Activity {
   calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
   asanaTaskGid    String?        @unique
 
+  mirrorRecords MirrorRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1144,6 +1149,42 @@ model Activity {
   @@index([dueAt])
   @@index([createdById])
   @@map("activity")
+}
+
+enum MirrorEntity {
+  COMPANY
+  CONTACT
+  DEAL
+  ACTIVITY
+}
+
+model MirrorRecord {
+  id         String       @id @default(cuid())
+  source     String
+  entity     MirrorEntity
+  externalId String
+  hash       String
+  ownerEmail String?
+
+  companyId  String?
+  company    Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId  String?
+  contact    Contact?  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  dealId     String?
+  deal       Deal?     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  activityId String?
+  activity   Activity? @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, entity, externalId])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([dealId])
+  @@index([activityId])
+  @@index([source, ownerEmail])
+  @@map("mirrorRecord")
 }
 
 enum GoogleSyncStatus {
