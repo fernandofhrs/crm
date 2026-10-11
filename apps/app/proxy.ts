@@ -1,8 +1,9 @@
 import { AUTH_COOKIE_PREFIX } from "@crm/auth/cookies";
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
-import { isMarketing } from "@/lib/env";
+import { isMarketing, isResearchKeyOptional } from "@/lib/env";
 import {
+	type Gate,
 	ONBOARDING_PATH,
 	RESEARCH_PATH,
 	readResearchGate,
@@ -41,7 +42,7 @@ export async function proxy(request: NextRequest) {
 	// trip rather than two, and neither answer can be stale.
 	const [workspace, research] = await Promise.all([
 		readWorkspaceGate(request),
-		readResearchGate(request),
+		researchGate(request),
 	]);
 
 	if (workspace.gate === "required") return sendTo(ONBOARDING_PATH, request);
@@ -52,6 +53,10 @@ export async function proxy(request: NextRequest) {
 	if (!settled || !workspace.slug) return NextResponse.next();
 
 	return sendTo(appPath(pathname, workspace.slug), request);
+}
+
+async function researchGate(request: NextRequest): Promise<Gate> {
+	return isResearchKeyOptional() ? "settled" : readResearchGate(request);
 }
 
 function appPath(pathname: string, slug: string): string {

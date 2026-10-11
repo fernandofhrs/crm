@@ -12,10 +12,18 @@ const realFetch = globalThis.fetch;
 
 const realMarketing = process.env.IS_MARKETING;
 
+const realOptionalKey = process.env.RESEARCH_KEY_OPTIONAL;
+
 afterEach(() => {
 	globalThis.fetch = realFetch;
 	marketing(realMarketing);
+	optionalKey(realOptionalKey);
 });
+
+function optionalKey(value: string | undefined) {
+	if (value === undefined) delete process.env.RESEARCH_KEY_OPTIONAL;
+	else process.env.RESEARCH_KEY_OPTIONAL = value;
+}
 
 function marketing(value: string | undefined) {
 	if (value === undefined) delete process.env.IS_MARKETING;
@@ -392,5 +400,47 @@ describe("the research key gate", () => {
 		expect(
 			redirectedTo(await proxy(request("/onboarding", [SESSION_COOKIE]))),
 		).toBe("/onboarding/research");
+	});
+
+	it("lets a keyless install in when the key is optional, without asking", async () => {
+		optionalKey("true");
+		const calls = setup({ configured: false });
+
+		expect(
+			redirectedTo(
+				await proxy(request(`/${SLUG}/companies`, [SESSION_COOKIE])),
+			),
+		).toBeNull();
+		expect(
+			redirectedTo(
+				await proxy(request("/onboarding/research", [SESSION_COOKIE])),
+			),
+		).toBe(`/${SLUG}`);
+		expect(calls.research).toBe(0);
+	});
+
+	it("still asks for the workspace name when the key is optional", async () => {
+		optionalKey("true");
+		setup({ onboarded: false, configured: false });
+
+		expect(
+			redirectedTo(
+				await proxy(request(`/${SLUG}/companies`, [SESSION_COOKIE])),
+			),
+		).toBe("/onboarding");
+	});
+
+	it("takes only the literal true as optional", async () => {
+		setup({ configured: false });
+
+		for (const value of ["1", "TRUE", "yes", ""]) {
+			optionalKey(value);
+
+			expect(
+				redirectedTo(
+					await proxy(request(`/${SLUG}/companies`, [SESSION_COOKIE])),
+				),
+			).toBe("/onboarding/research");
+		}
 	});
 });

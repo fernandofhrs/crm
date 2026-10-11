@@ -154,7 +154,13 @@ General — an admin who cannot redeploy cannot set a variable.
   read back from a LinkedIn URL already on their record. Both capabilities in
   `agent/lib/capabilities.ts` turn on and off with this one key.
 - **An install that had the variable is asked again**: no migration, no fallback, and
-  **the gate cannot be dismissed**.
+  **the gate cannot be dismissed** from the page.
+- **`RESEARCH_KEY_OPTIONAL="true"` removes the gate for the whole install.** The proxy
+  then never asks `settings.researchKey` and sends `/onboarding/research` on into the
+  workspace. It exists because the gate holds every member, and a member cannot be
+  expected to hold the key. Only the literal `true`; read per request by
+  `isResearchKeyOptional()` (`apps/app/lib/env.ts`); declared in the root `turbo.json`
+  and `apps/app/turbo.json`. Settings → General still sets the key.
 - **Nothing is lost while waiting.** A keyless `brand` task settles `SKIPPED` *before*
   anything marks the row `RUNNING`, and `settle` only overwrites `RUNNING` — so the
   company stays `PENDING`, which the sweep re-queues
