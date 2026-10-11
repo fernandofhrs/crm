@@ -116,7 +116,7 @@ export function SavedViewsMenu({
 						/>
 					))}
 					{shared_.length > 0 && (
-						<DropdownMenuLabel>Compartilhadas com a equipe</DropdownMenuLabel>
+						<DropdownMenuLabel>Compartilhadas com o time</DropdownMenuLabel>
 					)}
 					{shared_.map((view) => (
 						<DropdownMenuItem
@@ -149,7 +149,7 @@ export function SavedViewsMenu({
 						</Field>
 						<Field orientation="horizontal">
 							<FieldLabel htmlFor="saved-view-shared">
-								Compartilhar com a equipe
+								Compartilhar com o time
 							</FieldLabel>
 							<Switch
 								id="saved-view-shared"

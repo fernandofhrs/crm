@@ -71,13 +71,15 @@ export const SLACK_SCOPES: readonly SlackScope[] = [
 	{
 		scope: "channels:manage",
 		group: "change",
-		grant: "Criar canais públicos, e renomear ou arquivar os canais em que está",
+		grant:
+			"Criar canais públicos, e renomear ou arquivar os canais em que está",
 		sensitive: true,
 	},
 	{
 		scope: "groups:write",
 		group: "change",
-		grant: "Criar canais privados, e renomear ou arquivar os canais em que está",
+		grant:
+			"Criar canais privados, e renomear ou arquivar os canais em que está",
 		sensitive: true,
 	},
 	{
@@ -147,7 +149,8 @@ export const SLACK_SCOPE_GROUPS: ReadonlyArray<{
 	{
 		id: "change",
 		label: "Canais que pode alterar",
-		summary: "Entrar, criar, renomear, arquivar e convidar pessoas para canais.",
+		summary:
+			"Entrar, criar, renomear, arquivar e convidar pessoas para canais.",
 	},
 ];
 

@@ -408,7 +408,7 @@ describe("field values", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/works here/);
+		expect(refused?.message).toMatch(/trabalha aqui/);
 
 		expect(await db.fieldValue.count({ where: { companyId: record } })).toBe(0);
 
@@ -492,7 +492,7 @@ describe("a select option that was taken away", () => {
 		} catch (cause) {
 			refused = cause as Error;
 		}
-		expect(refused?.message).toMatch(/no option/);
+		expect(refused?.message).toMatch(/não tem a opção/);
 	});
 
 	it("still reads as a label in a table, not as an option id", async () => {

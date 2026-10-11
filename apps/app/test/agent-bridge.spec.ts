@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { verifyJwtHmac } from "eve/channels/auth";
+import { BRIDGE_ERRORS, bridgeErrorHint } from "../lib/agent-bridge-errors";
 
 const SECRET = "test-secret-at-least-long-enough-to-be-a-secret";
 
@@ -78,5 +79,20 @@ describe("mintBridgeToken", () => {
 		expect(mintBridgeToken(rep)).rejects.toThrow();
 
 		process.env.AGENT_BRIDGE_SECRET = secret;
+	});
+});
+
+describe("bridgeErrorHint", () => {
+	it("tells whoever runs the install how to bring the agent back", () => {
+		expect(bridgeErrorHint(BRIDGE_ERRORS.notReachable)).toContain("AGENT_URL");
+		expect(bridgeErrorHint(BRIDGE_ERRORS.notConfigured)).toContain(
+			"AGENT_BRIDGE_SECRET",
+		);
+	});
+
+	it("says nothing about an error the install cannot fix", () => {
+		expect(bridgeErrorHint(BRIDGE_ERRORS.notSignedIn)).toBeNull();
+		expect(bridgeErrorHint(BRIDGE_ERRORS.conversationNotFound)).toBeNull();
+		expect(bridgeErrorHint("Server returned 500.")).toBeNull();
 	});
 });

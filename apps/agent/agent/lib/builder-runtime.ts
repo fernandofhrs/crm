@@ -395,7 +395,8 @@ export async function saveBuilderDraft(
 					actorType: "USER",
 					actorId: userId,
 					type: "agent.created",
-					summary: "Created a draft agent from a private builder chat",
+					summary:
+						"Criou um rascunho de agente em um chat privado do construtor",
 					requestId: `builder:${conversationId}`,
 				},
 			});
@@ -409,7 +410,7 @@ export async function saveBuilderDraft(
 				actorType: "USER",
 				actorId: userId,
 				type: "version.created",
-				summary: `Prepared version ${number} for review`,
+				summary: `Preparou a versão ${number} para revisão`,
 				requestId: version.id,
 				after: { status: "READY", validation: "passed" },
 			},

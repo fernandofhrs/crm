@@ -126,7 +126,7 @@ export function classifyKey(cause: unknown): KeyCheck {
 	if (cause.status === 401 && !recognisedKeyFailure(cause)) {
 		return {
 			outcome: "invalid",
-			reason: "Context did not recognise that API key.",
+			reason: "O Context não reconheceu essa chave de API.",
 		};
 	}
 

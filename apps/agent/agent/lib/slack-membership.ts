@@ -133,14 +133,18 @@ export async function joinSlackChannel(
 	});
 
 	if (!channel) {
-		return { joined: false, reason: "No such channel.", needsHuman: false };
+		return {
+			joined: false,
+			reason: "Esse canal não existe.",
+			needsHuman: false,
+		};
 	}
 
 	const bot = await slackAccessToken();
 	if (!bot) {
 		return {
 			joined: false,
-			reason: "Slack is not connected.",
+			reason: "O Slack não está conectado.",
 			needsHuman: true,
 		};
 	}
@@ -205,20 +209,20 @@ function needsHuman(error: string): boolean {
 function explain(error: string): string {
 	switch (error) {
 		case "no_user_grant":
-			return "This workspace did not grant Comp AI permission to add itself to a private channel.";
+			return "Este workspace do Slack não deu ao Comp AI permissão para entrar sozinho em um canal privado.";
 		case "channel_not_found":
-			return "Slack cannot see this channel. A member has to invite Comp AI.";
+			return "O Slack não enxerga este canal. Um membro precisa convidar o Comp AI.";
 		case "is_archived":
-			return "This channel is archived. Somebody has to unarchive it before Comp AI can join.";
+			return "Este canal está arquivado. Alguém precisa desarquivar o canal antes de o Comp AI entrar.";
 		case "missing_scope":
-			return "Slack refused: a permission is missing. Reconnect Slack.";
+			return "O Slack recusou: falta uma permissão. Reconecte o Slack.";
 		case "invalid_auth":
 		case "token_revoked":
-			return "Slack needs to be reconnected.";
+			return "É preciso reconectar o Slack.";
 		case "unknown_bot_user":
-			return "Slack did not report which user Comp AI is.";
+			return "O Slack não informou qual usuário é o Comp AI.";
 		default:
-			return `Slack refused the request (${error}).`;
+			return `O Slack recusou o pedido (${error}).`;
 	}
 }
 
@@ -233,8 +237,8 @@ export async function createSlackChannel(
 	if (!token) {
 		return {
 			error: isPrivate
-				? "This workspace did not grant Comp AI permission to create a private channel."
-				: "Slack is not connected.",
+				? "Este workspace do Slack não deu ao Comp AI permissão para criar um canal privado."
+				: "O Slack não está conectado.",
 		};
 	}
 
@@ -249,8 +253,7 @@ export async function createSlackChannel(
 	});
 
 	const parsed = schemas.slack.createReply.safeParse(await response.json());
-	if (!parsed.success)
-		return { error: "Slack sent back something unreadable." };
+	if (!parsed.success) return { error: "O Slack respondeu com algo ilegível." };
 
 	if (!parsed.data.ok || !parsed.data.channel) {
 		return { error: explain(parsed.data.error ?? "rejected") };

@@ -15,8 +15,8 @@ export function handoffResources(handoff: Handoff) {
 						id: `slack:channel:${handoff.channel.id}`,
 						label: `#${handoff.channel.name}`,
 						detail: handoff.channel.isMember
-							? "A Comp AI é membro"
-							: "A Comp AI ainda não está neste canal",
+							? "O Comp AI é membro"
+							: "O Comp AI ainda não está neste canal",
 					},
 				]
 			: []),

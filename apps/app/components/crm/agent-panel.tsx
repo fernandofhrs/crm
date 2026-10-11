@@ -53,6 +53,7 @@ import {
 	ConversationPicker,
 	useConversations,
 } from "@/components/crm/agent-conversations";
+import { bridgeErrorHint } from "@/lib/agent-bridge-errors";
 import {
 	type AgentRecord,
 	recordCopy,

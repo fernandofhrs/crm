@@ -11,16 +11,16 @@ describe("the suggested company fields", () => {
 	});
 
 	it("still answer to the key the seed and the English label made", () => {
-		expect(FIELD_TEMPLATES.COMPANY.map((template) => template.legacyKey)).toEqual(
-			[
-				"account_type",
-				"segment",
-				"territory",
-				"lifecycle_stage",
-				"lead_source",
-				"icp_fit_score",
-				"bdr_owner",
-			],
-		);
+		expect(
+			FIELD_TEMPLATES.COMPANY.map((template) => template.legacyKey),
+		).toEqual([
+			"account_type",
+			"segment",
+			"territory",
+			"lifecycle_stage",
+			"lead_source",
+			"icp_fit_score",
+			"bdr_owner",
+		]);
 	});
 });

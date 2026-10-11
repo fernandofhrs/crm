@@ -30,7 +30,7 @@ export default function SsoSettingsPage({
 				<PageShellHeading>
 					<PageShellTitle>SSO</PageShellTitle>
 					<PageShellDescription>
-						Deixe sua equipe entrar pelo seu próprio provedor de identidade.
+						Deixe seu time entrar pelo seu próprio provedor de identidade.
 						Enquanto houver um configurado, a página de entrada oferece esse
 						provedor no lugar do Google.
 					</PageShellDescription>

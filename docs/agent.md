@@ -521,15 +521,15 @@ Then `bun run dev` (the agent serves on `:2000`) and open any contact.
 
 | Symptom | Cause |
 | --- | --- |
-| `503`, "not configured for this install" | `AGENT_BRIDGE_SECRET` is unset in the app's process |
+| `503`, `BRIDGE_ERRORS.notConfigured` ("não está configurado nesta instalação") | `AGENT_BRIDGE_SECRET` is unset in the app's process |
 | `401` | The two processes hold *different* secrets |
-| `502`, "not reachable" | The agent is not running, or `AGENT_URL` is wrong |
+| `502`, `BRIDGE_ERRORS.notReachable` ("Não foi possível acessar o agente de pesquisa") | The agent is not running, or `AGENT_URL` is wrong |
 
 `eve dev` takes about five seconds to bind, and it listens on **IPv4 only**.
 That is why `AGENT_URL` defaults to `http://127.0.0.1:2000` rather than
 `http://localhost:2000`: Node resolves `localhost` to `::1` first, so the
 `localhost` form fails to connect on a machine where the agent is plainly
-running — and reports itself as "not reachable", which sends you looking in the
+running — and reports itself as not reachable, which sends you looking in the
 wrong place.
 
 A variable in `.env` is not enough on its own: Turbo runs in strict env mode, so

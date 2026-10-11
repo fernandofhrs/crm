@@ -222,8 +222,10 @@ export function AgentCapabilities({
 
 			<Section
 				summary={
-					capabilities.dataScope?.summary ||
-					"O que ele lê para fazer o trabalho."
+					capabilities.dataScope?.mode === "WORKSPACE"
+						? "Registros do CRM de todo o espaço de trabalho."
+						: capabilities.dataScope?.summary ||
+							"O que ele lê para fazer o trabalho."
 				}
 				title="O que ele pode ver"
 			>

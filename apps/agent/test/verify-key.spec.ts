@@ -16,7 +16,7 @@ describe("checking a Context key", () => {
 
 		expect(check.outcome).toBe("invalid");
 		expect(check.outcome === "invalid" && check.reason).toContain(
-			"did not recognise",
+			"não reconheceu",
 		);
 	});
 

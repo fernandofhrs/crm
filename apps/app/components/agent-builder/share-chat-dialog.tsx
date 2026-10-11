@@ -173,7 +173,7 @@ export function ShareChatDialog({
 							/>
 							<ShareChoice
 								selected={shared === true}
-								label="Qualquer pessoa no Comp AI com o link"
+								label="Qualquer pessoa do CRM com o link"
 								detail="Somente leitura"
 								disabled={createAction.pending || revokeAction.pending}
 								onSelect={() => {

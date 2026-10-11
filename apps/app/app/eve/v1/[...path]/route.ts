@@ -20,10 +20,7 @@ async function handler(request: Request): Promise<Response> {
 
 	const session = await getSession();
 	if (!session) {
-		return Response.json(
-			{ error: BRIDGE_ERRORS.notSignedIn },
-			{ status: 401 },
-		);
+		return Response.json({ error: BRIDGE_ERRORS.notSignedIn }, { status: 401 });
 	}
 
 	const url = new URL(request.url);

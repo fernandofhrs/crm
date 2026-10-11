@@ -426,6 +426,24 @@ its limits.
 - **A second company at a domain is stored without the domain.** Two customers share
   a mail address more often than two companies share a site.
 
+## What a person reads is Brazilian Portuguese
+
+This install is used by a Brazilian team, and the text is written in the code. There
+is no translation layer.
+
+- **A message that reaches the screen is in pt-BR**: an HTTP exception, a Zod message
+  in a `*.contracts.ts`, and a string saved for the timeline (an activity `subject`, an
+  audit summary, a connection's `lastError`).
+- **A message nobody reads on a screen stays in English**: a log line, an OpenAPI
+  `summary`, the answer of an `internal/*` cron route, and anything handed to the
+  model (an `AgentTask.reason`, a tool description).
+- **A Zod message ends with a full stop.** `trpc/error-formatter.ts` treats only a
+  string ending in `.`, `!` or `?` as a sentence it can show as it is.
+- **`LOCALE` (`config/locale.ts`) is the only locale a formatter takes.** The app has
+  its own in `@crm/ui/lib/locale`; the two hold the same value.
+- **Nobody compares against a message.** A caller that needs to tell two failures
+  apart reads the code or the status, because the sentence is free to change.
+
 ## Money
 
 A deal is sold in one currency and reported in another, and **only `baseAmount` may
