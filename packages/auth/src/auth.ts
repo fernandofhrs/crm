@@ -12,6 +12,7 @@ import { AUTH_COOKIE_PREFIX } from "./cookies";
 import { env } from "./env";
 import { imapSignIn } from "./imap-sign-in";
 import { ensureWorkspaceMembership } from "./organization";
+import { portalSignIn } from "./portal-sign-in";
 import {
 	GOOGLE_PROVIDER_ID,
 	MICROSOFT_PROVIDER_ID,
@@ -212,6 +213,7 @@ export const auth = betterAuth({
 				]
 			: []),
 		imapSignIn(),
+		portalSignIn(),
 		organization({
 			allowUserToCreateOrganization: false,
 			disableOrganizationDeletion: true,

@@ -1,3 +1,4 @@
+import { PORTAL_REFUSALS } from "@crm/auth/portal";
 import type { MailboxProviderId } from "@crm/auth/scopes";
 import { FieldSeparator } from "@crm/ui/components/field";
 import type { Metadata } from "next";
@@ -7,6 +8,7 @@ import { AuthHeading, AuthShell } from "@/components/auth-shell";
 import { getSession } from "@/lib/session";
 import { getServerQueryClient, getServerTrpc } from "@/lib/trpc/server";
 import { ImapSignIn } from "./imap-sign-in";
+import { PortalNotice } from "./portal-notice";
 import { SocialSignIn } from "./social-sign-in";
 import { type SsoProvider, SsoSignIn } from "./sso-sign-in";
 
@@ -63,11 +65,13 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
 async function SignIn({
 	searchParams,
 }: Pick<PageProps<"/sign-in">, "searchParams">) {
-	const [session, options, { method }] = await Promise.all([
+	const [session, options, { method, portal }] = await Promise.all([
 		currentSession(),
 		signInOptions(),
 		searchParams,
 	]);
+
+	const refusal = PORTAL_REFUSALS.find((value) => value === portal) ?? null;
 
 	if (session) {
 		redirect("/");
@@ -116,6 +120,7 @@ async function SignIn({
 				description="Entre com sua conta para continuar."
 			/>
 
+			{refusal ? <PortalNotice refusal={refusal} /> : null}
 			{showImap ? <ImapSignIn /> : null}
 			{showImap && showOthers ? <FieldSeparator>ou</FieldSeparator> : null}
 			{showSso ? <SsoSignIn providers={providers} /> : null}

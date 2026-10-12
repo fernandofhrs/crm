@@ -38,6 +38,16 @@ export {
 	workspaceRoleOf,
 } from "./organization";
 export {
+	PORTAL_REFUSALS,
+	PORTAL_SIGN_IN,
+	type PortalRefusal,
+} from "./portal-sign-in-config";
+export {
+	type PortalTicketClaims,
+	readPortalTicket,
+	signPortalTicket,
+} from "./portal-ticket";
+export {
 	CALENDAR_SCOPE,
 	GMAIL_SCOPE,
 	GOOGLE_PROVIDER_ID,

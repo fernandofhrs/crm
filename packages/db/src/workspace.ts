@@ -11,6 +11,8 @@ export const WORKSPACE_ID = "workspace";
 
 export const DEFAULT_WORKSPACE_SLUG = "workspace";
 
+export const ADMIN_ROLES: readonly string[] = ["owner", "admin"];
+
 export const MAX_SLUG = 48;
 
 export const RESERVED_SLUGS: readonly string[] = [
@@ -25,6 +27,7 @@ export const RESERVED_SLUGS: readonly string[] = [
 	"eve",
 	"grant-access",
 	"onboarding",
+	"portal-sign-out",
 	"settings",
 	"sign-in",
 ];

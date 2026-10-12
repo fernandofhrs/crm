@@ -69,6 +69,21 @@ server is trusted to say who owns an address. Read in
 root `turbo.json` and in `apps/api/turbo.json`. The rules are in `api.md`, *The mailbox
 is also a way in*.
 
+**`PORTAL_SIGN_IN_SECRET`** — at least 32 characters, shared with one other system of
+the same company. Set, that system may sign its own user in with a signed ticket;
+unset, or shorter, the endpoint answers `404`. **The other system holds the same
+value, so treat it as a password for every member account.** It never signs in an
+owner or an admin. Read in `packages/auth/src/portal-sign-in.ts`, so it is not in
+`env.validation.ts`; it is in the root `turbo.json` and in `apps/api/turbo.json`. The
+rules are in `api.md`, *A portal the team already signs in to is also a way in*.
+
+**`EMBED_ORIGINS`** — comma-separated origins that may show the app in a frame, for
+example `https://acme.com,https://www.acme.com`. Only `https` (or `localhost`) is
+accepted, and an entry that is not a URL is dropped. Unset, the app answers
+`frame-ancestors 'self'` and no other site can frame it. Read by the app
+(`apps/app/lib/env.ts`), at run time, in `proxy.ts`; it is in the root `turbo.json`
+and in `apps/app/turbo.json`.
+
 **`ALLOWED_SIGN_IN`** — comma-separated whole domains or single addresses (bare
 addresses exist for a solo self-hoster, where `gmail.com` would be an open door). **One
 list, read by the sign-in guard *and* the sync's "which side is external" decision** —
