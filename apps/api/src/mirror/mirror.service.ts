@@ -153,6 +153,8 @@ export class MirrorService {
 			this.activity(push, row),
 		);
 
+		await this.ownTheUnowned(push);
+
 		const ownersReassigned = await this.reconcileOwners(input.source);
 
 		await this.stamp.recomputeMany({
@@ -374,7 +376,7 @@ export class MirrorService {
 			if (existingId) {
 				const current = await tx.company.findUniqueOrThrow({
 					where: { id: existingId },
-					select: { domain: true },
+					select: { domain: true, name: true, source: true, ownerId: true },
 				});
 				const takes =
 					domain !== null &&
@@ -385,7 +387,8 @@ export class MirrorService {
 					where: { id: existingId },
 					data: {
 						...present(details),
-						ownerId: ownerId ?? undefined,
+						name: namedHere(current) ? undefined : details.name,
+						ownerId: ownerId ?? (current.ownerId ? undefined : push.actorId),
 						domain: takes ? domain : undefined,
 						website: takes ? `https://${domain}` : undefined,
 					},
@@ -414,7 +417,7 @@ export class MirrorService {
 					...details,
 					domain: free ? domain : null,
 					website: free ? `https://${domain}` : null,
-					ownerId,
+					ownerId: ownerId ?? push.actorId,
 					source: RecordSource.IMPORT,
 					enrichmentStatus: EnrichmentStatus.SKIPPED,
 					createdAt: input.createdAt,
@@ -480,13 +483,18 @@ export class MirrorService {
 				email !== null && (holder === null || holder.id === existingId);
 
 			if (existingId) {
+				const current = await tx.contact.findUniqueOrThrow({
+					where: { id: existingId },
+					select: { ownerId: true },
+				});
+
 				await tx.contact.update({
 					where: { id: existingId },
 					data: {
 						...present(details),
 						email: mayHoldEmail ? email : undefined,
 						companyId: companyId ?? undefined,
-						ownerId: ownerId ?? undefined,
+						ownerId: ownerId ?? (current.ownerId ? undefined : push.actorId),
 					},
 				});
 
@@ -511,7 +519,7 @@ export class MirrorService {
 					...details,
 					email: mayHoldEmail ? email : null,
 					companyId,
-					ownerId,
+					ownerId: ownerId ?? push.actorId,
 					source: RecordSource.IMPORT,
 					enrichmentStatus: EnrichmentStatus.SKIPPED,
 					createdAt: input.createdAt,
@@ -933,6 +941,24 @@ export class MirrorService {
 		push.refs.set(refKey(entity, input.externalId), row);
 	}
 
+	private async ownTheUnowned(push: Push): Promise<void> {
+		const unowned = {
+			ownerId: null,
+			mirrorRecords: { some: { source: push.source } },
+		};
+
+		await Promise.all([
+			this.db.company.updateMany({
+				where: unowned,
+				data: { ownerId: push.actorId },
+			}),
+			this.db.contact.updateMany({
+				where: unowned,
+				data: { ownerId: push.actorId },
+			}),
+		]);
+	}
+
 	private async reconcileOwners(source: string): Promise<number> {
 		const named = await this.db.mirrorRecord.findMany({
 			where: { source, ownerEmail: { not: null } },
@@ -1000,6 +1026,16 @@ function hashOf(
 function blank(value: string | null | undefined): string | null {
 	const trimmed = value?.trim();
 	return trimmed ? trimmed : null;
+}
+
+function namedHere(company: {
+	name: string;
+	domain: string | null;
+	source: RecordSource;
+}): boolean {
+	if (company.source === RecordSource.IMPORT) return false;
+
+	return company.name.trim().toLowerCase() !== company.domain?.toLowerCase();
 }
 
 function present<Row extends Record<string, string | null>>(

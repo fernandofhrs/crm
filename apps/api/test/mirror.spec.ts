@@ -232,7 +232,7 @@ describe("mirroring records in from another system", () => {
 			domain: `acme.${tld}`,
 			source: "IMPORT",
 			enrichmentStatus: "SKIPPED",
-			ownerId: null,
+			ownerId,
 		});
 		expect(company.createdAt.toISOString()).toBe("2026-03-02T12:00:00.000Z");
 		expect(company.primaryContact?.firstName).toBe("Ana");
@@ -346,6 +346,98 @@ describe("mirroring records in from another system", () => {
 
 		expect(company.name).toBe("Acme Velas Ltda");
 		expect(company.source).toBe("EMAIL");
+	});
+
+	it("keeps the name a company already had here, and takes the rest", async () => {
+		const filed = await db.company.create({
+			data: { name: "Acme", domain: `acme.${tld}`, source: "EMAIL" },
+		});
+
+		await push({ companies: [acme] });
+		await push({ companies: [{ ...acme, city: "Campinas" }] });
+
+		const company = await db.company.findUniqueOrThrow({
+			where: { id: filed.id },
+		});
+
+		expect(await mirrored("COMPANY", acme.externalId, "companyId")).toBe(
+			filed.id,
+		);
+		expect(company.name).toBe("Acme");
+		expect(company.city).toBe("Campinas");
+		expect(company.phone).toBe(acme.phone);
+	});
+
+	it("renames a company it created when the source renames it", async () => {
+		await push({ companies: [acme] });
+		await push({ companies: [{ ...acme, name: "Acme Aromas Ltda" }] });
+
+		const company = await db.company.findUniqueOrThrow({
+			where: { id: await mirrored("COMPANY", acme.externalId, "companyId") },
+		});
+
+		expect(company.name).toBe("Acme Aromas Ltda");
+	});
+
+	it("leaves no record without an owner while the seller is not here", async () => {
+		const mine = await db.company.create({
+			data: {
+				name: `outra.${tld}`,
+				domain: `outra.${tld}`,
+				source: "EMAIL",
+				ownerId: memberId,
+			},
+		});
+
+		await push({
+			companies: [
+				acme,
+				{ ...acme, externalId: "n:outra", email: `x@outra.${tld}` },
+			],
+			contacts: [buyer],
+		});
+
+		const company = await db.company.findUniqueOrThrow({
+			where: { id: await mirrored("COMPANY", acme.externalId, "companyId") },
+		});
+		const contact = await db.contact.findUniqueOrThrow({
+			where: { id: await mirrored("CONTACT", buyer.externalId, "contactId") },
+		});
+		const adopted = await db.company.findUniqueOrThrow({
+			where: { id: mine.id },
+		});
+
+		expect(company.ownerId).toBe(ownerId);
+		expect(contact.ownerId).toBe(ownerId);
+		expect(adopted.ownerId).toBe(memberId);
+	});
+
+	it("gives an owner to what an earlier push left without one", async () => {
+		await push({ companies: [acme], contacts: [buyer] });
+
+		const companyId = await mirrored("COMPANY", acme.externalId, "companyId");
+		const contactId = await mirrored("CONTACT", buyer.externalId, "contactId");
+
+		await db.company.update({
+			where: { id: companyId },
+			data: { ownerId: null },
+		});
+		await db.contact.update({
+			where: { id: contactId },
+			data: { ownerId: null },
+		});
+
+		const again = await push({ companies: [acme], contacts: [buyer] });
+
+		expect(again.companies).toMatchObject({ unchanged: 1 });
+		expect(
+			(await db.company.findUniqueOrThrow({ where: { id: companyId } }))
+				.ownerId,
+		).toBe(ownerId);
+		expect(
+			(await db.contact.findUniqueOrThrow({ where: { id: contactId } }))
+				.ownerId,
+		).toBe(ownerId);
 	});
 
 	it("gives a second customer at the same domain a company of its own", async () => {

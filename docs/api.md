@@ -434,9 +434,17 @@ its limits.
   lasts only until that record changes at the source. On a company or a contact an
   empty value never blanks what is there; a deal is written whole. A record that
   disappears at the source is not removed here.
-- **Owners are named by e-mail.** An unknown address leaves a deal with the key's
-  user, `MirrorRecord.ownerEmail` remembers whose it is, and `reconcileOwners` hands
-  the records over on the first push after that person signs in.
+- **An adopted company keeps the name it has here.** A company that already existed
+  at the domain and has a name of its own is not renamed by the push: the customer
+  on the sender's side is often a person, and "Algobom" must not turn into the buyer's
+  name. The sender's name goes in a custom field. A company the mirror created, and
+  one still named after its domain, take the sender's name (`namedHere`).
+- **Owners are named by e-mail, and no mirrored record is left without one.** An
+  unknown or missing address leaves the record with the key's user,
+  `MirrorRecord.ownerEmail` remembers whose it is, and `reconcileOwners` hands the
+  records over on the first push after that person signs in. `ownTheUnowned` gives
+  the key's user every mirrored company and contact an earlier push left ownerless.
+  A record nobody owns is on nobody's list.
 - **`fields` creates the custom fields it names** with `agentFilled: false`, so the
   agent never researches a value the source system owns.
 - **A second company at a domain is stored without the domain.** Two customers share
