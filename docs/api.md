@@ -334,6 +334,11 @@ opens inside that portal, and nobody types a second password. It is
   the other system. If it leaks there, it must not open the accounts that see
   everything and change settings. An owner or an admin signs in on the CRM's own
   page once; the frame then shares that session.
+- **A ticket for an owner or an admin keeps the session the browser has.** With a
+  session, of any account, the caller is sent on to `to` and nothing is opened.
+  Without one, the answer is the `direct` refusal. The refusal page forwards a
+  signed-in caller to `/`, so refusing here only lost the screen the person asked
+  for.
 - **A caller already signed in as the same address is sent on, and the ticket is not
   spent.**
 - **`to` is a path inside the app.** `portalLandingPath` refuses anything else and

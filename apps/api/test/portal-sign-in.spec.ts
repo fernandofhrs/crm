@@ -66,9 +66,10 @@ function ticket(overrides: Partial<PortalTicketClaims> = {}): string {
 	);
 }
 
-async function enter(given: string, to?: string) {
+async function enter(given: string, to?: string, signedIn?: string) {
 	const response = await auth.api.signInPortal({
 		query: to === undefined ? { ticket: given } : { ticket: given, to },
+		headers: new Headers(signedIn ? { cookie: signedIn } : {}),
 		asResponse: true,
 	});
 
@@ -76,6 +77,10 @@ async function enter(given: string, to?: string) {
 		status: response.status,
 		location: response.headers.get("location") ?? "",
 		cookie: response.headers.get("set-cookie") ?? "",
+		jar: response.headers
+			.getSetCookie()
+			.map((line) => line.split(";")[0])
+			.join("; "),
 	};
 }
 
@@ -297,6 +302,32 @@ describe("entering from the portal", () => {
 		expect(new URL(result.location).searchParams.get("portal")).toBe("direct");
 		expect(result.cookie).not.toContain("session_token=");
 		expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
+	});
+
+	it("keeps the session the browser has when the ticket names an owner or an admin", async () => {
+		await enter(ticket({ email: manager, sub: "manager" }));
+		const admin = await db.user.findUniqueOrThrow({
+			where: { email: manager },
+			select: { id: true },
+		});
+		await db.member.updateMany({
+			where: { userId: admin.id },
+			data: { role: "admin" },
+		});
+		await db.session.deleteMany({ where: { userId: admin.id } });
+
+		const member = await enter(ticket());
+
+		const result = await enter(
+			ticket({ email: manager, sub: "manager" }),
+			"/deals",
+			member.jar,
+		);
+
+		expect(new URL(result.location).pathname).toBe("/deals");
+		expect(result.cookie).not.toContain("session_token=");
+		expect(await db.session.count({ where: { userId: admin.id } })).toBe(0);
+		expect(await db.session.count({ where: { user: { email: rep } } })).toBe(1);
 	});
 
 	it("does not leave the app, whatever the portal asks", async () => {

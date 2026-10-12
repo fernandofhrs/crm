@@ -105,7 +105,7 @@ export const portalSignIn = () =>
 					});
 
 					if (found && isWorkspaceAdmin(await workspaceRoleOf(found.user.id))) {
-						throw ctx.redirect(refusalUrl("direct"));
+						throw ctx.redirect(current ? landing : refusalUrl("direct"));
 					}
 
 					if (!(await spendTicket(ticket))) {
