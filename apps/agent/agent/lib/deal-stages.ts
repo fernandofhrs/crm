@@ -9,7 +9,8 @@ export function stagesMarkdown(): string {
 		"## Deal stages",
 		"",
 		"A tool names a stage by its key. A person reads the name this CRM shows.",
-		"Write that name, never the key and never a translation of the key:",
+		"Write that name alone. Never write the key, not even in brackets, and",
+		"never translate the key:",
 		"",
 		...lines,
 	].join("\n");

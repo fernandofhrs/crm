@@ -1,5 +1,9 @@
 import { DealStage, db } from "@crm/db";
-import { LOSING_DEAL_STAGES, OPEN_DEAL_STAGES } from "@crm/db/deal-stage";
+import {
+	DEAL_STAGE_LABELS,
+	LOSING_DEAL_STAGES,
+	OPEN_DEAL_STAGES,
+} from "@crm/db/deal-stage";
 import { domainOf, normalise } from "./names";
 
 export type RecordKind = "contact" | "company" | "deal";
@@ -66,6 +70,7 @@ export type RecordCounts = {
 		lost: number;
 		byStage: {
 			stage: DealStage;
+			name: string;
 			currency: string;
 			count: number;
 			amount: number;
@@ -91,6 +96,7 @@ export async function countRecords(): Promise<RecordCounts> {
 
 	const byStage = groups.map((group) => ({
 		stage: group.stage,
+		name: DEAL_STAGE_LABELS[group.stage],
 		currency: group.currency,
 		count: group._count._all,
 		amount: Number(group._sum.amount ?? 0),

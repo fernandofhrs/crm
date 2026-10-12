@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { DealStage, db } from "@crm/db";
+import { DEAL_STAGE_LABELS } from "@crm/db/deal-stage";
 import { countRecords, listDeals, searchCrm } from "../agent/lib/lookup";
 
 const suffix = process.env.TEST_RUN_ID ?? "lookup-spec";
@@ -212,6 +213,10 @@ describe("countRecords", () => {
 		);
 		expect(before.deals.open).toBeGreaterThanOrEqual(2);
 		expect(before.deals.lost).toBeGreaterThanOrEqual(1);
+		expect(before.deals.byStage.length).toBeGreaterThan(0);
+		for (const row of before.deals.byStage) {
+			expect(row.name).toBe(DEAL_STAGE_LABELS[row.stage]);
+		}
 
 		const extra = await db.company.create({
 			data: { name: `Counted ${suffix}`, domain: `counted-${suffix}.test` },
