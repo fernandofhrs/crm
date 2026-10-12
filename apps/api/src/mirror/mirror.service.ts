@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { canManageConnections, workspaceRoleOf } from "@crm/auth";
+import { canManageConnections, onSignedIn, workspaceRoleOf } from "@crm/auth";
 import {
 	ActivityType,
 	type Db,
@@ -18,6 +18,7 @@ import {
 	HttpException,
 	Injectable,
 	Logger,
+	type OnModuleInit,
 } from "@nestjs/common";
 import { domainFromEmail, normalizeDomain } from "../companies/domain";
 import { ActivityStampService } from "../crm/activity-stamp.service";
@@ -49,6 +50,8 @@ type Ref = {
 	dealId: string | null;
 	activityId: string | null;
 };
+
+type Person = { id: string; email: string };
 
 type Target =
 	| { companyId: string }
@@ -90,7 +93,7 @@ const TRANSACTION = {
 class MirrorRefusal extends Error {}
 
 @Injectable()
-export class MirrorService {
+export class MirrorService implements OnModuleInit {
 	private readonly logger = new Logger(MirrorService.name);
 
 	constructor(
@@ -99,6 +102,26 @@ export class MirrorService {
 		private readonly conversion: ConversionService,
 		private readonly stamp: ActivityStampService,
 	) {}
+
+	onModuleInit(): void {
+		onSignedIn(async (user) => {
+			await this.handOver(user);
+		});
+	}
+
+	async handOver(user: Person): Promise<number> {
+		const reassigned = await this.assign(user, { ownerEmail: user.email });
+
+		if (reassigned > 0) {
+			this.logger.log({
+				message: "Mirrored records handed over at sign-in",
+				userId: user.id,
+				reassigned,
+			});
+		}
+
+		return reassigned;
+	}
 
 	async push(
 		userId: string,
@@ -977,32 +1000,40 @@ export class MirrorService {
 		let reassigned = 0;
 
 		for (const user of users) {
-			const theirs = {
-				mirrorRecords: { some: { source, ownerEmail: user.email } },
-			};
-			const notTheirs = {
-				OR: [{ ownerId: null }, { ownerId: { not: user.id } }],
-			};
-
-			const [deals, companies, contacts] = await Promise.all([
-				this.db.deal.updateMany({
-					where: { ...theirs, ownerId: { not: user.id } },
-					data: { ownerId: user.id },
-				}),
-				this.db.company.updateMany({
-					where: { ...theirs, ...notTheirs },
-					data: { ownerId: user.id },
-				}),
-				this.db.contact.updateMany({
-					where: { ...theirs, ...notTheirs },
-					data: { ownerId: user.id },
-				}),
-			]);
-
-			reassigned += deals.count + companies.count + contacts.count;
+			reassigned += await this.assign(user, {
+				source,
+				ownerEmail: user.email,
+			});
 		}
 
 		return reassigned;
+	}
+
+	private async assign(
+		user: Person,
+		named: Prisma.MirrorRecordWhereInput,
+	): Promise<number> {
+		const theirs = { mirrorRecords: { some: named } };
+		const notTheirs = {
+			OR: [{ ownerId: null }, { ownerId: { not: user.id } }],
+		};
+
+		const [deals, companies, contacts] = await Promise.all([
+			this.db.deal.updateMany({
+				where: { ...theirs, ownerId: { not: user.id } },
+				data: { ownerId: user.id },
+			}),
+			this.db.company.updateMany({
+				where: { ...theirs, ...notTheirs },
+				data: { ownerId: user.id },
+			}),
+			this.db.contact.updateMany({
+				where: { ...theirs, ...notTheirs },
+				data: { ownerId: user.id },
+			}),
+		]);
+
+		return deals.count + companies.count + contacts.count;
 	}
 }
 

@@ -520,9 +520,12 @@ its limits.
   name. The sender's name goes in a custom field. A company the mirror created, and
   one still named after its domain, take the sender's name (`namedHere`).
 - **Owners are named by e-mail, and no mirrored record is left without one.** An
-  unknown or missing address leaves the record with the key's user,
-  `MirrorRecord.ownerEmail` remembers whose it is, and `reconcileOwners` hands the
-  records over on the first push after that person signs in. `ownTheUnowned` gives
+  unknown or missing address leaves the record with the key's user, and
+  `MirrorRecord.ownerEmail` remembers whose it is. The records are handed over at
+  two moments: `handOver` runs on `onSignedIn`, before the first page of that
+  session, and `reconcileOwners` runs on every push. The sign-in is not optional:
+  a sender pushes only what changed, so a member who arrives between two pushes
+  opens an empty CRM until the next change at the source. `ownTheUnowned` gives
   the key's user every mirrored company and contact an earlier push left ownerless.
   A record nobody owns is on nobody's list.
 - **`fields` creates the custom fields it names** with `agentFilled: false`, so the

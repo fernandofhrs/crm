@@ -14,6 +14,13 @@ import {
 	WORKSPACE_ID,
 } from "@crm/auth";
 import { db } from "@crm/db";
+import type { AgentTriggerService } from "../src/agent/agent-trigger.service";
+import { ActivityStampService } from "../src/crm/activity-stamp.service";
+import { ConversionService } from "../src/currency/conversion.service";
+import { FieldsService } from "../src/fields/fields.service";
+import { mirrorPushInput } from "../src/mirror/mirror.contracts";
+import { MirrorService } from "../src/mirror/mirror.service";
+import { withDiscardedCrmEvents } from "./agent-trigger.stub";
 
 const suffix = process.env.TEST_RUN_ID ?? "portal-sign-in-spec";
 const domain = `portal-${suffix}.test`;
@@ -21,6 +28,20 @@ const rep = `rep@${domain}`;
 const manager = `manager@${domain}`;
 const stranger = `rep@elsewhere-${suffix}.test`;
 const secret = "portal-sign-in-spec-secret-0123456789abcdef";
+const source = `portal-${suffix}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+const ownerId = `owner-${suffix}`;
+
+const agent = {
+	withCrmEvents: withDiscardedCrmEvents,
+	fieldBackfillRecords: async () => ({ queued: 0, merged: 0 }),
+} as unknown as AgentTriggerService;
+
+const mirror = new MirrorService(
+	db,
+	new FieldsService(db, agent),
+	new ConversionService(db),
+	new ActivityStampService(db),
+);
 
 const MANAGED = ["PORTAL_SIGN_IN_SECRET", "ALLOWED_SIGN_IN"] as const;
 const before = new Map<string, string | undefined>();
@@ -59,6 +80,11 @@ async function enter(given: string, to?: string) {
 }
 
 async function clean() {
+	const mirrored = { mirrorRecords: { some: { source } } };
+
+	await db.deal.deleteMany({ where: mirrored });
+	await db.company.deleteMany({ where: mirrored });
+	await db.mirrorRecord.deleteMany({ where: { source } });
 	await db.user.deleteMany({
 		where: {
 			OR: [{ email: { endsWith: `@${domain}` } }, { email: stranger }],
@@ -75,6 +101,8 @@ beforeAll(async () => {
 	process.env.PORTAL_SIGN_IN_SECRET = secret;
 	process.env.ALLOWED_SIGN_IN = domain;
 
+	mirror.onModuleInit();
+
 	membersBefore = (await db.member.findMany({ select: { id: true } })).map(
 		(member) => member.id,
 	);
@@ -83,7 +111,7 @@ beforeAll(async () => {
 async function seedOwner() {
 	const owner = await db.user.create({
 		data: {
-			id: `owner-${suffix}`,
+			id: ownerId,
 			name: "Owner",
 			email: `owner@${domain}`,
 			emailVerified: true,
@@ -158,6 +186,50 @@ describe("entering from the portal", () => {
 		expect(user.members).toEqual([
 			{ organizationId: WORKSPACE_ID, role: "member" },
 		]);
+	});
+
+	it("hands over the mirrored records that name the person, before the app opens", async () => {
+		await mirror.push(
+			ownerId,
+			mirrorPushInput.parse({
+				source,
+				companies: [
+					{ externalId: "acme", name: "Acme Velas", ownerEmail: rep },
+					{ externalId: "outra", name: "Outra Casa", ownerEmail: manager },
+				],
+				deals: [
+					{
+						externalId: "1426",
+						companyExternalId: "acme",
+						name: "Proposta 1426",
+						stage: "QUALIFIED_TO_BUY",
+						ownerEmail: rep,
+					},
+				],
+			}),
+		);
+
+		const held = { mirrorRecords: { some: { source } } };
+
+		expect(await db.company.count({ where: { ...held, ownerId } })).toBe(2);
+
+		await enter(ticket());
+
+		const user = await db.user.findUniqueOrThrow({
+			where: { email: rep },
+			select: { id: true },
+		});
+
+		expect(
+			await db.company.findMany({
+				where: { ...held, ownerId: user.id },
+				select: { name: true },
+			}),
+		).toEqual([{ name: "Acme Velas" }]);
+		expect(await db.deal.count({ where: { ...held, ownerId: user.id } })).toBe(
+			1,
+		);
+		expect(await db.company.count({ where: { ...held, ownerId } })).toBe(1);
 	});
 
 	it("lets a ticket in once", async () => {
