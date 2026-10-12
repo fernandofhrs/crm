@@ -149,12 +149,12 @@ export function CloseReasonDialog() {
 					<DialogTitle>
 						{stage === "CLOSED_LOST"
 							? "Fechar como perdida"
-							: "Marcar como sem perfil"}
+							: "Mover para Reciclar"}
 					</DialogTitle>
 					<DialogDescription>
 						{stage === "CLOSED_LOST"
 							? "Para quem ou para o quê perdemos? Este é o único lugar onde essa resposta fica registrada."
-							: "Por que não tem perfil? O motivo vai para o histórico para ninguém repetir o mesmo negócio."}
+							: "Por que este negócio esfriou? O motivo vai para o histórico, para a retomada começar do ponto certo."}
 					</DialogDescription>
 				</DialogHeader>
 

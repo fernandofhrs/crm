@@ -47,7 +47,7 @@ function StageColumn({ column }: { column: BoardColumn }) {
 	const prefetchRecord = usePrefetchRecord();
 	const { input } = useTableQuery(dealsSearchParams);
 	const { label, tone } = dealStagePresentation(column.stage);
-	const won = isClosedStage(column.stage);
+	const closed = isClosedStage(column.stage);
 
 	const deals = useQuery({
 		...trpc.deals.list.queryOptions({
@@ -75,7 +75,7 @@ function StageColumn({ column }: { column: BoardColumn }) {
 			className={cn(
 				"w-[84vw] max-w-[340px] shrink-0 snap-center flex-col rounded-lg border border-foreground/5 md:flex md:w-[260px] md:max-w-none xl:w-auto xl:min-w-[200px] xl:flex-1",
 				deals.data && total === 0 ? "hidden" : "flex",
-				won ? "bg-tint-success" : "bg-tint-neutral",
+				DEALS_BOARD.tintClass[column.tint],
 			)}
 		>
 			<header className="flex flex-col gap-0.5 px-3.5 pt-3 pb-2">
@@ -89,9 +89,9 @@ function StageColumn({ column }: { column: BoardColumn }) {
 					</span>
 				</div>
 				<p className="h-4 text-[12px] text-foreground/65 tabular-nums">
-					{valueCents !== null && currency && !won
+					{valueCents !== null && currency && !closed
 						? formatMoneyCompact(valueCents, currency)
-						: won
+						: closed
 							? "Mais recentes primeiro"
 							: null}
 				</p>

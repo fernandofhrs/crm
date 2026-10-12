@@ -19,7 +19,7 @@ const TONE = {
 	CONTRACT_SENT: "warning",
 	CLOSED_WON: "success",
 	CLOSED_LOST: "error",
-	UNQUALIFIED_TO_BUY: "neutral",
+	UNQUALIFIED_TO_BUY: "warning",
 } as const satisfies Record<DealStage, StatusTone>;
 
 export const OPEN_STAGES = ORDER.slice(0, 4) as readonly DealStage[];

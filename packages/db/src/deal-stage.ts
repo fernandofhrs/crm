@@ -25,7 +25,7 @@ export const DEAL_STAGE_LABELS = {
 	CONTRACT_SENT: "Aprovada · entrada",
 	CLOSED_WON: "Ganha",
 	CLOSED_LOST: "Perdida",
-	UNQUALIFIED_TO_BUY: "Sem perfil",
+	UNQUALIFIED_TO_BUY: "Reciclar",
 } as const satisfies Record<DealStage, string>;
 
 const CLOSED = new Set<DealStage>(CLOSED_DEAL_STAGES);

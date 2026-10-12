@@ -226,7 +226,7 @@ export function DealsBulkActions({
 						<DialogTitle>
 							{closing === "CLOSED_LOST"
 								? `Fechar ${formatCount(ids.length, "negócio como perdido", "negócios como perdidos")}`
-								: `Marcar ${deals(ids.length)} como sem perfil`}
+								: `Mover ${deals(ids.length)} para Reciclar`}
 						</DialogTitle>
 						<DialogDescription>
 							O mesmo motivo vale para todos. Escreva só o que eles têm em
