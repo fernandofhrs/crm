@@ -9,9 +9,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
 					<Image
 						src="/moulin-logo.png"
 						alt="Moulin"
-						width={130}
-						height={52}
-						className="h-[52px] w-auto self-start"
+						width={147}
+						height={46}
+						className="h-[46px] w-auto self-start"
 						priority
 					/>
 					<div className="hidden flex-col gap-6 lg:flex">

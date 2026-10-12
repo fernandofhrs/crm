@@ -483,17 +483,17 @@ function BrandLogo() {
 			<Image
 				src="/moulin-logo.png"
 				alt="Moulin"
-				width={105}
-				height={42}
-				className="h-[42px] w-auto dark:hidden"
+				width={115}
+				height={36}
+				className="h-9 w-auto dark:hidden"
 				priority
 			/>
 			<Image
 				src="/moulin-logo-branco.png"
 				alt="Moulin"
-				width={105}
-				height={42}
-				className="hidden h-[42px] w-auto dark:block"
+				width={115}
+				height={36}
+				className="hidden h-9 w-auto dark:block"
 				priority
 			/>
 		</>
