@@ -209,6 +209,7 @@ export function AgentBuilderChat({
 			const data = query.state.data;
 			return data && builderConversationNeedsPolling(data) ? 2500 : false;
 		},
+		refetchIntervalInBackground: true,
 	});
 	const shared = useQuery({
 		...trpc.conversations.shared.queryOptions({ token: conversationId }),
@@ -232,6 +233,7 @@ export function AgentBuilderChat({
 				!eventStreamSettled(query.state.data ?? []))
 				? 2500
 				: false,
+		refetchIntervalInBackground: true,
 	});
 	const submit = useMutation(
 		trpc.conversations.submitBuilder.mutationOptions({
