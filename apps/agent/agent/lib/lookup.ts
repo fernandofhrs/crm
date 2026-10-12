@@ -4,6 +4,12 @@ import {
 	LOSING_DEAL_STAGES,
 	OPEN_DEAL_STAGES,
 } from "@crm/db/deal-stage";
+import {
+	companiesVisibleTo,
+	contactsVisibleTo,
+	dealsVisibleTo,
+	type Viewer,
+} from "@crm/db/visibility";
 import { domainOf, normalise } from "./names";
 
 export type RecordKind = "contact" | "company" | "deal";
@@ -78,13 +84,17 @@ export type RecordCounts = {
 	};
 };
 
-export async function countRecords(): Promise<RecordCounts> {
+export async function countRecords(viewer: Viewer): Promise<RecordCounts> {
 	const [companies, contacts, groups] = await Promise.all([
-		db.company.count({ where: { archivedAt: null } }),
-		db.contact.count({ where: { archivedAt: null } }),
+		db.company.count({
+			where: { archivedAt: null, AND: [companiesVisibleTo(viewer)] },
+		}),
+		db.contact.count({
+			where: { archivedAt: null, AND: [contactsVisibleTo(viewer)] },
+		}),
 		db.deal.groupBy({
 			by: ["stage", "currency"],
-			where: { archivedAt: null },
+			where: { archivedAt: null, AND: [dealsVisibleTo(viewer)] },
 			_count: { _all: true },
 			_sum: { amount: true },
 			orderBy: [{ stage: "asc" }, { currency: "asc" }],
@@ -118,7 +128,7 @@ export async function countRecords(): Promise<RecordCounts> {
 	};
 }
 
-export async function listDeals(options: DealListOptions = {}) {
+export async function listDeals(viewer: Viewer, options: DealListOptions = {}) {
 	const status = options.status ?? "open";
 	const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
 	const now = options.now ?? new Date();
@@ -139,6 +149,7 @@ export async function listDeals(options: DealListOptions = {}) {
 
 	const rows = await db.deal.findMany({
 		where: {
+			AND: [dealsVisibleTo(viewer)],
 			stage: stages ? { in: stages } : undefined,
 			companyId: options.companyId ?? undefined,
 			ownerId: options.ownerId ?? undefined,
@@ -217,6 +228,7 @@ export async function listDeals(options: DealListOptions = {}) {
 }
 
 export async function searchCrm(
+	viewer: Viewer,
 	query: string,
 	options: { kinds?: RecordKind[]; limit?: number } = {},
 ): Promise<SearchResult> {
@@ -234,9 +246,9 @@ export async function searchCrm(
 	const words = term.split(/\s+/).filter((word) => word.length >= 2);
 
 	const [contacts, companies, deals] = await Promise.all([
-		wants("contact") ? searchContacts(term, words, email, limit) : [],
-		wants("company") ? searchCompanies(term, words, domain, limit) : [],
-		wants("deal") ? searchDeals(term, words, limit) : [],
+		wants("contact") ? searchContacts(viewer, term, words, email, limit) : [],
+		wants("company") ? searchCompanies(viewer, term, words, domain, limit) : [],
+		wants("deal") ? searchDeals(viewer, term, words, limit) : [],
 	]);
 
 	return {
@@ -249,6 +261,7 @@ export async function searchCrm(
 }
 
 async function searchContacts(
+	viewer: Viewer,
 	term: string,
 	words: string[],
 	email: string | null,
@@ -262,6 +275,7 @@ async function searchContacts(
 
 	const rows = await db.contact.findMany({
 		where: {
+			AND: [contactsVisibleTo(viewer)],
 			OR: [
 				...(email
 					? [{ email: { equals: email, mode: "insensitive" as const } }]
@@ -305,6 +319,7 @@ async function searchContacts(
 }
 
 async function searchCompanies(
+	viewer: Viewer,
 	term: string,
 	words: string[],
 	domain: string | null,
@@ -312,6 +327,7 @@ async function searchCompanies(
 ): Promise<CompanyHit[]> {
 	const rows = await db.company.findMany({
 		where: {
+			AND: [companiesVisibleTo(viewer)],
 			OR: [
 				{ name: { contains: term, mode: "insensitive" } },
 				...(domain
@@ -352,12 +368,14 @@ async function searchCompanies(
 }
 
 async function searchDeals(
+	viewer: Viewer,
 	term: string,
 	words: string[],
 	limit: number,
 ): Promise<DealHit[]> {
 	const rows = await db.deal.findMany({
 		where: {
+			AND: [dealsVisibleTo(viewer)],
 			OR: [
 				{ name: { contains: term, mode: "insensitive" } },
 				...words.map((word) => ({

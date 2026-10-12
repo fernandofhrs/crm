@@ -1,5 +1,10 @@
 import { isGoogleConfigured, signsInWithGoogle } from "@crm/auth";
 import type { Db, Prisma } from "@crm/db";
+import {
+	companiesVisibleTo,
+	seesEverything,
+	type Viewer,
+} from "@crm/db/visibility";
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { normalizeDomain } from "../companies/domain";
 import { ActivityStampService } from "../crm/activity-stamp.service";
@@ -178,6 +183,7 @@ export class GoogleConnectionService {
 	async suppressDomain(
 		domain: string,
 		options: { reason?: string; purge: boolean },
+		viewer: Viewer,
 	): Promise<SuppressDomainOutput> {
 		const normalised = normalizeDomain(domain);
 		if (!normalised) {
@@ -189,6 +195,17 @@ export class GoogleConnectionService {
 			throw new NotFoundException(
 				"Esse é o nosso próprio domínio. Ele já é ignorado.",
 			);
+		}
+
+		if (!seesEverything(viewer)) {
+			const hidden = await this.db.company.count({
+				where: { domain: normalised, NOT: companiesVisibleTo(viewer) },
+			});
+			if (hidden > 0) {
+				throw new NotFoundException(
+					`"${normalised}" não é o domínio de um cliente seu.`,
+				);
+			}
 		}
 
 		await this.db.suppressedDomain.upsert({

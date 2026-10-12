@@ -7,6 +7,7 @@ import {
 	it,
 } from "bun:test";
 import { db, type FieldEntity } from "@crm/db";
+import { SEES_EVERYTHING } from "@crm/db/visibility";
 import { AgentQueueService } from "../src/agent/agent-queue.service";
 import { AgentTriggerService } from "../src/agent/agent-trigger.service";
 import { CompaniesService } from "../src/companies/companies.service";
@@ -531,11 +532,15 @@ describe("a record update that fails", () => {
 
 		let refused: Error | null = null;
 		try {
-			await companies.update(record, {
-				name: "Renamed",
-				ownerId: `nobody-${suffix}`,
-				fields: { spec_seats: "99" },
-			});
+			await companies.update(
+				record,
+				{
+					name: "Renamed",
+					ownerId: `nobody-${suffix}`,
+					fields: { spec_seats: "99" },
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (cause) {
 			refused = cause as Error;
 		}
@@ -569,10 +574,14 @@ describe("a record update that fails", () => {
 
 		let refused: Error | null = null;
 		try {
-			await contacts.update(contact.id, {
-				companyId: `nobody-${suffix}`,
-				fields: { spec_note: "Reads the docs" },
-			});
+			await contacts.update(
+				contact.id,
+				{
+					companyId: `nobody-${suffix}`,
+					fields: { spec_note: "Reads the docs" },
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (cause) {
 			refused = cause as Error;
 		}
@@ -604,10 +613,14 @@ describe("a record update that fails", () => {
 
 		let refused: Error | null = null;
 		try {
-			await deals.update(deal.id, {
-				companyId: `nobody-${suffix}`,
-				fields: { spec_risk: "Champion left" },
-			});
+			await deals.update(
+				deal.id,
+				{
+					companyId: `nobody-${suffix}`,
+					fields: { spec_risk: "Champion left" },
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (cause) {
 			refused = cause as Error;
 		}
@@ -615,7 +628,11 @@ describe("a record update that fails", () => {
 
 		expect(await db.fieldValue.count({ where: { dealId: deal.id } })).toBe(0);
 
-		await deals.update(deal.id, { fields: { spec_risk: "Champion left" } });
+		await deals.update(
+			deal.id,
+			{ fields: { spec_risk: "Champion left" } },
+			SEES_EVERYTHING,
+		);
 
 		expect(await db.fieldValue.count({ where: { dealId: deal.id } })).toBe(1);
 	});

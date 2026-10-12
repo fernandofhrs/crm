@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { queryRunCrm } from "../../../lib/run-runtime";
 import { requireTeamAgentAttribute } from "../../../lib/session-purpose";
+import { viewerFor } from "../../../lib/viewer";
 
 export default defineTool({
 	description:
@@ -12,6 +13,10 @@ export default defineTool({
 		limit: z.number().int().min(1).max(50).default(20),
 	}),
 	async execute(input, ctx) {
-		return queryRunCrm(requireTeamAgentAttribute(ctx, "runId"), input);
+		return queryRunCrm(
+			requireTeamAgentAttribute(ctx, "runId"),
+			input,
+			await viewerFor(ctx),
+		);
 	},
 });

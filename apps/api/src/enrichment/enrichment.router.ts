@@ -1,7 +1,8 @@
 import { enrichmentQueueInput } from "@crm/validation/enrichment-queue";
 import { Inject } from "@nestjs/common";
-import { Input, Query, Router, UseMiddlewares } from "nestjs-trpc";
+import { Ctx, Input, Query, Router, UseMiddlewares } from "nestjs-trpc";
 import { z } from "zod";
+import type { AuthedTrpcContext } from "../trpc/context.types";
 import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import { restMeta } from "../trpc/openapi";
 import { EnrichmentService } from "./enrichment.service";
@@ -61,7 +62,10 @@ export class EnrichmentRouter {
 		output: enrichmentQueueOutput,
 		meta: restMeta("GET", "/enrichment/queue", ["Enrichment"]),
 	})
-	async queue(@Input() input: z.infer<typeof enrichmentQueueInput>) {
-		return this.enrichment.queue(input.limit);
+	async queue(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof enrichmentQueueInput>,
+	) {
+		return this.enrichment.queue(ctx.viewer, input.limit);
 	}
 }

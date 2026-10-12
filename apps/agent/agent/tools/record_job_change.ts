@@ -6,6 +6,7 @@ import { writeTimelineNote } from "../lib/crm";
 import { lastEmployerChange } from "../lib/facts";
 import { focusOn } from "../lib/focus";
 import { assertResearchPurpose } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -24,6 +25,10 @@ export default defineTool({
 	),
 	async execute({ contactId, moveToCompanyId }, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: contactId });
+		if (moveToCompanyId) {
+			await assertSees(ctx, { kind: "company", id: moveToCompanyId });
+		}
 		focusOn({ contactId });
 
 		const change = await lastEmployerChange(contactId);

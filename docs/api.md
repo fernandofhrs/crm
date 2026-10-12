@@ -80,7 +80,7 @@ request.
   waits `GATE_TIMEOUT_MS`, which has to outlast a cold start of the API: a signed-in
   rep whose gate read times out at `/` is shown the landing page.
 - **`RESEARCH_KEY_OPTIONAL` skips the key gate** and its read. See `environment.md`.
-- **`/sign-in`, `/grant-access`, `/eve` are ungated.** `/sign-in` is the only path a
+- **`/sign-in`, `/grant-access`, `/eve`, `/portal-sign-out` are ungated.** `/sign-in` is the only path a
   stranger may read; `/` joins it only when `IS_MARKETING` is set.
 - **There is no way past the key gate but to answer** — Skip stranded installs, every
   later company sitting `PENDING` with nothing saying so.
@@ -101,6 +101,44 @@ every query still resolves through `WORKSPACE_ID`.
   keeps every `callbackURL` correct without knowing about slugs.
 - **Renaming moves the URL**, so `workspace-form.tsx` replaces the location onto the
   slug `workspace.update` returns.
+
+## A member sees the companies they answer for
+
+One organization is still not a tenancy boundary. Inside it, a **member** reads and
+writes only the companies they answer for. An **owner** or an **admin** sees every
+record. `@crm/db/visibility` is the whole rule.
+
+- **The company decides.** A member sees a company when they own it, own one of its
+  deals, or own one of its contacts. A member who sees a company sees everything
+  filed under it: every contact, every deal, the timeline, the mail threads, the
+  events. A contact with no company follows its own owner.
+- **A record with no owner is on no member's list.** Only an owner or an admin sees
+  it. The mirror and the mailbox sync always name an owner for this reason.
+- **`Viewer` is `everything` or `own` with a user id.** `viewerOf` reads the role;
+  `ADMIN_ROLES` (`@crm/db/workspace`) is the one list of roles that see everything,
+  and `isWorkspaceAdmin` reads the same list.
+- **`AuthMiddleware` puts `viewer` on the tRPC context.** A router passes
+  `ctx.viewer` to the service; a service that reads or writes a company, a contact,
+  a deal, an activity, a thread or an event takes a `Viewer` and adds
+  `companiesVisibleTo(viewer)` (or its sibling) to the `where`. An API key is its
+  user, so a member's key reads what the member reads.
+- **A hidden record does not exist.** The answer is the same `NotFoundException` a
+  wrong id gets. Never a 403: a 403 confirms the record is there.
+- **A system caller passes `SEES_EVERYTHING`.** The retention sweep, the mirror, the
+  sync and the intake are not a person. Never default the parameter: a forgotten
+  viewer must be a compile error, not an open read.
+- **A member who creates a company owns it** unless they name another owner. A deal
+  goes only in a company the member sees.
+- **The duplicate-domain message does not name a hidden company.**
+- **The enrichment queue filters by id list for a member**, because `AgentTask` has
+  no relation to its record. An owner or an admin keeps the unfiltered query.
+- **The bridge and the agent apply the same rule.** `app/eve/v1/[...path]/route.ts`
+  refuses a record the caller does not see, and `apps/agent/agent/lib/viewer.ts`
+  resolves the viewer of every session. See `agent.md`.
+- **Not covered: workspace settings.** Fields, tracking, the agent model and the
+  retention window stay open to every member, as upstream has them.
+
+`test/visibility.spec.ts` holds one case per surface.
 
 ## SSO is a row, not a deployment
 
@@ -273,6 +311,48 @@ with. It is `POST /api/auth/sign-in/imap`, a Better Auth plugin in
   whole install.
 - **`sso.signInOptions` returns `imap`**, and the sign-in page shows the form above
   the other buttons. `needsMailboxGrant` ignores an `imap` row, like an SSO rep.
+
+### A portal the team already signs in to is also a way in
+
+`PORTAL_SIGN_IN_SECRET` lets another system of the same company sign its own user
+in. It exists for an install whose team already works in an order portal: the CRM
+opens inside that portal, and nobody types a second password. It is
+`GET /api/auth/sign-in/portal?ticket=…&to=…`, a Better Auth plugin in
+`packages/auth/src/portal-sign-in.ts`.
+
+- **The ticket is the proof.** `payload.signature`, both base64url; the signature is
+  HMAC-SHA256 of the payload text with the shared secret. The claims are `email`,
+  `sub`, `name`, `exp` and `jti` (`portal-ticket.ts`). The portal signs it on its
+  server, after its own session check.
+- **A ticket lives `PORTAL_SIGN_IN.ticket.lifetimeSeconds` and works once.** `jti` is
+  written to `PortalTicket` with `createMany({ skipDuplicates })`; a second use finds
+  the row and is refused. A ticket travels in a URL, so it is in a browser history
+  and in an access log: single use is what makes that harmless.
+- **`ALLOWED_SIGN_IN` still decides.** A ticket for an address outside the list is
+  refused.
+- **A ticket never signs in an owner or an admin.** The shared secret also lives in
+  the other system. If it leaks there, it must not open the accounts that see
+  everything and change settings. An owner or an admin signs in on the CRM's own
+  page once; the frame then shares that session.
+- **A caller already signed in as the same address is sent on, and the ticket is not
+  spent.**
+- **`to` is a path inside the app.** `portalLandingPath` refuses anything else and
+  falls back to `/`.
+- **A refusal is a redirect to `/sign-in?portal=<reason>`** (`PORTAL_REFUSALS`), and
+  the page says what happened in words. The endpoint is a navigation, so a JSON error
+  is a blank frame.
+- **The account row has provider `portal` and no secret.**
+- **Unset, the endpoint answers `404`.**
+- **`/portal-sign-out` ends the session from inside a frame.** The portal loads it in
+  a hidden frame when its own user signs out. Opened as a top-level page it does
+  nothing, so a link to it cannot sign anybody out.
+
+### The app may be framed by named origins only
+
+`proxy.ts` sets `Content-Security-Policy: frame-ancestors 'self' <EMBED_ORIGINS>` on
+every response. Unset, only the CRM frames the CRM. `embedded-frame.ts` marks the
+document when it runs inside a frame, and the navigation hides itself: the host
+page owns the menu. See `design.md`.
 
 ## Asana is the agenda where there is no calendar
 

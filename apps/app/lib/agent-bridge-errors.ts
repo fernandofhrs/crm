@@ -2,6 +2,7 @@ export const BRIDGE_ERRORS = {
 	notConfigured: "O agente de pesquisa não está configurado nesta instalação.",
 	notSignedIn: "Entre no CRM para continuar.",
 	conversationNotFound: "Conversa não encontrada.",
+	recordNotFound: "Registro não encontrado.",
 	notReachable: "Não foi possível acessar o agente de pesquisa.",
 } as const;
 

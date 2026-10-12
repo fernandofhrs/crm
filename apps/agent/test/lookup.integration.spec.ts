@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { DealStage, db } from "@crm/db";
 import { DEAL_STAGE_LABELS } from "@crm/db/deal-stage";
+import { SEES_EVERYTHING } from "@crm/db/visibility";
 import { countRecords, listDeals, searchCrm } from "../agent/lib/lookup";
 
 const suffix = process.env.TEST_RUN_ID ?? "lookup-spec";
@@ -132,20 +133,20 @@ async function cleanup(): Promise<void> {
 
 describe("searchCrm", () => {
 	it("finds a company by name", async () => {
-		const result = await searchCrm(`Northwind ${suffix}`);
+		const result = await searchCrm(SEES_EVERYTHING, `Northwind ${suffix}`);
 
 		expect(result.companies[0]?.id).toBe(northwindId);
 		expect(result.companies[0]?.contacts).toBe(1);
 	});
 
 	it("finds the people at a company named in the query", async () => {
-		const result = await searchCrm(`Northwind ${suffix}`);
+		const result = await searchCrm(SEES_EVERYTHING, `Northwind ${suffix}`);
 
 		expect(result.contacts.map((hit) => hit.id)).toContain(paulaId);
 	});
 
 	it("returns both people behind an ambiguous surname", async () => {
-		const result = await searchCrm("Marchetti");
+		const result = await searchCrm(SEES_EVERYTHING, "Marchetti");
 
 		expect(result.contacts.map((hit) => hit.id).sort()).toEqual(
 			[paulaId, peterId].sort(),
@@ -155,27 +156,33 @@ describe("searchCrm", () => {
 	});
 
 	it("finds a person by their address, and the company on its domain", async () => {
-		const result = await searchCrm(`paula.marchetti@${domain}`);
+		const result = await searchCrm(
+			SEES_EVERYTHING,
+			`paula.marchetti@${domain}`,
+		);
 
 		expect(result.contacts[0]?.id).toBe(paulaId);
 		expect(result.companies[0]?.id).toBe(northwindId);
 	});
 
 	it("treats a bare domain as the company", async () => {
-		const result = await searchCrm(domain);
+		const result = await searchCrm(SEES_EVERYTHING, domain);
 
 		expect(result.companies[0]?.id).toBe(northwindId);
 	});
 
 	it("finds a deal by name", async () => {
-		const result = await searchCrm(`Northwind renewal ${suffix}`);
+		const result = await searchCrm(
+			SEES_EVERYTHING,
+			`Northwind renewal ${suffix}`,
+		);
 
 		expect(result.deals[0]?.id).toBe(dealId);
 		expect(result.deals[0]?.amount).toBe(12_000);
 	});
 
 	it("narrows to the kinds asked for", async () => {
-		const result = await searchCrm(`Northwind ${suffix}`, {
+		const result = await searchCrm(SEES_EVERYTHING, `Northwind ${suffix}`, {
 			kinds: ["contact"],
 		});
 
@@ -185,25 +192,25 @@ describe("searchCrm", () => {
 	});
 
 	it("finds nothing rather than guessing", async () => {
-		const result = await searchCrm("zzyzxqqq");
+		const result = await searchCrm(SEES_EVERYTHING, "zzyzxqqq");
 
 		expect(result.total).toBe(0);
 	});
 
 	it("ranks a whole-phrase match above rows sharing only one word", async () => {
-		const result = await searchCrm(`Paula Marchetti`);
+		const result = await searchCrm(SEES_EVERYTHING, `Paula Marchetti`);
 
 		expect(result.contacts[0]?.id).toBe(paulaId);
 	});
 
 	it("refuses a query too short to mean anything", async () => {
-		expect((await searchCrm("a")).total).toBe(0);
+		expect((await searchCrm(SEES_EVERYTHING, "a")).total).toBe(0);
 	});
 });
 
 describe("countRecords", () => {
 	it("counts what is in the CRM, and leaves archived records out", async () => {
-		const before = await countRecords();
+		const before = await countRecords(SEES_EVERYTHING);
 
 		expect(before.deals.total).toBe(
 			before.deals.byStage.reduce((sum, row) => sum + row.count, 0),
@@ -223,14 +230,18 @@ describe("countRecords", () => {
 			select: { id: true },
 		});
 
-		expect((await countRecords()).companies).toBe(before.companies + 1);
+		expect((await countRecords(SEES_EVERYTHING)).companies).toBe(
+			before.companies + 1,
+		);
 
 		await db.company.update({
 			where: { id: extra.id },
 			data: { archivedAt: new Date() },
 		});
 
-		expect((await countRecords()).companies).toBe(before.companies);
+		expect((await countRecords(SEES_EVERYTHING)).companies).toBe(
+			before.companies,
+		);
 
 		await db.company.delete({ where: { id: extra.id } });
 	});
@@ -238,7 +249,7 @@ describe("countRecords", () => {
 
 describe("listDeals", () => {
 	it("lists stale open deals across the pipeline", async () => {
-		const result = await listDeals({
+		const result = await listDeals(SEES_EVERYTHING, {
 			status: "open",
 			inactiveForDays: 14,
 			now: new Date("2026-08-05T12:00:00.000Z"),
@@ -263,11 +274,11 @@ describe("listDeals", () => {
 	});
 
 	it("paginates a broad deal sweep without repeating a row", async () => {
-		const first = await listDeals({ status: "all", limit: 1 });
+		const first = await listDeals(SEES_EVERYTHING, { status: "all", limit: 1 });
 		expect(first.hasMore).toBe(true);
 		expect(first.nextCursor).toBeTruthy();
 
-		const second = await listDeals({
+		const second = await listDeals(SEES_EVERYTHING, {
 			status: "all",
 			limit: 1,
 			cursor: first.nextCursor ?? undefined,

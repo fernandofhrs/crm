@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { createRunActivity } from "../../../lib/run-runtime";
 import { requireTeamAgentAttribute } from "../../../lib/session-purpose";
+import { viewerFor } from "../../../lib/viewer";
 
 export default defineTool({
 	description:
@@ -19,6 +20,7 @@ export default defineTool({
 			requireTeamAgentAttribute(ctx, "runId"),
 			ctx.callId,
 			input,
+			await viewerFor(ctx),
 		);
 	},
 });

@@ -3,6 +3,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { extract, type JsonSchema } from "../lib/context-dev";
 import { spend } from "../lib/focus";
+import { assertSees } from "../lib/viewer";
 
 const RESEARCH_SCHEMA: JsonSchema = {
 	type: "object",
@@ -74,7 +75,9 @@ export default defineTool({
 	inputSchema: z.object({
 		companyId: z.string(),
 	}),
-	async execute({ companyId }) {
+	async execute({ companyId }, ctx) {
+		await assertSees(ctx, { kind: "company", id: companyId });
+
 		const company = await db.company.findUnique({
 			where: { id: companyId },
 			select: {

@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { readCrmHistory } from "../lib/crm";
 import { focusOn } from "../lib/focus";
+import { sees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -16,7 +17,11 @@ export default defineTool({
 			.default(5)
 			.describe("How many recent threads to read."),
 	}),
-	async execute({ contactId, threads }) {
+	async execute({ contactId, threads }, ctx) {
+		if (!(await sees(ctx, { kind: "contact", id: contactId }))) {
+			return { found: false as const, reason: "No such contact." };
+		}
+
 		focusOn({ contactId });
 
 		const history = await readCrmHistory(contactId, { threads });

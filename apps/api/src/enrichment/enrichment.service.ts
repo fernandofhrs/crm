@@ -1,4 +1,10 @@
 import type { Db, Prisma } from "@crm/db";
+import {
+	companiesVisibleTo,
+	contactsVisibleTo,
+	seesEverything,
+	type Viewer,
+} from "@crm/db/visibility";
 import { ENRICHMENT_PAGE, pageSize } from "@crm/validation/enrichment-queue";
 import { Injectable } from "@nestjs/common";
 import { InjectDatabase } from "../database/database.constants";
@@ -73,13 +79,16 @@ type QueuedTask = {
 export class EnrichmentService {
 	constructor(@InjectDatabase() private readonly db: Db) {}
 
-	async queue(limit: number = ENRICHMENT_PAGE): Promise<EnrichmentQueue> {
+	async queue(
+		viewer: Viewer,
+		limit: number = ENRICHMENT_PAGE,
+	): Promise<EnrichmentQueue> {
 		const take = pageSize(limit);
 		const now = new Date();
 
 		const named: Prisma.AgentTaskWhereInput = {
 			finishedAt: null,
-			OR: [{ contactId: { not: null } }, { companyId: { not: null } }],
+			OR: await this.subjects(viewer),
 		};
 
 		const dueWhere: Prisma.AgentTaskWhereInput = {
@@ -210,6 +219,33 @@ export class EnrichmentService {
 		}
 
 		return { rows, total, scheduled, scheduledTotal };
+	}
+
+	private async subjects(
+		viewer: Viewer,
+	): Promise<Prisma.AgentTaskWhereInput[]> {
+		if (seesEverything(viewer)) {
+			return [{ contactId: { not: null } }, { companyId: { not: null } }];
+		}
+
+		const [contacts, companies] = await Promise.all([
+			this.db.contact.findMany({
+				where: contactsVisibleTo(viewer),
+				select: { id: true },
+			}),
+			this.db.company.findMany({
+				where: companiesVisibleTo(viewer),
+				select: { id: true },
+			}),
+		]);
+
+		return [
+			{ contactId: { in: contacts.map((contact) => contact.id) } },
+			{
+				contactId: null,
+				companyId: { in: companies.map((company) => company.id) },
+			},
+		];
 	}
 }
 

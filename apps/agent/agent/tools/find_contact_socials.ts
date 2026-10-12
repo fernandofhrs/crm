@@ -3,6 +3,7 @@ import { z } from "zod";
 import { personForVerification, stampSocialsChecked } from "../lib/crm";
 import { focusOn, spend } from "../lib/focus";
 import { findSocialCandidates } from "../lib/socials";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -10,7 +11,8 @@ export default defineTool({
 	inputSchema: z.object({
 		contactId: z.string(),
 	}),
-	async execute({ contactId }) {
+	async execute({ contactId }, ctx) {
+		await assertSees(ctx, { kind: "contact", id: contactId });
 		focusOn({ contactId });
 
 		const person = await personForVerification(contactId);

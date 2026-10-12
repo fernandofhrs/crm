@@ -1,3 +1,4 @@
+import type { RecordRef } from "@crm/db/visibility";
 import { defineDynamic, defineInstructions } from "eve/instructions";
 import { z } from "zod";
 import { stagesMarkdown } from "../lib/deal-stages";
@@ -5,6 +6,7 @@ import { focusOn, setBudget } from "../lib/focus";
 import { sessionPreamble } from "../lib/preamble";
 import { RESEARCH_INSTRUCTIONS } from "../lib/research-instructions";
 import { attribute, purposeOf } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 const attributeText = z.string().trim().min(1).nullable().catch(null);
 
@@ -36,21 +38,23 @@ export default defineDynamic({
 			if (budget) setBudget(budget);
 
 			const fieldKeys = attributeText.parse(attributes.fieldKeys);
+			const record = {
+				contactId: attributeText.parse(attributes.contactId),
+				companyId: attributeText.parse(attributes.companyId),
+				dealId: attributeText.parse(attributes.dealId),
+			};
 
-			const { markdown, focus } = await sessionPreamble(
-				{
-					contactId: attributeText.parse(attributes.contactId),
-					companyId: attributeText.parse(attributes.companyId),
-					dealId: attributeText.parse(attributes.dealId),
-				},
-				{
-					dispatched: Boolean(kind),
-					kind,
-					reason: attributeText.parse(attributes.reason),
-					budget,
-					fieldKeys: fieldKeys ? fieldKeys.split(",") : null,
-				},
-			);
+			for (const opened of openedRecords(record)) {
+				await assertSees(ctx, opened);
+			}
+
+			const { markdown, focus } = await sessionPreamble(record, {
+				dispatched: Boolean(kind),
+				kind,
+				reason: attributeText.parse(attributes.reason),
+				budget,
+				fieldKeys: fieldKeys ? fieldKeys.split(",") : null,
+			});
 
 			focusOn({ ...focus, sessionId: ctx.session.id, taskKind: kind });
 
@@ -62,6 +66,22 @@ export default defineDynamic({
 			purposeOf(ctx) === "builder" ? builderInstructions(ctx) : null,
 	},
 });
+
+function openedRecords(record: {
+	contactId: string | null;
+	companyId: string | null;
+	dealId: string | null;
+}): RecordRef[] {
+	return [
+		...(record.contactId
+			? [{ kind: "contact" as const, id: record.contactId }]
+			: []),
+		...(record.companyId
+			? [{ kind: "company" as const, id: record.companyId }]
+			: []),
+		...(record.dealId ? [{ kind: "deal" as const, id: record.dealId }] : []),
+	];
+}
 
 function builderInstructions(ctx: Parameters<typeof purposeOf>[0]) {
 	return defineInstructions({

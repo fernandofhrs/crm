@@ -10,6 +10,7 @@ import { spend } from "../lib/focus";
 import { verdictFor } from "../lib/identity";
 import { personByProfileUrl } from "../lib/people";
 import { storePortrait } from "../lib/portrait";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -26,7 +27,9 @@ export default defineTool({
 				"The CRM contact this candidate is for. Supply it and their photo is copied automatically if — and only if — the profile turns out to be them.",
 			),
 	}),
-	async execute({ slug, email, companyName, companyDomain, contactId }) {
+	async execute({ slug, email, companyName, companyDomain, contactId }, ctx) {
+		if (contactId) await assertSees(ctx, { kind: "contact", id: contactId });
+
 		if (!(await enabled(CONTEXT_DEV_PEOPLE))) {
 			return { found: false as const, ...unavailable(CONTEXT_DEV_SOURCE) };
 		}

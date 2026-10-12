@@ -126,8 +126,11 @@ export class TrackingRouter {
 			"Tracking",
 		]),
 	})
-	async companyActivity(@Input() input: z.infer<typeof companyActivityInput>) {
-		return this.tracking.activityForCompany(input.companyId);
+	async companyActivity(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof companyActivityInput>,
+	) {
+		return this.tracking.activityForCompany(input.companyId, ctx.viewer);
 	}
 
 	@Query({
@@ -137,7 +140,10 @@ export class TrackingRouter {
 			"Tracking",
 		]),
 	})
-	async contactActivity(@Input() input: z.infer<typeof contactActivityInput>) {
-		return this.tracking.activityForContact(input.contactId);
+	async contactActivity(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof contactActivityInput>,
+	) {
+		return this.tracking.activityForContact(input.contactId, ctx.viewer);
 	}
 }

@@ -9,6 +9,13 @@ import {
 } from "@crm/db";
 import type { FieldDefinitionWithOptions } from "@crm/db/fields";
 import {
+	companiesVisibleTo,
+	contactsVisibleTo,
+	SEES_EVERYTHING,
+	seesEverything,
+	type Viewer,
+} from "@crm/db/visibility";
+import {
 	ConflictException,
 	Injectable,
 	Logger,
@@ -103,9 +110,12 @@ export class ContactsService {
 		private readonly fields: FieldsService,
 	) {}
 
-	async list(input: ContactListInput): Promise<ListResult<ContactRow>> {
+	async list(
+		input: ContactListInput,
+		viewer: Viewer,
+	): Promise<ListResult<ContactRow>> {
 		const filterableFields = await this.fields.filterableFieldsFor("CONTACT");
-		const where = this.buildWhere(input, filterableFields);
+		const where = this.buildWhere(input, filterableFields, viewer);
 		const { skip, take } = paginate(input);
 
 		const [rows, total, facetCounts] = await Promise.all([
@@ -130,7 +140,7 @@ export class ContactsService {
 				},
 			}),
 			this.db.contact.count({ where }),
-			this.facetCounts(input, filterableFields),
+			this.facetCounts(input, filterableFields, viewer),
 		]);
 
 		const tableFields = await this.fields.tableValuesFor(
@@ -151,9 +161,9 @@ export class ContactsService {
 		};
 	}
 
-	async byId(id: string) {
+	async byId(id: string, viewer: Viewer) {
 		const contact = await this.db.contact.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: {
 				id: true,
 				firstName: true,
@@ -260,8 +270,10 @@ export class ContactsService {
 		};
 	}
 
-	async create(input: ContactCreateInput) {
+	async create(input: ContactCreateInput, viewer: Viewer) {
 		const email = normalizeEmail(input.email ?? "");
+		const ownerId =
+			input.ownerId ?? (viewer.sees === "own" ? viewer.userId : null);
 
 		if (email) {
 			const existing = await this.db.contact.findFirst({
@@ -272,19 +284,24 @@ export class ContactsService {
 				select: { id: true, firstName: true, lastName: true },
 			});
 			if (existing) {
+				const seen = await this.db.contact.count({
+					where: this.visible(existing.id, viewer),
+				});
+
 				throw new ConflictException(
-					`${[existing.firstName, existing.lastName].filter(Boolean).join(" ")} já usa ${email}.`,
+					seen > 0
+						? `${nameOf(existing)} já usa ${email}.`
+						: `Outro contato, de outro responsável, já usa ${email}.`,
 				);
 			}
 		}
 
+		if (input.companyId)
+			await this.assertCompanyVisible(input.companyId, viewer);
+
 		const companyId =
 			input.companyId ??
-			(email
-				? await this.companies.companyForEmail(email, {
-						ownerId: input.ownerId,
-					})
-				: null);
+			(email ? await this.companies.companyForEmail(email, { ownerId }) : null);
 
 		const contact = await this.agent.withCrmEvents(async (tx, emit) => {
 			await this.allowAgain(tx, email);
@@ -297,7 +314,7 @@ export class ContactsService {
 					phone: blankToNull(input.phone ?? ""),
 					title: blankToNull(input.title ?? ""),
 					companyId,
-					ownerId: input.ownerId ?? null,
+					ownerId,
 				},
 				select: {
 					id: true,
@@ -347,10 +364,13 @@ export class ContactsService {
 		};
 	}
 
-	async archive(id: string): Promise<{ id: string; name: string }> {
+	async archive(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const contact = await this.db.contact.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: new Date() },
 				select: { firstName: true, lastName: true },
 			});
@@ -363,10 +383,13 @@ export class ContactsService {
 		}
 	}
 
-	async restore(id: string): Promise<{ id: string; name: string }> {
+	async restore(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const contact = await this.db.contact.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: null },
 				select: { firstName: true, lastName: true },
 			});
@@ -379,13 +402,18 @@ export class ContactsService {
 		}
 	}
 
-	async purge(id: string): Promise<{ id: string; name: string }>;
 	async purge(
 		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }>;
+	async purge(
+		id: string,
+		viewer: Viewer,
 		guard: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null>;
 	async purge(
 		id: string,
+		viewer: Viewer,
 		guard?: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null> {
 		let deleted: {
@@ -410,6 +438,8 @@ export class ContactsService {
 				) {
 					return null;
 				}
+
+				await this.assertVisible(id, viewer, tx);
 
 				const targets = await this.stamp.targetsOf({ contactId: id }, tx);
 
@@ -463,12 +493,15 @@ export class ContactsService {
 
 		return runBulk(
 			expired.map((row) => row.id),
-			(id) => this.purge(id, { archivedBefore: before }),
+			(id) => this.purge(id, SEES_EVERYTHING, { archivedBefore: before }),
 		);
 	}
 
-	async update(id: string, input: ContactUpdateInput) {
+	async update(id: string, input: ContactUpdateInput, viewer: Viewer) {
 		const data: Prisma.ContactUpdateInput = {};
+
+		if (input.companyId)
+			await this.assertCompanyVisible(input.companyId, viewer);
 
 		if (input.firstName !== undefined) data.firstName = input.firstName.trim();
 		if (input.lastName !== undefined)
@@ -505,7 +538,7 @@ export class ContactsService {
 				}
 
 				const updated = await tx.contact.update({
-					where: { id },
+					where: this.visible(id, viewer),
 					data,
 					select: { id: true, firstName: true, lastName: true },
 				});
@@ -521,14 +554,17 @@ export class ContactsService {
 		}
 	}
 
-	async bulkAssignOwner(input: ContactBulkOwnerInput): Promise<BulkResult> {
+	async bulkAssignOwner(
+		input: ContactBulkOwnerInput,
+		viewer: Viewer,
+	): Promise<BulkResult> {
 		const ownerId = input.ownerId || null;
 
 		await requireOwner(this.db, ownerId);
 
 		const ids = [...new Set(input.ids)];
 		const { count } = await this.db.contact.updateMany({
-			where: { id: { in: ids } },
+			where: { id: { in: ids }, AND: [contactsVisibleTo(viewer)] },
 			data: { ownerId },
 		});
 
@@ -547,22 +583,17 @@ export class ContactsService {
 		};
 	}
 
-	async bulkSetCompany(input: ContactBulkCompanyInput): Promise<BulkResult> {
+	async bulkSetCompany(
+		input: ContactBulkCompanyInput,
+		viewer: Viewer,
+	): Promise<BulkResult> {
 		const companyId = input.companyId || null;
 
-		if (companyId) {
-			const company = await this.db.company.findUnique({
-				where: { id: companyId },
-				select: { id: true },
-			});
-			if (!company) {
-				throw new NotFoundException(`Nenhuma empresa com o id ${companyId}.`);
-			}
-		}
+		if (companyId) await this.assertCompanyVisible(companyId, viewer);
 
 		const ids = [...new Set(input.ids)];
 		const { count } = await this.db.contact.updateMany({
-			where: { id: { in: ids } },
+			where: { id: { in: ids }, AND: [contactsVisibleTo(viewer)] },
 			data: { companyId },
 		});
 
@@ -581,20 +612,53 @@ export class ContactsService {
 		};
 	}
 
-	async bulkEnrich(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.enrich(id));
+	async bulkEnrich(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.enrich(id, viewer));
 	}
 
-	async bulkArchive(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.archive(id));
+	async bulkArchive(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.archive(id, viewer));
 	}
 
-	async bulkRestore(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.restore(id));
+	async bulkRestore(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.restore(id, viewer));
 	}
 
-	async bulkPurge(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.purge(id));
+	async bulkPurge(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.purge(id, viewer));
+	}
+
+	private visible(id: string, viewer: Viewer): Prisma.ContactWhereUniqueInput {
+		return { id, AND: [contactsVisibleTo(viewer)] };
+	}
+
+	private async assertVisible(
+		id: string,
+		viewer: Viewer,
+		client: Prisma.TransactionClient,
+	): Promise<void> {
+		if (seesEverything(viewer)) return;
+
+		const seen = await client.contact.count({
+			where: this.visible(id, viewer),
+		});
+
+		if (seen === 0) {
+			throw new NotFoundException(`Nenhum contato com o id ${id}.`);
+		}
+	}
+
+	private async assertCompanyVisible(
+		companyId: string,
+		viewer: Viewer,
+	): Promise<void> {
+		const seen = await this.db.company.count({
+			where: { id: companyId, AND: [companiesVisibleTo(viewer)] },
+		});
+
+		if (seen === 0) {
+			throw new NotFoundException(`Nenhuma empresa com o id ${companyId}.`);
+		}
 	}
 
 	private async allowAgain(
@@ -671,9 +735,12 @@ export class ContactsService {
 		};
 	}
 
-	async enrich(id: string): Promise<{ id: string; queued: boolean }> {
+	async enrich(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; queued: boolean }> {
 		const contact = await this.db.contact.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: { id: true, imageUrl: true, linkedinUrl: true, updatedAt: true },
 		});
 
@@ -702,9 +769,10 @@ export class ContactsService {
 	async decideFact(
 		input: FactDecisionInput,
 		userId: string,
+		viewer: Viewer,
 	): Promise<{ contactId: string; field: string; applied: boolean }> {
 		const fact = await this.db.contactFact.findUnique({
-			where: { id: input.factId },
+			where: { id: input.factId, contact: contactsVisibleTo(viewer) },
 			select: {
 				id: true,
 				contactId: true,
@@ -807,8 +875,10 @@ export class ContactsService {
 	private buildWhere(
 		input: ContactListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	): Prisma.ContactWhereInput {
 		const and: Prisma.ContactWhereInput[] = [
+			contactsVisibleTo(viewer),
 			this.searchFilter(input.q),
 			archivedFilter(input.archived),
 			...this.fields.fieldFilters(filterableFields, input.fields),
@@ -838,9 +908,14 @@ export class ContactsService {
 	private async facetCounts(
 		input: ContactListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	) {
 		const where = {
-			AND: [this.searchFilter(input.q), archivedFilter(input.archived)],
+			AND: [
+				contactsVisibleTo(viewer),
+				this.searchFilter(input.q),
+				archivedFilter(input.archived),
+			],
 		};
 
 		const [

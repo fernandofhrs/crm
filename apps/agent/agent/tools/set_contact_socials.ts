@@ -6,6 +6,7 @@ import { recordFact } from "../lib/facts";
 import { focusOn } from "../lib/focus";
 import { assertResearchPurpose } from "../lib/session-purpose";
 import { parseSocialUrl, verifyGithub, verifyX } from "../lib/socials";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -25,6 +26,7 @@ export default defineTool({
 	}),
 	async execute({ contactId, twitterUrl, githubUrl }, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: contactId });
 		focusOn({ contactId });
 
 		const person = await personForVerification(contactId);

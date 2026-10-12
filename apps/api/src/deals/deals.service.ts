@@ -14,6 +14,13 @@ import {
 } from "@crm/db/deal-stage";
 import type { FieldDefinitionWithOptions } from "@crm/db/fields";
 import {
+	companiesVisibleTo,
+	dealsVisibleTo,
+	SEES_EVERYTHING,
+	seesEverything,
+	type Viewer,
+} from "@crm/db/visibility";
+import {
 	BadRequestException,
 	Injectable,
 	Logger,
@@ -111,9 +118,9 @@ export class DealsService {
 		private readonly fields: FieldsService,
 	) {}
 
-	async list(input: DealListInput) {
+	async list(input: DealListInput, viewer: Viewer) {
 		const filterableFields = await this.fields.filterableFieldsFor("DEAL");
-		const where = this.buildWhere(input, filterableFields);
+		const where = this.buildWhere(input, filterableFields, viewer);
 		const { skip, take } = paginate(input);
 
 		const openWhere = { ...where, stage: { in: [...OPEN_DEAL_STAGES] } };
@@ -143,7 +150,7 @@ export class DealsService {
 					},
 				}),
 				this.db.deal.count({ where }),
-				this.facetCounts(input, filterableFields),
+				this.facetCounts(input, filterableFields, viewer),
 				this.db.deal.aggregate({
 					where: { AND: [openWhere, this.conversion.countedWhere(base)] },
 					_sum: { baseAmount: true },
@@ -191,9 +198,9 @@ export class DealsService {
 		};
 	}
 
-	async byId(id: string) {
+	async byId(id: string, viewer: Viewer) {
 		const deal = await this.db.deal.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: {
 				id: true,
 				name: true,
@@ -250,7 +257,9 @@ export class DealsService {
 		};
 	}
 
-	async create(input: DealCreateInput) {
+	async create(input: DealCreateInput, viewer: Viewer) {
+		await this.assertCompanyVisible(input.companyId, viewer);
+
 		const stage = input.stage ?? "DEMO_BOOKED";
 		const closed = isClosedStage(stage);
 		const now = new Date();
@@ -307,8 +316,12 @@ export class DealsService {
 		}
 	}
 
-	async update(id: string, input: DealUpdateInput) {
+	async update(id: string, input: DealUpdateInput, viewer: Viewer) {
 		const data: Prisma.DealUpdateInput = {};
+
+		if (input.companyId !== undefined) {
+			await this.assertCompanyVisible(input.companyId, viewer);
+		}
 
 		if (input.name !== undefined) data.name = input.name.trim();
 		if (input.description !== undefined) {
@@ -333,7 +346,7 @@ export class DealsService {
 
 		if (input.amountCents !== undefined || input.currency !== undefined) {
 			const current = await this.db.deal.findUnique({
-				where: { id },
+				where: this.visible(id, viewer),
 				select: { amount: true, currency: true },
 			});
 
@@ -360,7 +373,7 @@ export class DealsService {
 				}
 
 				return tx.deal.update({
-					where: { id },
+					where: this.visible(id, viewer),
 					data,
 					select: { id: true, name: true },
 				});
@@ -370,10 +383,13 @@ export class DealsService {
 		}
 	}
 
-	async archive(id: string): Promise<{ id: string; name: string }> {
+	async archive(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const deal = await this.db.deal.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: new Date() },
 				select: { name: true },
 			});
@@ -386,10 +402,13 @@ export class DealsService {
 		}
 	}
 
-	async restore(id: string): Promise<{ id: string; name: string }> {
+	async restore(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const deal = await this.db.deal.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: null },
 				select: { name: true },
 			});
@@ -402,13 +421,18 @@ export class DealsService {
 		}
 	}
 
-	async purge(id: string): Promise<{ id: string; name: string }>;
 	async purge(
 		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }>;
+	async purge(
+		id: string,
+		viewer: Viewer,
 		guard: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null>;
 	async purge(
 		id: string,
+		viewer: Viewer,
 		guard?: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null> {
 		let deleted: { targets: StampTargets; name: string } | null;
@@ -429,6 +453,8 @@ export class DealsService {
 				) {
 					return null;
 				}
+
+				await this.assertVisible(id, viewer, tx);
 
 				const targets = await this.stamp.targetsOf({ dealId: id }, tx);
 				await tx.agentTask.deleteMany({ where: { dealId: id } });
@@ -466,14 +492,16 @@ export class DealsService {
 
 		return runBulk(
 			expired.map((row) => row.id),
-			(id) => this.purge(id, { archivedBefore: before }),
+			(id) => this.purge(id, SEES_EVERYTHING, { archivedBefore: before }),
 		);
 	}
 
-	async setStage(input: SetStageInput, actingUserId: string) {
+	async setStage(input: SetStageInput, actingUserId: string, viewer: Viewer) {
 		const closedReason = input.closedReason?.trim();
 		const closed = isClosedStage(input.stage);
 		const transition = await this.agent.withCrmEvents(async (tx, emit) => {
+			await this.assertVisible(input.id, viewer, tx);
+
 			const [deal] = await tx.$queryRaw<
 				Array<{ id: string; stage: DealStage; companyId: string }>
 			>`
@@ -576,9 +604,9 @@ export class DealsService {
 		return { ...updated, changed: true };
 	}
 
-	async contactOptions(dealId: string) {
+	async contactOptions(dealId: string, viewer: Viewer) {
 		const deal = await this.db.deal.findUnique({
-			where: { id: dealId },
+			where: this.visible(dealId, viewer),
 			select: { companyId: true, contacts: { select: { contactId: true } } },
 		});
 
@@ -597,8 +625,8 @@ export class DealsService {
 		});
 	}
 
-	async attachContact(input: DealAttachContactInput) {
-		const company = await this.companyOf(input.dealId);
+	async attachContact(input: DealAttachContactInput, viewer: Viewer) {
+		const company = await this.companyOf(input.dealId, viewer);
 		const contact = await this.db.contact.findUnique({
 			where: { id: input.contactId },
 			select: { companyId: true },
@@ -638,9 +666,13 @@ export class DealsService {
 		return { dealId: input.dealId, contactId: input.contactId };
 	}
 
-	async detachContact(input: DealDetachContactInput) {
+	async detachContact(input: DealDetachContactInput, viewer: Viewer) {
 		const { count } = await this.db.dealContact.deleteMany({
-			where: { dealId: input.dealId, contactId: input.contactId },
+			where: {
+				dealId: input.dealId,
+				contactId: input.contactId,
+				deal: dealsVisibleTo(viewer),
+			},
 		});
 
 		if (count === 0) {
@@ -656,11 +688,15 @@ export class DealsService {
 		return { dealId: input.dealId, contactId: input.contactId };
 	}
 
-	async setContactRole(input: DealContactRoleInput) {
+	async setContactRole(input: DealContactRoleInput, viewer: Viewer) {
 		const role = roleOrNull(input.role);
 
 		const { count } = await this.db.dealContact.updateMany({
-			where: { dealId: input.dealId, contactId: input.contactId },
+			where: {
+				dealId: input.dealId,
+				contactId: input.contactId,
+				deal: dealsVisibleTo(viewer),
+			},
 			data: { role },
 		});
 
@@ -671,12 +707,15 @@ export class DealsService {
 		return { dealId: input.dealId, contactId: input.contactId, role };
 	}
 
-	async bulkAssignOwner(input: DealBulkOwnerInput): Promise<BulkResult> {
+	async bulkAssignOwner(
+		input: DealBulkOwnerInput,
+		viewer: Viewer,
+	): Promise<BulkResult> {
 		await requireOwner(this.db, input.ownerId);
 
 		const ids = [...new Set(input.ids)];
 		const { count } = await this.db.deal.updateMany({
-			where: { id: { in: ids } },
+			where: { id: { in: ids }, AND: [dealsVisibleTo(viewer)] },
 			data: { ownerId: input.ownerId },
 		});
 
@@ -698,6 +737,7 @@ export class DealsService {
 	async bulkSetStage(
 		input: DealBulkStageInput,
 		actingUserId: string,
+		viewer: Viewer,
 	): Promise<BulkResult> {
 		const closedReason = input.closedReason?.trim();
 
@@ -708,25 +748,64 @@ export class DealsService {
 		}
 
 		return runBulk(input.ids, (id) =>
-			this.setStage({ id, stage: input.stage, closedReason }, actingUserId),
+			this.setStage(
+				{ id, stage: input.stage, closedReason },
+				actingUserId,
+				viewer,
+			),
 		);
 	}
 
-	async bulkArchive(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.archive(id));
+	async bulkArchive(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.archive(id, viewer));
 	}
 
-	async bulkRestore(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.restore(id));
+	async bulkRestore(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.restore(id, viewer));
 	}
 
-	async bulkPurge(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.purge(id));
+	async bulkPurge(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.purge(id, viewer));
 	}
 
-	private async companyOf(dealId: string) {
+	private visible(id: string, viewer: Viewer): Prisma.DealWhereUniqueInput {
+		return { id, AND: [dealsVisibleTo(viewer)] };
+	}
+
+	private async assertVisible(
+		id: string,
+		viewer: Viewer,
+		client: Prisma.TransactionClient,
+	): Promise<void> {
+		if (seesEverything(viewer)) return;
+
+		const seen = await client.deal.count({ where: this.visible(id, viewer) });
+
+		if (seen === 0) {
+			throw new NotFoundException(`Nenhum negócio com o id ${id}.`);
+		}
+	}
+
+	private async assertCompanyVisible(
+		companyId: string,
+		viewer: Viewer,
+	): Promise<void> {
+		if (seesEverything(viewer)) return;
+
+		const seen = await this.db.company.count({
+			where: { id: companyId, AND: [companiesVisibleTo(viewer)] },
+		});
+
+		if (seen === 0) {
+			throw new BadRequestException(
+				"Essa empresa ou esse responsável não existe mais.",
+			);
+		}
+	}
+
+	private async companyOf(dealId: string, viewer: Viewer) {
 		const deal = await this.db.deal.findUnique({
-			where: { id: dealId },
+			where: this.visible(dealId, viewer),
 			select: { company: { select: { id: true, name: true } } },
 		});
 
@@ -752,8 +831,10 @@ export class DealsService {
 	private buildWhere(
 		input: DealListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	): Prisma.DealWhereInput {
 		const and: Prisma.DealWhereInput[] = [
+			dealsVisibleTo(viewer),
 			this.searchFilter(input.q),
 			archivedFilter(input.archived),
 			...this.fields.fieldFilters(filterableFields, input.fields),
@@ -786,9 +867,14 @@ export class DealsService {
 	private async facetCounts(
 		input: DealListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	) {
 		const where: Prisma.DealWhereInput = {
-			AND: [this.searchFilter(input.q), archivedFilter(input.archived)],
+			AND: [
+				dealsVisibleTo(viewer),
+				this.searchFilter(input.q),
+				archivedFilter(input.archived),
+			],
 		};
 
 		const [owners, stages, fieldFacets, ...closingCounts] = await Promise.all([

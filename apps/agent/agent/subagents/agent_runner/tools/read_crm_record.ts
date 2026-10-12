@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { readRunRecord } from "../../../lib/run-runtime";
 import { requireTeamAgentAttribute } from "../../../lib/session-purpose";
+import { viewerFor } from "../../../lib/viewer";
 
 export default defineTool({
 	description:
@@ -11,6 +12,10 @@ export default defineTool({
 		id: z.string().min(1),
 	}),
 	async execute(input, ctx) {
-		return readRunRecord(requireTeamAgentAttribute(ctx, "runId"), input);
+		return readRunRecord(
+			requireTeamAgentAttribute(ctx, "runId"),
+			input,
+			await viewerFor(ctx),
+		);
 	},
 });

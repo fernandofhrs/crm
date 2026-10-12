@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { db } from "@crm/db";
+import { SEES_EVERYTHING } from "@crm/db/visibility";
 import {
 	ENRICHMENT_PAGE,
 	ENRICHMENT_PAGE_MAX,
@@ -98,14 +99,14 @@ afterAll(clean);
 
 describe("what the enrichment widget reads", () => {
 	it("lists work that is due now", async () => {
-		const queue = await enrichment.queue();
+		const queue = await enrichment.queue(SEES_EVERYTHING);
 
 		expect(queue.rows.map((row) => row.id)).toContain(dueId);
 		expect(queue.total).toBeGreaterThanOrEqual(1);
 	});
 
 	it("keeps work booked for a later day out of the count", async () => {
-		const queue = await enrichment.queue();
+		const queue = await enrichment.queue(SEES_EVERYTHING);
 
 		expect(queue.rows.map((row) => row.id)).not.toContain(scheduledId);
 		expect(queue.scheduled.map((row) => row.id)).toContain(scheduledId);
@@ -113,7 +114,7 @@ describe("what the enrichment widget reads", () => {
 	});
 
 	it("says when a booked record is looked at again", async () => {
-		const queue = await enrichment.queue();
+		const queue = await enrichment.queue(SEES_EVERYTHING);
 		const booked = queue.scheduled.find((row) => row.id === scheduledId);
 
 		expect(booked?.due).toBe("Em 3 meses");
@@ -122,7 +123,7 @@ describe("what the enrichment widget reads", () => {
 	});
 
 	it("names the company a due row is about", async () => {
-		const queue = await enrichment.queue();
+		const queue = await enrichment.queue(SEES_EVERYTHING);
 		const row = queue.rows.find((entry) => entry.id === dueId);
 
 		expect(row?.subject.id).toBe(companyId);
@@ -130,27 +131,33 @@ describe("what the enrichment widget reads", () => {
 	});
 
 	it("hands back exactly the number of rows asked for", async () => {
-		const queue = await enrichment.queue(3);
+		const queue = await enrichment.queue(SEES_EVERYTHING, 3);
 
 		expect(queue.rows).toHaveLength(3);
 		expect(queue.total).toBeGreaterThan(3);
 	});
 
 	it("counts every due task, not only the ones it returned", async () => {
-		const page = await enrichment.queue(3);
-		const all = await enrichment.queue(EXTRA_ROWS + 10);
+		const page = await enrichment.queue(SEES_EVERYTHING, 3);
+		const all = await enrichment.queue(SEES_EVERYTHING, EXTRA_ROWS + 10);
 
 		expect(page.total).toBe(all.total);
 		expect(all.rows.length).toBeGreaterThan(page.rows.length);
 	});
 
 	it("treats a nonsense limit as one row, never as none", async () => {
-		expect(await enrichment.queue(0)).toHaveProperty("rows.length", 1);
-		expect(await enrichment.queue(-5)).toHaveProperty("rows.length", 1);
+		expect(await enrichment.queue(SEES_EVERYTHING, 0)).toHaveProperty(
+			"rows.length",
+			1,
+		);
+		expect(await enrichment.queue(SEES_EVERYTHING, -5)).toHaveProperty(
+			"rows.length",
+			1,
+		);
 	});
 
 	it("reads the whole page when asked for more than exists", async () => {
-		const queue = await enrichment.queue(ENRICHMENT_PAGE_MAX);
+		const queue = await enrichment.queue(SEES_EVERYTHING, ENRICHMENT_PAGE_MAX);
 
 		expect(queue.rows).toHaveLength(Math.min(queue.total, ENRICHMENT_PAGE_MAX));
 	});

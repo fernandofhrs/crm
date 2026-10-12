@@ -93,11 +93,15 @@ export class GoogleRouter {
 		output: suppressDomainOutput,
 		meta: restMeta("POST", "/google/suppress-domain", ["Google"]),
 	})
-	async suppressDomain(@Input() input: z.infer<typeof suppressDomainInput>) {
-		return this.connection.suppressDomain(input.domain, {
-			reason: input.reason,
-			purge: input.purge,
-		});
+	async suppressDomain(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof suppressDomainInput>,
+	) {
+		return this.connection.suppressDomain(
+			input.domain,
+			{ reason: input.reason, purge: input.purge },
+			ctx.viewer,
+		);
 	}
 
 	@Query({
@@ -105,8 +109,11 @@ export class GoogleRouter {
 		output: emailThreadOutput,
 		meta: restMeta("GET", "/google/threads/{threadId}", ["Google"]),
 	})
-	async thread(@Input("threadId") threadId: string) {
-		return this.conversations.thread(threadId);
+	async thread(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input("threadId") threadId: string,
+	) {
+		return this.conversations.thread(threadId, ctx.viewer);
 	}
 
 	@Query({
@@ -114,7 +121,10 @@ export class GoogleRouter {
 		output: calendarEventOutput,
 		meta: restMeta("GET", "/google/events/{eventId}", ["Google"]),
 	})
-	async event(@Input("eventId") eventId: string) {
-		return this.conversations.event(eventId);
+	async event(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input("eventId") eventId: string,
+	) {
+		return this.conversations.event(eventId, ctx.viewer);
 	}
 }

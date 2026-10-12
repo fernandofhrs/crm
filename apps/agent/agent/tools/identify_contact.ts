@@ -5,6 +5,7 @@ import { WEIGHTS } from "../lib/evidence";
 import { recordFact } from "../lib/facts";
 import { focusOn } from "../lib/focus";
 import { assertResearchPurpose } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -27,6 +28,7 @@ export default defineTool({
 	}),
 	async execute(input, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: input.contactId });
 		focusOn({ contactId: input.contactId });
 
 		const result = await recordFact({

@@ -1,6 +1,7 @@
 import { Inject } from "@nestjs/common";
-import { Input, Query, Router, UseMiddlewares } from "nestjs-trpc";
+import { Ctx, Input, Query, Router, UseMiddlewares } from "nestjs-trpc";
 import { z } from "zod";
+import type { AuthedTrpcContext } from "../trpc/context.types";
 import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import { restMeta } from "../trpc/openapi";
 import { SearchService } from "./search.service";
@@ -30,7 +31,7 @@ export class SearchRouter {
 		output: quickOutput,
 		meta: restMeta("GET", "/search", ["Search"]),
 	})
-	async quick(@Input("q") q: string) {
-		return this.search.quick(q);
+	async quick(@Ctx() ctx: AuthedTrpcContext, @Input("q") q: string) {
+		return this.search.quick(q, ctx.viewer);
 	}
 }

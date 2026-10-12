@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { ActivityType, db, type Prisma } from "@crm/db";
 import type { AgentActionStatus, AgentTriggerType } from "@crm/db/enums";
 import { lockIdempotencyKey } from "@crm/db/idempotency";
+import type { Viewer } from "@crm/db/visibility";
 import {
 	AGENT_ACTION_TYPES,
 	type AgentManifestResource,
@@ -19,6 +20,7 @@ import {
 	runTerminalEventId,
 } from "./run-state";
 import { slackAccessToken } from "./slack-connection";
+import { assertVisible } from "./viewer";
 
 const ACTION_LEASE_MS = DISPATCH.run.actionLeaseMs;
 const NO_ACTION_TRIGGER_TYPES = new Set<AgentTriggerType>(
@@ -169,12 +171,13 @@ export async function queryRunCrm(
 		kinds?: ("contact" | "company" | "deal")[];
 		limit: number;
 	},
+	viewer: Viewer,
 ) {
 	const run = await runContext(runId);
 	const scoped = run.allowedResources.filter(
 		(resource) => resource.kind !== "integration",
 	);
-	const result = await searchCrm(input.query, input);
+	const result = await searchCrm(viewer, input.query, input);
 	if (run.recordScope === "WORKSPACE") return result;
 
 	const allowed = new Set(
@@ -202,9 +205,11 @@ export async function readRunRecord(
 		kind: "contact" | "company" | "deal";
 		id: string;
 	},
+	viewer: Viewer,
 ) {
 	const run = await runContext(runId);
 	assertResourceAllowed(run.recordScope, run.allowedResources, input);
+	await assertVisible(viewer, input);
 	const sources = allowedHistorySources(run.allowedResources);
 
 	if (input.kind === "contact")
@@ -239,6 +244,7 @@ export async function createRunActivity(
 		body?: string | null;
 		dueAt?: string | null;
 	},
+	viewer: Viewer,
 ) {
 	const run = await db.agentRun.findUnique({
 		where: { id: runId },
@@ -259,6 +265,7 @@ export async function createRunActivity(
 		kind: input.targetKind,
 		id: input.targetId,
 	});
+	await assertVisible(viewer, { kind: input.targetKind, id: input.targetId });
 	const idempotencyKey = `${runId}:${callId}`;
 	const requestHash = actionRequestHash(input);
 	const existing = await findRunAction(idempotencyKey, requestHash);

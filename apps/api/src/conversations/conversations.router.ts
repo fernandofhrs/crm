@@ -74,7 +74,7 @@ export class ConversationsRouter {
 		]),
 	})
 	async builderResources(@Ctx() ctx: AuthedTrpcContext, @Input("q") q: string) {
-		return this.conversations.builderResources(q, ctx.user.id);
+		return this.conversations.builderResources(q, ctx.user.id, ctx.viewer);
 	}
 
 	@Query({

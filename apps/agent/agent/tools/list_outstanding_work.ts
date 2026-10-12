@@ -1,6 +1,7 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { contactsNeedingWork } from "../lib/crm";
+import { viewerFor } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -8,8 +9,8 @@ export default defineTool({
 	inputSchema: z.object({
 		limit: z.number().int().min(1).max(25).default(10),
 	}),
-	async execute({ limit }) {
-		const contacts = await contactsNeedingWork(limit);
+	async execute({ limit }, ctx) {
+		const contacts = await contactsNeedingWork(await viewerFor(ctx), limit);
 		return { count: contacts.length, contacts };
 	},
 });

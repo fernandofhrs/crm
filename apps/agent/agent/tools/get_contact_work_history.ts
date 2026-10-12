@@ -9,6 +9,7 @@ import {
 import { contactProfileSlug } from "../lib/crm";
 import { spend } from "../lib/focus";
 import { personByProfileUrl } from "../lib/people";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -16,7 +17,8 @@ export default defineTool({
 	inputSchema: z.object({
 		contactId: z.string(),
 	}),
-	async execute({ contactId }) {
+	async execute({ contactId }, ctx) {
+		await assertSees(ctx, { kind: "contact", id: contactId });
 		if (!(await enabled(CONTEXT_DEV_PEOPLE))) {
 			return { found: false as const, ...unavailable(CONTEXT_DEV_SOURCE) };
 		}

@@ -1,4 +1,9 @@
 import type { Db, Prisma } from "@crm/db";
+import {
+	calendarEventsVisibleTo,
+	emailThreadsVisibleTo,
+	type Viewer,
+} from "@crm/db/visibility";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { z } from "zod";
 import { InjectDatabase } from "../database/database.constants";
@@ -17,9 +22,9 @@ const storedRecipients = z.array(z.json()).catch([]);
 export class ConversationService {
 	constructor(@InjectDatabase() private readonly db: Db) {}
 
-	async thread(threadId: string) {
-		const thread = await this.db.emailThread.findUnique({
-			where: { id: threadId },
+	async thread(threadId: string, viewer: Viewer) {
+		const thread = await this.db.emailThread.findFirst({
+			where: { id: threadId, AND: [emailThreadsVisibleTo(viewer)] },
 			select: {
 				id: true,
 				subject: true,
@@ -108,9 +113,9 @@ export class ConversationService {
 		return faces;
 	}
 
-	async event(eventId: string) {
-		const event = await this.db.calendarEvent.findUnique({
-			where: { id: eventId },
+	async event(eventId: string, viewer: Viewer) {
+		const event = await this.db.calendarEvent.findFirst({
+			where: { id: eventId, AND: [calendarEventsVisibleTo(viewer)] },
 			select: {
 				id: true,
 				title: true,

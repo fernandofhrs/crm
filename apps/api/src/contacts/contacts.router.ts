@@ -42,8 +42,11 @@ export class ContactsRouter {
 		output: contactListOutput,
 		meta: restMeta("POST", "/contacts/search", ["Contacts"]),
 	})
-	async list(@Input() input: z.infer<typeof contactListInput>) {
-		return this.contacts.list(input);
+	async list(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof contactListInput>,
+	) {
+		return this.contacts.list(input, ctx.viewer);
 	}
 
 	@Query({
@@ -51,8 +54,8 @@ export class ContactsRouter {
 		output: contactByIdOutput,
 		meta: restMeta("GET", "/contacts/{id}", ["Contacts"]),
 	})
-	async byId(@Input("id") id: string) {
-		return this.contacts.byId(id);
+	async byId(@Ctx() ctx: AuthedTrpcContext, @Input("id") id: string) {
+		return this.contacts.byId(id, ctx.viewer);
 	}
 
 	@Mutation({
@@ -60,8 +63,11 @@ export class ContactsRouter {
 		output: contactBasicOutput,
 		meta: restMeta("POST", "/contacts", ["Contacts"]),
 	})
-	async create(@Input() input: z.infer<typeof contactCreateInput>) {
-		return this.contacts.create(input);
+	async create(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof contactCreateInput>,
+	) {
+		return this.contacts.create(input, ctx.viewer);
 	}
 
 	@Mutation({
@@ -69,8 +75,11 @@ export class ContactsRouter {
 		output: contactBasicOutput,
 		meta: restMeta("PATCH", "/contacts/{id}", ["Contacts"]),
 	})
-	async update(@Input() input: z.infer<typeof contactUpdateArgs>) {
-		return this.contacts.update(input.id, input.data);
+	async update(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof contactUpdateArgs>,
+	) {
+		return this.contacts.update(input.id, input.data, ctx.viewer);
 	}
 
 	@Mutation({
@@ -78,8 +87,8 @@ export class ContactsRouter {
 		output: contactNameOutput,
 		meta: restMeta("POST", "/contacts/{id}/archive", ["Contacts"]),
 	})
-	async archive(@Input("id") id: string) {
-		return this.contacts.archive(id);
+	async archive(@Ctx() ctx: AuthedTrpcContext, @Input("id") id: string) {
+		return this.contacts.archive(id, ctx.viewer);
 	}
 
 	@Mutation({
@@ -87,8 +96,8 @@ export class ContactsRouter {
 		output: contactNameOutput,
 		meta: restMeta("POST", "/contacts/{id}/restore", ["Contacts"]),
 	})
-	async restore(@Input("id") id: string) {
-		return this.contacts.restore(id);
+	async restore(@Ctx() ctx: AuthedTrpcContext, @Input("id") id: string) {
+		return this.contacts.restore(id, ctx.viewer);
 	}
 
 	@Mutation({
@@ -96,8 +105,8 @@ export class ContactsRouter {
 		output: contactNameOutput,
 		meta: restMeta("DELETE", "/contacts/{id}", ["Contacts"]),
 	})
-	async purge(@Input("id") id: string) {
-		return this.contacts.purge(id);
+	async purge(@Ctx() ctx: AuthedTrpcContext, @Input("id") id: string) {
+		return this.contacts.purge(id, ctx.viewer);
 	}
 
 	@Mutation({
@@ -105,8 +114,8 @@ export class ContactsRouter {
 		output: contactEnrichOutput,
 		meta: restMeta("POST", "/contacts/{id}/enrich", ["Contacts"]),
 	})
-	async enrich(@Input("id") id: string) {
-		return this.contacts.enrich(id);
+	async enrich(@Ctx() ctx: AuthedTrpcContext, @Input("id") id: string) {
+		return this.contacts.enrich(id, ctx.viewer);
 	}
 
 	@Mutation({
@@ -114,8 +123,11 @@ export class ContactsRouter {
 		output: bulkResultOutput,
 		meta: restMeta("POST", "/contacts/bulk-assign-owner", ["Contacts"]),
 	})
-	async bulkAssignOwner(@Input() input: z.infer<typeof contactBulkOwnerInput>) {
-		return this.contacts.bulkAssignOwner(input);
+	async bulkAssignOwner(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof contactBulkOwnerInput>,
+	) {
+		return this.contacts.bulkAssignOwner(input, ctx.viewer);
 	}
 
 	@Mutation({
@@ -124,9 +136,10 @@ export class ContactsRouter {
 		meta: restMeta("POST", "/contacts/bulk-set-company", ["Contacts"]),
 	})
 	async bulkSetCompany(
+		@Ctx() ctx: AuthedTrpcContext,
 		@Input() input: z.infer<typeof contactBulkCompanyInput>,
 	) {
-		return this.contacts.bulkSetCompany(input);
+		return this.contacts.bulkSetCompany(input, ctx.viewer);
 	}
 
 	@Mutation({
@@ -134,8 +147,8 @@ export class ContactsRouter {
 		output: bulkResultOutput,
 		meta: restMeta("POST", "/contacts/bulk-enrich", ["Contacts"]),
 	})
-	async bulkEnrich(@Input("ids") ids: string[]) {
-		return this.contacts.bulkEnrich(ids);
+	async bulkEnrich(@Ctx() ctx: AuthedTrpcContext, @Input("ids") ids: string[]) {
+		return this.contacts.bulkEnrich(ids, ctx.viewer);
 	}
 
 	@Mutation({
@@ -143,8 +156,11 @@ export class ContactsRouter {
 		output: bulkResultOutput,
 		meta: restMeta("POST", "/contacts/bulk-archive", ["Contacts"]),
 	})
-	async bulkArchive(@Input("ids") ids: string[]) {
-		return this.contacts.bulkArchive(ids);
+	async bulkArchive(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input("ids") ids: string[],
+	) {
+		return this.contacts.bulkArchive(ids, ctx.viewer);
 	}
 
 	@Mutation({
@@ -152,8 +168,11 @@ export class ContactsRouter {
 		output: bulkResultOutput,
 		meta: restMeta("POST", "/contacts/bulk-restore", ["Contacts"]),
 	})
-	async bulkRestore(@Input("ids") ids: string[]) {
-		return this.contacts.bulkRestore(ids);
+	async bulkRestore(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input("ids") ids: string[],
+	) {
+		return this.contacts.bulkRestore(ids, ctx.viewer);
 	}
 
 	@Mutation({
@@ -161,8 +180,8 @@ export class ContactsRouter {
 		output: bulkResultOutput,
 		meta: restMeta("POST", "/contacts/bulk-purge", ["Contacts"]),
 	})
-	async bulkPurge(@Input("ids") ids: string[]) {
-		return this.contacts.bulkPurge(ids);
+	async bulkPurge(@Ctx() ctx: AuthedTrpcContext, @Input("ids") ids: string[]) {
+		return this.contacts.bulkPurge(ids, ctx.viewer);
 	}
 
 	@Mutation({
@@ -174,6 +193,6 @@ export class ContactsRouter {
 		@Ctx() ctx: AuthedTrpcContext,
 		@Input() input: z.infer<typeof factDecisionInput>,
 	) {
-		return this.contacts.decideFact(input, ctx.user.id);
+		return this.contacts.decideFact(input, ctx.user.id, ctx.viewer);
 	}
 }

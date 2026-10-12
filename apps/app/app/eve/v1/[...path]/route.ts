@@ -1,4 +1,5 @@
 import { db } from "@crm/db";
+import { isVisibleTo, type RecordRef, viewerOf } from "@crm/db/visibility";
 import { connection } from "next/server";
 import {
 	AGENT_URL,
@@ -56,6 +57,22 @@ async function handler(request: Request): Promise<Response> {
 	headers.delete("x-crm-deal");
 	headers.delete("x-crm-builder-conversation");
 
+	const record = {
+		contactId: cuid(contactId),
+		companyId: cuid(companyId),
+		dealId: cuid(dealId),
+	};
+	const viewer = await viewerOf(db, session.user.id);
+
+	for (const opened of recordsOf(record)) {
+		if (!(await isVisibleTo(db, viewer, opened))) {
+			return Response.json(
+				{ error: BRIDGE_ERRORS.recordNotFound },
+				{ status: 404 },
+			);
+		}
+	}
+
 	if (requestedSession) {
 		const conversation = await db.agentConversation.findUnique({
 			where: { sessionId: requestedSession },
@@ -97,11 +114,7 @@ async function handler(request: Request): Promise<Response> {
 				email: session.user.email,
 				name: session.user.name,
 			},
-			{
-				contactId: cuid(contactId),
-				companyId: cuid(companyId),
-				dealId: cuid(dealId),
-			},
+			record,
 		)}`,
 	);
 
@@ -156,6 +169,22 @@ export {
 	handler as POST,
 	handler as PUT,
 };
+
+function recordsOf(record: {
+	contactId?: string;
+	companyId?: string;
+	dealId?: string;
+}): RecordRef[] {
+	return [
+		...(record.contactId
+			? [{ kind: "contact" as const, id: record.contactId }]
+			: []),
+		...(record.companyId
+			? [{ kind: "company" as const, id: record.companyId }]
+			: []),
+		...(record.dealId ? [{ kind: "deal" as const, id: record.dealId }] : []),
+	];
+}
 
 function cuid(value: string | null): string | undefined {
 	return value && /^[a-z0-9]{20,32}$/.test(value) ? value : undefined;

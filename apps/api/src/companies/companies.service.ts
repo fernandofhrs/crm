@@ -8,6 +8,12 @@ import {
 import { OPEN_DEAL_STAGES } from "@crm/db/deal-stage";
 import type { FieldDefinitionWithOptions } from "@crm/db/fields";
 import {
+	companiesVisibleTo,
+	SEES_EVERYTHING,
+	seesEverything,
+	type Viewer,
+} from "@crm/db/visibility";
+import {
 	BadRequestException,
 	ConflictException,
 	Injectable,
@@ -81,9 +87,12 @@ export class CompaniesService {
 		private readonly fields: FieldsService,
 	) {}
 
-	async list(input: CompanyListInput): Promise<ListResult<CompanyRow>> {
+	async list(
+		input: CompanyListInput,
+		viewer: Viewer,
+	): Promise<ListResult<CompanyRow>> {
 		const filterableFields = await this.fields.filterableFieldsFor("COMPANY");
-		const where = this.buildWhere(input, filterableFields);
+		const where = this.buildWhere(input, filterableFields, viewer);
 		const { skip, take } = paginate(input);
 
 		const [rows, total, facetCounts] = await Promise.all([
@@ -119,7 +128,7 @@ export class CompaniesService {
 				},
 			}),
 			this.db.company.count({ where }),
-			this.facetCounts(input, filterableFields),
+			this.facetCounts(input, filterableFields, viewer),
 		]);
 
 		const ids = rows.map((row) => row.id);
@@ -155,9 +164,9 @@ export class CompaniesService {
 		};
 	}
 
-	async byId(id: string) {
+	async byId(id: string, viewer: Viewer) {
 		const company = await this.db.company.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: {
 				id: true,
 				name: true,
@@ -262,16 +271,16 @@ export class CompaniesService {
 		};
 	}
 
-	async options(q: string) {
+	async options(q: string, viewer: Viewer) {
 		return this.db.company.findMany({
-			where: this.searchFilter(q),
+			where: { AND: [this.searchFilter(q), companiesVisibleTo(viewer)] },
 			select: { id: true, name: true, domain: true, iconUrl: true },
 			orderBy: { name: "asc" },
 			take: 100,
 		});
 	}
 
-	async create(input: CompanyCreateInput) {
+	async create(input: CompanyCreateInput, viewer: Viewer) {
 		const domain = normalizeDomain(input.domain);
 
 		if (domain) {
@@ -280,11 +289,20 @@ export class CompaniesService {
 				select: { id: true, name: true },
 			});
 			if (existing) {
+				const seen = await this.db.company.count({
+					where: this.visible(existing.id, viewer),
+				});
+
 				throw new ConflictException(
-					`${existing.name} já usa o domínio ${domain}.`,
+					seen > 0
+						? `${existing.name} já usa o domínio ${domain}.`
+						: `Outra empresa, de outro responsável, já usa o domínio ${domain}.`,
 				);
 			}
 		}
+
+		const ownerId =
+			input.ownerId ?? (viewer.sees === "own" ? viewer.userId : null);
 
 		const company = await this.agent.withCrmEvents(async (tx, emit) => {
 			const created = await tx.company.create({
@@ -292,7 +310,7 @@ export class CompaniesService {
 					name: input.name.trim(),
 					domain,
 					website: domain ? `https://${domain}` : null,
-					ownerId: input.ownerId ?? null,
+					ownerId,
 				},
 				select: { id: true, name: true, domain: true, createdAt: true },
 			});
@@ -319,7 +337,7 @@ export class CompaniesService {
 		return { id: company.id, name: company.name, domain: company.domain };
 	}
 
-	async update(id: string, input: CompanyUpdateInput) {
+	async update(id: string, input: CompanyUpdateInput, viewer: Viewer) {
 		const data: Prisma.CompanyUpdateInput = {};
 
 		if (input.name !== undefined) data.name = input.name.trim();
@@ -354,7 +372,7 @@ export class CompaniesService {
 			}
 			data.domain = domain;
 			const current = await this.db.company.findUnique({
-				where: { id },
+				where: this.visible(id, viewer),
 				select: { domain: true },
 			});
 			if (current && current.domain !== domain) {
@@ -373,7 +391,7 @@ export class CompaniesService {
 				}
 
 				return tx.company.update({
-					where: { id },
+					where: this.visible(id, viewer),
 					data,
 					select: { id: true, name: true, domain: true },
 				});
@@ -393,10 +411,13 @@ export class CompaniesService {
 		}
 	}
 
-	async archive(id: string): Promise<{ id: string; name: string }> {
+	async archive(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const company = await this.db.company.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: new Date() },
 				select: { name: true },
 			});
@@ -409,10 +430,13 @@ export class CompaniesService {
 		}
 	}
 
-	async restore(id: string): Promise<{ id: string; name: string }> {
+	async restore(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }> {
 		try {
 			const company = await this.db.company.update({
-				where: { id },
+				where: this.visible(id, viewer),
 				data: { archivedAt: null },
 				select: { name: true },
 			});
@@ -425,13 +449,18 @@ export class CompaniesService {
 		}
 	}
 
-	async purge(id: string): Promise<{ id: string; name: string }>;
 	async purge(
 		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; name: string }>;
+	async purge(
+		id: string,
+		viewer: Viewer,
 		guard: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null>;
 	async purge(
 		id: string,
+		viewer: Viewer,
 		guard?: { archivedBefore: Date },
 	): Promise<{ id: string; name: string } | null> {
 		let deleted: { targets: StampTargets; name: string } | null;
@@ -452,6 +481,8 @@ export class CompaniesService {
 				) {
 					return null;
 				}
+
+				await this.assertVisible(id, viewer, tx);
 
 				const targets = await this.stamp.targetsOf(
 					{ OR: [{ companyId: id }, { deal: { companyId: id } }] },
@@ -505,18 +536,21 @@ export class CompaniesService {
 
 		return runBulk(
 			expired.map((row) => row.id),
-			(id) => this.purge(id, { archivedBefore: before }),
+			(id) => this.purge(id, SEES_EVERYTHING, { archivedBefore: before }),
 		);
 	}
 
-	async bulkAssignOwner(input: CompanyBulkOwnerInput): Promise<BulkResult> {
+	async bulkAssignOwner(
+		input: CompanyBulkOwnerInput,
+		viewer: Viewer,
+	): Promise<BulkResult> {
 		const ownerId = input.ownerId || null;
 
 		await requireOwner(this.db, ownerId);
 
 		const ids = [...new Set(input.ids)];
 		const { count } = await this.db.company.updateMany({
-			where: { id: { in: ids } },
+			where: { id: { in: ids }, AND: [companiesVisibleTo(viewer)] },
 			data: { ownerId },
 		});
 
@@ -535,25 +569,28 @@ export class CompaniesService {
 		};
 	}
 
-	async bulkEnrich(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.enrich(id));
+	async bulkEnrich(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.enrich(id, viewer));
 	}
 
-	async bulkArchive(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.archive(id));
+	async bulkArchive(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.archive(id, viewer));
 	}
 
-	async bulkRestore(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.restore(id));
+	async bulkRestore(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.restore(id, viewer));
 	}
 
-	async bulkPurge(ids: string[]): Promise<BulkResult> {
-		return runBulk(ids, (id) => this.purge(id));
+	async bulkPurge(ids: string[], viewer: Viewer): Promise<BulkResult> {
+		return runBulk(ids, (id) => this.purge(id, viewer));
 	}
 
-	async enrich(id: string): Promise<{ id: string; queued: boolean }> {
+	async enrich(
+		id: string,
+		viewer: Viewer,
+	): Promise<{ id: string; queued: boolean }> {
 		const company = await this.db.company.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: { id: true, updatedAt: true },
 		});
 
@@ -576,9 +613,9 @@ export class CompaniesService {
 		return { id, queued };
 	}
 
-	async research(id: string, actingUserId: string) {
+	async research(id: string, actingUserId: string, viewer: Viewer) {
 		const company = await this.db.company.findUnique({
-			where: { id },
+			where: this.visible(id, viewer),
 			select: { id: true, domain: true },
 		});
 
@@ -600,7 +637,11 @@ export class CompaniesService {
 		return { ok: true as const, queued };
 	}
 
-	async setPrimaryContact(companyId: string, contactId: string | null) {
+	async setPrimaryContact(
+		companyId: string,
+		contactId: string | null,
+		viewer: Viewer,
+	) {
 		if (contactId) {
 			const contact = await this.db.contact.findUnique({
 				where: { id: contactId },
@@ -618,12 +659,32 @@ export class CompaniesService {
 
 		try {
 			return await this.db.company.update({
-				where: { id: companyId },
+				where: this.visible(companyId, viewer),
 				data: { primaryContactId: contactId },
 				select: { id: true, primaryContactId: true },
 			});
 		} catch (error) {
 			throw this.translate(error, companyId);
+		}
+	}
+
+	private visible(id: string, viewer: Viewer): Prisma.CompanyWhereUniqueInput {
+		return { id, AND: [companiesVisibleTo(viewer)] };
+	}
+
+	private async assertVisible(
+		id: string,
+		viewer: Viewer,
+		client: Prisma.TransactionClient,
+	): Promise<void> {
+		if (seesEverything(viewer)) return;
+
+		const seen = await client.company.count({
+			where: this.visible(id, viewer),
+		});
+
+		if (seen === 0) {
+			throw new NotFoundException(`Nenhuma empresa com o id ${id}.`);
 		}
 	}
 
@@ -642,8 +703,10 @@ export class CompaniesService {
 	private buildWhere(
 		input: CompanyListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	): Prisma.CompanyWhereInput {
 		const and: Prisma.CompanyWhereInput[] = [
+			companiesVisibleTo(viewer),
 			this.searchFilter(input.q),
 			archivedFilter(input.archived),
 			...this.fields.fieldFilters(filterableFields, input.fields),
@@ -672,9 +735,14 @@ export class CompaniesService {
 	private async facetCounts(
 		input: CompanyListInput,
 		filterableFields: FieldDefinitionWithOptions[],
+		viewer: Viewer,
 	) {
 		const where = {
-			AND: [this.searchFilter(input.q), archivedFilter(input.archived)],
+			AND: [
+				companiesVisibleTo(viewer),
+				this.searchFilter(input.q),
+				archivedFilter(input.archived),
+			],
 		};
 
 		const [owners, industries, enrichment, sources, activity, fieldFacets] =

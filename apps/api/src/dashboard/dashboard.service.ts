@@ -1,5 +1,10 @@
-import { ActivityType, type Db, DealStage } from "@crm/db";
+import { ActivityType, type Db, DealStage, type Prisma } from "@crm/db";
 import { OPEN_DEAL_STAGES } from "@crm/db/deal-stage";
+import {
+	activitiesVisibleTo,
+	dealsVisibleTo,
+	type Viewer,
+} from "@crm/db/visibility";
 import { activityMeta } from "@crm/validation/activity-meta";
 import { Injectable } from "@nestjs/common";
 import { LOCALE } from "../config/locale";
@@ -38,9 +43,17 @@ export class DashboardService {
 		private readonly conversion: ConversionService,
 	) {}
 
-	async summary(actingUserId: string, input: DashboardSummaryInput) {
+	async summary(
+		actingUserId: string,
+		input: DashboardSummaryInput,
+		viewer: Viewer,
+	) {
 		const mine = input.scope === "me";
-		const owned = mine ? { ownerId: actingUserId } : {};
+		const owned = {
+			ownerId: mine ? actingUserId : undefined,
+			...dealsVisibleTo(viewer),
+		} satisfies Prisma.DealWhereInput;
+		const visibleActivity = activitiesVisibleTo(viewer);
 
 		const now = new Date();
 		const startOfMonth = monthStart(now, 0);
@@ -139,6 +152,7 @@ export class DashboardService {
 					completedAt: null,
 					dueAt: { lt: now },
 					createdById: actingUserId,
+					AND: [visibleActivity],
 				},
 				orderBy: [{ dueAt: "asc" }],
 				take: 10,
@@ -151,7 +165,10 @@ export class DashboardService {
 				},
 			}),
 			this.db.activity.findMany({
-				where: mine ? { createdById: actingUserId } : {},
+				where: {
+					createdById: mine ? actingUserId : undefined,
+					AND: [visibleActivity],
+				},
 				orderBy: [{ createdAt: "desc" }],
 				take: 12,
 				select: {
@@ -190,6 +207,7 @@ export class DashboardService {
 		const wonPrevMonth = { count: 0, valueCents: 0 };
 		let wins = 0;
 		let losses = 0;
+		let recycled = 0;
 		let valuedWins = 0;
 		let wonCents = 0;
 		let cycleDays = 0;
@@ -229,10 +247,12 @@ export class DashboardService {
 				cycleDays += (closedAt.getTime() - deal.createdAt.getTime()) / DAY_MS;
 			} else if (stage === DealStage.CLOSED_LOST) {
 				losses += 1;
+			} else if (stage === DealStage.UNQUALIFIED_TO_BUY) {
+				recycled += 1;
 			}
 		}
 
-		const decided = wins + losses;
+		const decided = wins + losses + recycled;
 
 		return {
 			scope: input.scope,
@@ -249,6 +269,7 @@ export class DashboardService {
 				windowDays: RATE_WINDOW_DAYS,
 				wins,
 				losses,
+				recycled,
 				winRate: decided === 0 ? null : wins / decided,
 				avgDealCents:
 					valuedWins === 0 ? null : Math.round(wonCents / valuedWins),

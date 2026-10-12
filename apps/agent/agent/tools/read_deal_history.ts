@@ -2,6 +2,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { readDealHistory } from "../lib/accounts";
 import { focusOn } from "../lib/focus";
+import { sees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -16,7 +17,11 @@ export default defineTool({
 			.default(5)
 			.describe("How many recent threads to read."),
 	}),
-	async execute({ dealId, threads }) {
+	async execute({ dealId, threads }, ctx) {
+		if (!(await sees(ctx, { kind: "deal", id: dealId }))) {
+			return { found: false as const, reason: "No such deal." };
+		}
+
 		const history = await readDealHistory(dealId, { threads });
 		if (!history) return { found: false as const, reason: "No such deal." };
 

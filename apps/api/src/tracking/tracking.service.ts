@@ -23,6 +23,7 @@ import {
 	trackingSnippet,
 	VERIFY_WINDOW_MS,
 } from "@crm/db/tracking";
+import { contactsVisibleTo, type Viewer } from "@crm/db/visibility";
 import {
 	BadRequestException,
 	ForbiddenException,
@@ -318,18 +319,24 @@ export class TrackingService {
 		return attribute;
 	}
 
-	async activityForCompany(companyId: string): Promise<WebsiteActivity> {
+	async activityForCompany(
+		companyId: string,
+		viewer: Viewer,
+	): Promise<WebsiteActivity> {
 		const visitors = await this.db.trackedVisitor.findMany({
-			where: { contact: { companyId } },
+			where: { contact: { companyId, AND: [contactsVisibleTo(viewer)] } },
 			select: { id: true },
 		});
 
 		return this.activityFor(visitors.map((visitor) => visitor.id));
 	}
 
-	async activityForContact(contactId: string): Promise<WebsiteActivity> {
+	async activityForContact(
+		contactId: string,
+		viewer: Viewer,
+	): Promise<WebsiteActivity> {
 		const visitors = await this.db.trackedVisitor.findMany({
-			where: { contactId },
+			where: { contactId, contact: contactsVisibleTo(viewer) },
 			select: { id: true },
 		});
 

@@ -1,4 +1,5 @@
 import { db, EnrichmentStatus, type Prisma } from "@crm/db";
+import { contactsVisibleTo, type Viewer } from "@crm/db/visibility";
 import { domainOf, isDerivedName } from "./names";
 import type { Person } from "./socials";
 
@@ -17,9 +18,13 @@ export type WorkItem = {
 	};
 };
 
-export async function contactsNeedingWork(limit: number): Promise<WorkItem[]> {
+export async function contactsNeedingWork(
+	viewer: Viewer,
+	limit: number,
+): Promise<WorkItem[]> {
 	const rows = await db.contact.findMany({
 		where: {
+			AND: [contactsVisibleTo(viewer)],
 			OR: [
 				{ brief: { is: null } },
 				{ socialsCheckedAt: null },

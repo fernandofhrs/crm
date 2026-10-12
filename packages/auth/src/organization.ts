@@ -1,5 +1,5 @@
 import { type Db, db } from "@crm/db";
-import { WORKSPACE_ID, workspaceSlug } from "@crm/db/workspace";
+import { ADMIN_ROLES, WORKSPACE_ID, workspaceSlug } from "@crm/db/workspace";
 
 export { WORKSPACE_ID };
 
@@ -14,7 +14,7 @@ export function isWorkspaceRole(value: string): value is WorkspaceRole {
 }
 
 export function isWorkspaceAdmin(role: WorkspaceRole | null): boolean {
-	return role === "owner" || role === "admin";
+	return role !== null && ADMIN_ROLES.includes(role);
 }
 
 export function canRenameWorkspace(role: WorkspaceRole | null): boolean {

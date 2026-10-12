@@ -5,6 +5,7 @@ import { WEIGHTS } from "../lib/evidence";
 import { writeBrief } from "../lib/facts";
 import { focusOn } from "../lib/focus";
 import { assertResearchPurpose } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 const MAX_NARRATIVE = 400;
 
@@ -50,6 +51,7 @@ export default defineTool({
 	}),
 	async execute(input, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: input.contactId });
 		focusOn({ contactId: input.contactId });
 
 		const narrative = input.narrative.trim();

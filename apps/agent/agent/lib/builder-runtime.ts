@@ -6,6 +6,13 @@ import {
 	type CrmEventType,
 } from "@crm/db/crm-events";
 import { readAgentModel } from "@crm/db/settings";
+import {
+	companiesVisibleTo,
+	contactsVisibleTo,
+	dealsVisibleTo,
+	type Viewer,
+	viewerOf,
+} from "@crm/db/visibility";
 import { WORKSPACE_ID } from "@crm/db/workspace";
 import { AGENT_ACTION_TYPES } from "@crm/validation/agent-manifest";
 import { z } from "zod";
@@ -191,7 +198,7 @@ export async function builderContext(conversationId: string, userId: string) {
 			type,
 			...CRM_EVENT_CATALOG[type],
 		})),
-		resources: await describeResources(resources),
+		resources: await describeResources(resources, await viewerOf(db, userId)),
 		existingDraft: conversation.agent,
 		now: new Date().toISOString(),
 	};
@@ -569,7 +576,10 @@ async function validateDraft(
 	}
 	issues.push(...actionIntegrationIssues(input.actions, input.resources));
 
-	const missingRecords = await missingResourceIds(input.resources);
+	const missingRecords = await missingResourceIds(
+		input.resources,
+		await viewerOf(db, userId),
+	);
 	issues.push(
 		...missingRecords.map(
 			(resource) => `${resource.label} is no longer in the CRM.`,
@@ -735,19 +745,19 @@ export function slackDestinationIssues(
 	return [];
 }
 
-async function describeResources(resources: BuilderResource[]) {
+async function describeResources(resources: BuilderResource[], viewer: Viewer) {
 	return Promise.all(
 		resources.map(async (resource) => {
 			if (resource.kind === "company") {
-				const row = await db.company.findUnique({
-					where: { id: resource.id },
+				const row = await db.company.findFirst({
+					where: { id: resource.id, AND: [companiesVisibleTo(viewer)] },
 					select: { id: true, name: true, domain: true, industry: true },
 				});
 				return { ...resource, record: row };
 			}
 			if (resource.kind === "contact") {
-				const row = await db.contact.findUnique({
-					where: { id: resource.id },
+				const row = await db.contact.findFirst({
+					where: { id: resource.id, AND: [contactsVisibleTo(viewer)] },
 					select: {
 						id: true,
 						firstName: true,
@@ -760,8 +770,8 @@ async function describeResources(resources: BuilderResource[]) {
 				return { ...resource, record: row };
 			}
 			if (resource.kind === "deal") {
-				const row = await db.deal.findUnique({
-					where: { id: resource.id },
+				const row = await db.deal.findFirst({
+					where: { id: resource.id, AND: [dealsVisibleTo(viewer)] },
 					select: {
 						id: true,
 						name: true,
@@ -786,9 +796,13 @@ async function describeResources(resources: BuilderResource[]) {
 	);
 }
 
-async function missingResourceIds(resources: BuilderResource[]) {
+async function missingResourceIds(
+	resources: BuilderResource[],
+	viewer: Viewer,
+) {
 	const described = await describeResources(
 		resources.filter((resource) => resource.kind !== "integration"),
+		viewer,
 	);
 	return described.filter((resource) => !resource.record);
 }

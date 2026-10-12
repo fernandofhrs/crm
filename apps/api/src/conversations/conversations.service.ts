@@ -1,5 +1,11 @@
 import { WORKSPACE_ID } from "@crm/auth";
 import { type Db, type Prisma, Prisma as PrismaNamespace } from "@crm/db";
+import {
+	companiesVisibleTo,
+	contactsVisibleTo,
+	dealsVisibleTo,
+	type Viewer,
+} from "@crm/db/visibility";
 import { readAgentManifestSummary } from "@crm/validation/agent-manifest";
 import {
 	type BuilderQuestion,
@@ -154,7 +160,7 @@ export class ConversationsService {
 		});
 	}
 
-	async builderResources(q: string, userId: string) {
+	async builderResources(q: string, userId: string, viewer: Viewer) {
 		await this.assertWorkspaceMember(userId);
 
 		const search = q.trim();
@@ -164,21 +170,22 @@ export class ConversationsService {
 
 		const [companies, contacts, deals, slackAccount] = await Promise.all([
 			this.db.company.findMany({
-				where: contains ? { name: contains } : undefined,
+				where: { AND: [companiesVisibleTo(viewer)], name: contains },
 				orderBy: { lastActivityAt: { sort: "desc", nulls: "last" } },
 				take: 6,
 				select: { id: true, name: true, domain: true, logoUrl: true },
 			}),
 			this.db.contact.findMany({
-				where: contains
-					? {
-							OR: [
+				where: {
+					AND: [contactsVisibleTo(viewer)],
+					OR: contains
+						? [
 								{ firstName: contains },
 								{ lastName: contains },
 								{ email: contains },
-							],
-						}
-					: undefined,
+							]
+						: undefined,
+				},
 				orderBy: { lastActivityAt: { sort: "desc", nulls: "last" } },
 				take: 6,
 				select: {
@@ -191,7 +198,7 @@ export class ConversationsService {
 				},
 			}),
 			this.db.deal.findMany({
-				where: contains ? { name: contains } : undefined,
+				where: { AND: [dealsVisibleTo(viewer)], name: contains },
 				orderBy: { lastActivityAt: { sort: "desc", nulls: "last" } },
 				take: 6,
 				select: {

@@ -3,6 +3,7 @@ import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { assertResearchPurpose } from "../lib/session-purpose";
 import { scheduleTask } from "../lib/tasks";
+import { assertSees } from "../lib/viewer";
 
 const MIN_DAYS = 1;
 const MAX_DAYS = 730;
@@ -36,6 +37,7 @@ export default defineTool({
 	}),
 	async execute({ contactId, days, reason, budget }, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: contactId });
 		const dueAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
 		await scheduleTask({

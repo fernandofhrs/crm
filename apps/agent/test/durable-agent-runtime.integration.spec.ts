@@ -1,5 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "bun:test";
 import { db } from "@crm/db";
+import { SEES_EVERYTHING } from "@crm/db/visibility";
 import type { SendFn } from "eve/channels";
 import { z } from "zod";
 import audit from "../agent/hooks/audit";
@@ -204,13 +205,18 @@ async function createRun(
 }
 
 async function satisfyRequiredActivity(runId: string, callId: string) {
-	return createRunActivity(runId, callId, {
-		type: "NOTE",
-		targetKind: "company",
-		targetId: companyId,
-		subject: "Runtime test",
-		body: "Completed the required action.",
-	});
+	return createRunActivity(
+		runId,
+		callId,
+		{
+			type: "NOTE",
+			targetKind: "company",
+			targetId: companyId,
+			subject: "Runtime test",
+			body: "Completed the required action.",
+		},
+		SEES_EVERYTHING,
+	);
 }
 
 describe("durable custom-agent runtime", () => {
@@ -787,20 +793,30 @@ describe("durable custom-agent runtime", () => {
 		};
 		const attempts = await Promise.allSettled(
 			Array.from({ length: 4 }, () =>
-				createRunActivity(run.id, "shared-call", input),
+				createRunActivity(run.id, "shared-call", input, SEES_EVERYTHING),
 			),
 		);
 		expect(
 			attempts.filter((attempt) => attempt.status === "fulfilled").length,
 		).toBeGreaterThanOrEqual(1);
-		const replay = await createRunActivity(run.id, "shared-call", input);
+		const replay = await createRunActivity(
+			run.id,
+			"shared-call",
+			input,
+			SEES_EVERYTHING,
+		);
 		expect(replay.replayed).toBe(true);
 		let reusedCallError: Error | null = null;
 		try {
-			await createRunActivity(run.id, "shared-call", {
-				...input,
-				body: "Different input must not replay the earlier action.",
-			});
+			await createRunActivity(
+				run.id,
+				"shared-call",
+				{
+					...input,
+					body: "Different input must not replay the earlier action.",
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (error) {
 			reusedCallError = error as Error;
 		}
@@ -818,10 +834,15 @@ describe("durable custom-agent runtime", () => {
 
 		let scopeError: Error | null = null;
 		try {
-			await createRunActivity(run.id, "out-of-scope", {
-				...input,
-				targetId: otherCompanyId,
-			});
+			await createRunActivity(
+				run.id,
+				"out-of-scope",
+				{
+					...input,
+					targetId: otherCompanyId,
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (error) {
 			scopeError = error as Error;
 		}
@@ -834,11 +855,16 @@ describe("durable custom-agent runtime", () => {
 
 		let activityTypeError: Error | null = null;
 		try {
-			await createRunActivity(run.id, "unapproved-task", {
-				...input,
-				type: "TASK",
-				subject: "This type was not approved",
-			});
+			await createRunActivity(
+				run.id,
+				"unapproved-task",
+				{
+					...input,
+					type: "TASK",
+					subject: "This type was not approved",
+				},
+				SEES_EVERYTHING,
+			);
 		} catch (error) {
 			activityTypeError = error as Error;
 		}

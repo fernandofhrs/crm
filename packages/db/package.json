@@ -24,6 +24,7 @@
 		"./settings": "./src/settings.ts",
 		"./slack-inventory": "./src/slack-inventory.ts",
 		"./tracking": "./src/tracking.ts",
+		"./visibility": "./src/visibility.ts",
 		"./workspace": "./src/workspace.ts"
 	},
 	"scripts": {

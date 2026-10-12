@@ -1,4 +1,5 @@
 import { ActivityType, type Db, type Prisma } from "@crm/db";
+import { activitiesVisibleTo, type Viewer } from "@crm/db/visibility";
 import { activityMeta } from "@crm/validation/activity-meta";
 import {
 	BadRequestException,
@@ -8,6 +9,7 @@ import {
 } from "@nestjs/common";
 import { ActivityStampService } from "../crm/activity-stamp.service";
 import { blankToNull } from "../crm/values";
+import { type RecordRef, ViewerService } from "../crm/viewer.service";
 import { InjectDatabase } from "../database/database.constants";
 import type {
 	ActivityCreateInput,
@@ -75,10 +77,14 @@ export class ActivitiesService {
 	constructor(
 		@InjectDatabase() private readonly db: Db,
 		private readonly stamp: ActivityStampService,
+		private readonly viewers: ViewerService,
 	) {}
 
-	async timeline(input: TimelineInput): Promise<TimelineResult> {
-		const where = this.anchor(input);
+	async timeline(
+		input: TimelineInput,
+		viewer: Viewer,
+	): Promise<TimelineResult> {
+		const where = await this.anchor(input, viewer);
 		Object.assign(where, filterClause(input.filter));
 
 		const rows = await this.db.activity.findMany({
@@ -104,8 +110,9 @@ export class ActivitiesService {
 
 	async timelineCounts(
 		input: Pick<TimelineInput, "companyId" | "contactId" | "dealId">,
+		viewer: Viewer,
 	): Promise<TimelineCounts> {
-		const anchor = this.anchor(input);
+		const anchor = await this.anchor(input, viewer);
 
 		const [all, notes, upcoming, done, email, meetings] = await Promise.all([
 			this.db.activity.count({ where: anchor }),
@@ -130,7 +137,12 @@ export class ActivitiesService {
 	async create(
 		input: ActivityCreateInput,
 		actingUserId: string,
+		viewer: Viewer,
 	): Promise<ActivityEntry> {
+		for (const record of recordsOf(input)) {
+			await this.viewers.assertSees(viewer, record);
+		}
+
 		const companyId = await this.resolveCompanyId(input);
 
 		const isTask = input.type === ActivityType.TASK;
@@ -164,9 +176,13 @@ export class ActivitiesService {
 		return serializeEntry(activity);
 	}
 
-	async complete(id: string, completed: boolean): Promise<ActivityEntry> {
-		const activity = await this.db.activity.findUnique({
-			where: { id },
+	async complete(
+		id: string,
+		completed: boolean,
+		viewer: Viewer,
+	): Promise<ActivityEntry> {
+		const activity = await this.db.activity.findFirst({
+			where: { id, AND: [activitiesVisibleTo(viewer)] },
 			select: { type: true },
 		});
 
@@ -190,12 +206,14 @@ export class ActivitiesService {
 	async myTasks(
 		input: MyTasksInput,
 		actingUserId: string,
+		viewer: Viewer,
 	): Promise<ActivityEntry[]> {
 		const now = new Date();
 		const where: Prisma.ActivityWhereInput = {
 			type: ActivityType.TASK,
 			completedAt: null,
 			createdById: actingUserId,
+			AND: [activitiesVisibleTo(viewer)],
 		};
 
 		if (input.window === "overdue") where.dueAt = { lt: now };
@@ -214,15 +232,23 @@ export class ActivitiesService {
 		return tasks.map(serializeEntry);
 	}
 
-	private anchor(
+	private async anchor(
 		input: Pick<TimelineInput, "companyId" | "contactId" | "dealId">,
-	): Prisma.ActivityWhereInput {
-		if (input.dealId) return { dealId: input.dealId };
-		if (input.contactId) return { contactId: input.contactId };
-		if (input.companyId) return { companyId: input.companyId };
-		throw new BadRequestException(
-			"O histórico precisa de uma empresa, um contato ou um negócio.",
-		);
+		viewer: Viewer,
+	): Promise<Prisma.ActivityWhereInput> {
+		const record = anchorOf(input);
+
+		if (!record) {
+			throw new BadRequestException(
+				"O histórico precisa de uma empresa, um contato ou um negócio.",
+			);
+		}
+
+		await this.viewers.assertSees(viewer, record);
+
+		if (record.kind === "deal") return { dealId: record.id };
+		if (record.kind === "contact") return { contactId: record.id };
+		return { companyId: record.id };
 	}
 
 	private async resolveCompanyId(
@@ -256,6 +282,26 @@ export class ActivitiesService {
 
 		return null;
 	}
+}
+
+type Anchored = {
+	companyId?: string | null;
+	contactId?: string | null;
+	dealId?: string | null;
+};
+
+function recordsOf(input: Anchored): RecordRef[] {
+	const records: RecordRef[] = [];
+
+	if (input.dealId) records.push({ kind: "deal", id: input.dealId });
+	if (input.contactId) records.push({ kind: "contact", id: input.contactId });
+	if (input.companyId) records.push({ kind: "company", id: input.companyId });
+
+	return records;
+}
+
+function anchorOf(input: Anchored): RecordRef | null {
+	return recordsOf(input)[0] ?? null;
 }
 
 function filterClause(filter: TimelineFilter): Prisma.ActivityWhereInput {

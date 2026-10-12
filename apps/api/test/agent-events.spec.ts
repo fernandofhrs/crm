@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { db } from "@crm/db";
+import { SEES_EVERYTHING } from "@crm/db/visibility";
 import { AgentTriggerService } from "../src/agent/agent-trigger.service";
 import { ActivityStampService } from "../src/crm/activity-stamp.service";
 import { ConversionService } from "../src/currency/conversion.service";
@@ -213,25 +214,40 @@ describe("CRM agent events", () => {
 	});
 
 	it("emits each real deal lifecycle transition exactly once", async () => {
-		const deal = await deals.create({
-			name: "Event-driven deal",
-			companyId: persistedCompanyId,
-			ownerId,
-			amountCents: 25_000,
-			currency: "USD",
-		});
+		const deal = await deals.create(
+			{
+				name: "Event-driven deal",
+				companyId: persistedCompanyId,
+				ownerId,
+				amountCents: 25_000,
+				currency: "USD",
+			},
+			SEES_EVERYTHING,
+		);
 		persistedDealId = deal.id;
 
 		const transitions = await Promise.all([
-			deals.setStage({ id: deal.id, stage: "CLOSED_WON" }, ownerId),
-			deals.setStage({ id: deal.id, stage: "CLOSED_WON" }, ownerId),
+			deals.setStage(
+				{ id: deal.id, stage: "CLOSED_WON" },
+				ownerId,
+				SEES_EVERYTHING,
+			),
+			deals.setStage(
+				{ id: deal.id, stage: "CLOSED_WON" },
+				ownerId,
+				SEES_EVERYTHING,
+			),
 		]);
 
 		expect(transitions.map((transition) => transition.changed).sort()).toEqual([
 			false,
 			true,
 		]);
-		await deals.setStage({ id: deal.id, stage: "QUALIFIED_TO_BUY" }, ownerId);
+		await deals.setStage(
+			{ id: deal.id, stage: "QUALIFIED_TO_BUY" },
+			ownerId,
+			SEES_EVERYTHING,
+		);
 
 		const reasons = (
 			await db.agentTask.findMany({

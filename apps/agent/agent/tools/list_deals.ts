@@ -1,6 +1,7 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
 import { listDeals } from "../lib/lookup";
+import { viewerFor } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -21,8 +22,8 @@ export default defineTool({
 		limit: z.number().int().min(1).max(100).default(50),
 		cursor: z.string().optional(),
 	}),
-	async execute(input) {
-		return listDeals(input);
+	async execute(input, ctx) {
+		return listDeals(await viewerFor(ctx), input);
 	},
 	toModelOutput(output) {
 		return {

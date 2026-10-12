@@ -3,6 +3,7 @@ import { z } from "zod";
 import { runBrand } from "../lib/brand";
 import { spend } from "../lib/focus";
 import { assertResearchPurpose } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -18,6 +19,7 @@ export default defineTool({
 	}),
 	async execute({ companyId, fresh }, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "company", id: companyId });
 		const result = await runBrand({ companyId, fresh, spend });
 
 		if (!result.enriched) {

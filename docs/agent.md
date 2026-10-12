@@ -312,9 +312,27 @@ finished attempt stands the sweep down for seven days.**
 
 ## What may be read, and what may leave
 
-It may read **everything**, including full email bodies — internal single-tenant tool,
-and a signature block is the best source of a job title there is. The boundary is
-egress:
+It reads what the person it works for may read, including full email bodies — a
+signature block is the best source of a job title there is. `lib/viewer.ts` decides
+who that person is, and `@crm/db/visibility` decides what they see (`api.md`, *A
+member sees the companies they answer for*).
+
+- **The dispatcher sees everything.** A task the queue started has the app
+  principal (`eve:app`) and no person behind it.
+- **A session a person started sees what that person sees.** The record panel and
+  the chat carry a `user` principal. A member is limited; an owner or an admin is
+  not.
+- **A team agent sees what its principal sees**: the member who pressed Run, else the
+  member who created it. A member's scheduled agent does not read another member's
+  companies, whatever scope its manifest names.
+- **`viewerFor(ctx)` reads `current`, `initiator` and the `userId` attribute, and the
+  most limited one wins.** A session with no caller reads nothing and throws.
+- **A tool that takes a record id calls `assertSees` first.** A reader answers
+  `No such contact.`, the same words a wrong id gets. A tool that lists or counts
+  passes the viewer to the query (`lookup.ts`).
+- **`instructions/task.ts` checks the opened record again**, after the bridge did.
+
+The other boundary is egress:
 
 1. No customer text in a third-party query. Derived questions only.
 2. Nothing from a mailbox into `/workspace` — different lifetime.
@@ -422,7 +440,8 @@ browser → /eve/v1/*  (same origin, session cookie, x-crm-contact header)
 - **Mounted at `/eve/v1/*`** because that is where `useEveAgent()` looks — no `host`,
   no CORS, no cross-site cookie.
 - **The proxy is an enforcement point, not a passthrough** — the agent never sees the
-  session cookie, so if that route did not check, nothing would.
+  session cookie, so if that route did not check, nothing would. It also refuses a
+  record the caller does not see (`isVisibleTo`), with a `404`.
 - **eve's `jwtHmac()` resolves to `principalType: "service"`** — wrong for a person,
   and `lib/approval.ts` reads exactly those fields to decide whether to pause for a
   human. `repFromCrm` maps the subject to a real user principal

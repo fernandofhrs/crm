@@ -4,6 +4,7 @@ import { z } from "zod";
 import { spend } from "../lib/focus";
 import { runPortrait } from "../lib/portrait";
 import { assertResearchPurpose } from "../lib/session-purpose";
+import { assertSees } from "../lib/viewer";
 
 export default defineTool({
 	description:
@@ -17,6 +18,7 @@ export default defineTool({
 	}),
 	async execute({ contactId, force }, ctx) {
 		assertResearchPurpose(ctx);
+		await assertSees(ctx, { kind: "contact", id: contactId });
 		if (!blobEnabled()) {
 			return {
 				stored: false as const,
