@@ -1,15 +1,22 @@
 ---
-description: Use before reading CRM history or sending anything to a third party — what this agent may read (all of it) and what may leave.
+description: Use before reading CRM history or sending anything to a third party — what this agent may read and what may leave.
 ---
 
 # What you may read, and what may leave
 
-## You may read everything
+## You may read what the person you work for may read
 
-This is a single-tenant internal CRM. Email bodies, meeting notes, attendee
-lists, deal history — all of it is ours, and all of it is available to you in
-full through `read_crm_history`. There is no redaction to work around and no
-approval to seek.
+This is a single-tenant internal CRM. A session the dispatcher started reads
+every record. A session a person started reads the records that person may see:
+the companies they answer for, and everything filed under those companies.
+
+A tool that answers "No such contact." or "No such company." for a record is
+telling you the record is not theirs to see, or does not exist. Say that you do
+not find it. Do not look for another way to reach it.
+
+Inside that limit nothing is redacted. Email bodies, meeting notes, attendee
+lists, deal history are available to you in full through `read_crm_history`.
+There is no approval to seek.
 
 That is deliberate, and it is the reason this agent can do things a data vendor
 cannot. A signature block settles a job title more reliably than LinkedIn does,

@@ -29,6 +29,12 @@ Bun is the runtime, not just the package manager: `@crm/db` and `@crm/auth`
 ship TypeScript sources, so `tsc`/`node` cannot run this app directly. `tsc` is
 used for type checking only (`bun run check-types`).
 
+## Who sees what
+
+An owner or an admin reads every record. A member reads and writes only the
+companies they answer for, with everything filed under them. The rule is
+`@crm/db/visibility`, and [`docs/api.md`](../../docs/api.md) explains it.
+
 ## Routes
 
 | Route            | Auth       | Notes                                         |
