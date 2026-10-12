@@ -301,7 +301,8 @@ preamble; `lib/workspace.ts` is the only renderer.
 ### Every session names a stage the way the board does
 
 `composeClosing()` also carries a **Deal stages** block (`lib/deal-stages.ts`): each
-stage key beside the name the CRM shows. `DEAL_STAGE_LABELS` in `@crm/db/deal-stage`
+stage key beside the name the CRM shows. The chat has no preamble, so
+`builderTaskMarkdown` appends the same block to the chat turn. `DEAL_STAGE_LABELS` in `@crm/db/deal-stage`
 is the one list, and the app's board reads the same one. Without the block the model
 translates the key, and "Contrato enviado" is not a column anybody has on screen.
 

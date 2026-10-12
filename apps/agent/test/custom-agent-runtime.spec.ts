@@ -339,6 +339,10 @@ describe("builder command routing", () => {
 			"Do not restate or enumerate individual deal rows in prose, bullets, or tables",
 		);
 		expect(builderTaskMarkdown(null)).toContain("private CRM assistant chat");
+		expect(builderTaskMarkdown(null)).toContain(
+			'`CONTRACT_SENT` is "Aprovada · entrada"',
+		);
+		expect(creation).not.toContain("## Deal stages");
 	});
 
 	it("requires the configured model to title only a new builder chat", () => {
