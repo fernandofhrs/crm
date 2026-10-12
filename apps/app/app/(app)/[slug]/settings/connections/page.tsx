@@ -14,6 +14,25 @@ import { AddConnectionDialog } from "./add-connection-dialog";
 
 export const metadata: Metadata = { title: "Conexões" };
 
+type AsanaSummary = {
+	connected: boolean;
+	shared: boolean;
+	project: { name: string | null } | null;
+	team: { projectName: string | null } | null;
+};
+
+function asanaStatus(asana: AsanaSummary): string {
+	if (!asana.connected) {
+		return `Projeto do time: ${asana.team?.projectName ?? "Asana"}`;
+	}
+
+	if (!asana.project?.name) return "Conectado, sem projeto escolhido";
+
+	return asana.shared
+		? `Projeto do time: ${asana.project.name}`
+		: `Acompanhando ${asana.project.name}`;
+}
+
 export default function ConnectionsSettingsPage(
 	props: PageProps<"/[slug]/settings/connections">,
 ) {
@@ -91,14 +110,15 @@ async function ConnectionsSettingsPageContent({
 					},
 				]
 			: []),
-		...(asana.connected
+		...(asana.connected || asana.team
 			? [
 					{
 						name: "Asana",
-						status: asana.project?.name
-							? `Acompanhando ${asana.project.name}`
-							: "Conectado, sem projeto escolhido",
-						bringsIn: "Tarefas com data de um projeto, como suas tarefas",
+						status: asanaStatus(asana),
+						bringsIn:
+							asana.shared || (asana.team && !asana.connected)
+								? "Tarefas com data do projeto do time, para o responsável de cada uma"
+								: "Tarefas com data de um projeto, como suas tarefas",
 						sends: "Nada, então nada aqui altera o Asana",
 						href: `/${slug}/settings/connections/asana`,
 						logo: AsanaLogo,

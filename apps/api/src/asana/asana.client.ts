@@ -36,6 +36,13 @@ const asanaTask = z.object({
 	due_at: z.string().nullish(),
 	created_at: z.string().nullish(),
 	permalink_url: z.string().nullish(),
+	assignee: z
+		.object({
+			gid: z.string().min(1),
+			name: z.string().nullish(),
+			email: z.string().nullish(),
+		})
+		.nullish(),
 });
 
 const userEnvelope = z.object({ data: asanaUser });
@@ -59,6 +66,8 @@ const TASK_FIELDS = [
 	"due_at",
 	"created_at",
 	"permalink_url",
+	"assignee.name",
+	"assignee.email",
 ].join(",");
 
 const UNEXPECTED =

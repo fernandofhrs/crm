@@ -30,6 +30,7 @@ model User {
   mailboxSyncs    MailboxSync[]
   imapConnection  ImapConnection?
   asanaConnection AsanaConnection?
+  asanaAssignees  AsanaAssignee[]
   factDecisions   ContactFact[]       @relation("FactDecider")
   conversations   AgentConversation[] @relation("ConversationOwner")
   fieldValues     FieldValue[]        @relation("FieldValueUser")
@@ -1137,6 +1138,7 @@ model Activity {
   calendarEventId String?        @unique
   calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
   asanaTaskGid    String?        @unique
+  asanaSyncedById String?
 
   mirrorRecords MirrorRecord[]
 
@@ -1148,6 +1150,7 @@ model Activity {
   @@index([contactId, createdAt])
   @@index([dueAt])
   @@index([createdById])
+  @@index([asanaSyncedById])
   @@map("activity")
 }
 
@@ -1244,11 +1247,35 @@ model AsanaConnection {
   accountName String?
   projectGid  String?
   projectName String?
+  shared      Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  assignees AsanaAssignee[]
+
+  @@unique([shared], map: "asanaConnection_shared_team_key", where: { shared: true })
   @@map("asanaConnection")
+}
+
+model AsanaAssignee {
+  id           String          @id @default(cuid())
+  connectionId String
+  connection   AsanaConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  asanaUserGid String
+  name         String?
+  email        String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([connectionId, asanaUserGid])
+  @@index([userId])
+  @@map("asanaAssignee")
 }
 
 model EmailThread {

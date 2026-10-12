@@ -11,6 +11,7 @@ export type AgendaTask = {
 	createdAt: Date | null;
 	url: string | null;
 	addresses: string[];
+	assigneeGid: string | null;
 };
 
 export function dueDateOf(task: AsanaTask): Date | null {
@@ -36,6 +37,7 @@ export function toAgendaTask(task: AsanaTask): AgendaTask | null {
 		createdAt: validDate(task.created_at),
 		url: task.permalink_url ?? null,
 		addresses: addressesIn(`${name}\n${notes}`),
+		assigneeGid: task.assignee?.gid ?? null,
 	};
 }
 

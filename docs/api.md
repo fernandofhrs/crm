@@ -281,9 +281,25 @@ none. It is a sync, like the mailbox — not enrichment — which is why it may 
 
 - **One project per rep, chosen once.** A personal access token, sealed in the same
   vault, and the gid of the project that holds their commitments
-  (`asanaConnection`). Per rep and not per workspace: a shared token would let any
-  member read any project its owner can.
-- **A dated open task is a `TASK` activity**, owned by the rep, keyed by
+  (`asanaConnection`). The token never leaves its row: no member reads Asana
+  through another member's token.
+- **One of those projects can be the team's** (`asanaConnection.shared`). An owner
+  or admin turns it on for their own connection (`asana.share`), and a partial
+  unique index allows one such row. The token still reads one project only. What
+  changes is who owns each task here: the assignee, not the rep who connected.
+  Turning it off hands every task back to that rep.
+- **Who an Asana person is here is chosen, with the email as the default.** Each
+  assignee the sync meets is an `asanaAssignee` row. An owner or admin picks the
+  member for it once (`asana.assign`). With no choice, the member with exactly the
+  same email gets the task. With neither, the task stays with the rep who
+  connected. That is a key read, like the contact match below, not identity
+  matching: no names, no guessing.
+- **`activity.asanaSyncedById` is the connection that follows the task**, and
+  `createdById` is who it belongs to. In a personal project they are the same
+  person. Tracking, completion and purge go by `asanaSyncedById`; the dashboard's
+  "mine" goes by `createdById`. Every write claims the task for the connection that
+  wrote it.
+- **A dated open task is a `TASK` activity**, owned as above, keyed by
   `activity.asanaTaskGid`. `due_at` wins; a bare `due_on` ends with its day
   (`ASANA.task.dateOnlyDueTime`). Undated tasks are not agenda and are skipped.
 - **Only the window is brought in** — `ASANA.window`, 30 days back to 180 ahead — but

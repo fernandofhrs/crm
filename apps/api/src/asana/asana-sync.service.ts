@@ -9,6 +9,7 @@ import { ActivityStampService } from "../crm/activity-stamp.service";
 import { InjectDatabase } from "../database/database.constants";
 import { SyncStateService } from "../mailbox/sync-state.service";
 import { AsanaClient, type AsanaTask } from "./asana.client";
+import { AsanaAssigneesService } from "./asana-assignees.service";
 import { ASANA, ASANA_SOURCE } from "./asana-config";
 import { AsanaCredentialsService } from "./asana-credentials.service";
 import { type AgendaTask, isInWindow, toAgendaTask } from "./asana-task";
@@ -21,6 +22,8 @@ export type AsanaSyncOutcome = {
 	tasksClosed?: number;
 	reason?: string;
 };
+
+type TaskOwner = { syncedById: string; ownerId: string; reassign: boolean };
 
 type OpenTasks =
 	| { outcome: "ok"; tasks: AsanaTask[]; complete: boolean }
@@ -36,6 +39,7 @@ export class AsanaSyncService {
 		private readonly credentials: AsanaCredentialsService,
 		private readonly state: SyncStateService,
 		private readonly stamp: ActivityStampService,
+		private readonly assignees: AsanaAssigneesService,
 	) {}
 
 	async runOne(userId: string): Promise<AsanaSyncOutcome | null> {
@@ -57,7 +61,7 @@ export class AsanaSyncService {
 			return this.outcome(row, "reconnect", { reason: found.reason });
 		}
 
-		const { projectGid, projectName } = found.link;
+		const { id: connectionId, projectGid, projectName, shared } = found.link;
 
 		if (!projectGid) {
 			return this.outcome(row, "skipped", {
@@ -72,10 +76,13 @@ export class AsanaSyncService {
 
 		const now = new Date();
 
-		const existing = await this.db.activity.findMany({
-			where: { createdById: row.userId, asanaTaskGid: { not: null } },
-			select: { id: true, asanaTaskGid: true, completedAt: true },
-		});
+		const [existing, owners] = await Promise.all([
+			this.db.activity.findMany({
+				where: { asanaSyncedById: row.userId, asanaTaskGid: { not: null } },
+				select: { id: true, asanaTaskGid: true, completedAt: true },
+			}),
+			shared ? this.assignees.resolve(connectionId, open.tasks) : null,
+		]);
 
 		const tracked = new Set(existing.map((activity) => activity.asanaTaskGid));
 		const stillOpen = new Set<string>();
@@ -91,7 +98,21 @@ export class AsanaSyncService {
 			const known = tracked.has(task.gid);
 			if (!known && !isInWindow(task.dueAt, now)) continue;
 
-			await this.write(row.userId, task, projectName, known, now);
+			const assigned = task.assigneeGid
+				? owners?.get(task.assigneeGid)
+				: undefined;
+
+			await this.write(
+				{
+					syncedById: row.userId,
+					ownerId: assigned ?? row.userId,
+					reassign: shared,
+				},
+				task,
+				projectName,
+				known,
+				now,
+			);
 			written += 1;
 		}
 
@@ -114,6 +135,7 @@ export class AsanaSyncService {
 		this.logger.log({
 			message: "Asana agenda synced",
 			userId: row.userId,
+			shared,
 			written,
 			closed,
 		});
@@ -170,7 +192,7 @@ export class AsanaSyncService {
 	}
 
 	private async write(
-		userId: string,
+		owner: TaskOwner,
 		task: AgendaTask,
 		projectName: string | null,
 		known: boolean,
@@ -193,8 +215,9 @@ export class AsanaSyncService {
 				body: task.body,
 				dueAt: task.dueAt,
 				occurredAt: task.createdAt ?? now,
-				createdById: userId,
+				createdById: owner.ownerId,
 				asanaTaskGid: task.gid,
+				asanaSyncedById: owner.syncedById,
 				contactId: link?.id ?? null,
 				companyId: link?.companyId ?? null,
 				meta,
@@ -203,6 +226,8 @@ export class AsanaSyncService {
 				subject: task.subject,
 				body: task.body,
 				dueAt: task.dueAt,
+				asanaSyncedById: owner.syncedById,
+				createdById: owner.reassign ? owner.ownerId : undefined,
 				meta,
 			},
 			select: { createdAt: true, companyId: true, contactId: true },

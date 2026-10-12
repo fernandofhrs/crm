@@ -32,6 +32,7 @@ import {
 } from "@crm/ui/components/field";
 import { Icon } from "@crm/ui/components/icon";
 import { Input } from "@crm/ui/components/input";
+import { Label } from "@crm/ui/components/label";
 import {
 	Select,
 	SelectContent,
@@ -41,6 +42,7 @@ import {
 } from "@crm/ui/components/select";
 import { Spinner } from "@crm/ui/components/spinner";
 import { StatusIndicator } from "@crm/ui/components/status-indicator";
+import { Switch } from "@crm/ui/components/switch";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { toast } from "sonner";
@@ -48,8 +50,81 @@ import { LocalRelativeTime } from "@/components/local-date-time";
 import { isSyncing, SYNC_POLL_MS } from "@/lib/sync-status";
 import { useCrmCache } from "@/lib/trpc/cache";
 import { useTRPC } from "@/lib/trpc/client";
+import { AsanaPeople } from "./asana-people";
 
 const TOKEN_URL = "https://app.asana.com/0/my-apps";
+
+type TeamProject = {
+	projectName: string | null;
+	connectedBy: string | null;
+	lastSyncedAt: string | null;
+	failing: boolean;
+};
+
+function openTasksLabel(count: number): string {
+	return count === 1 ? "1 tarefa em aberto" : `${count} tarefas em aberto`;
+}
+
+function TeamAsana({
+	team,
+	openTasks,
+}: {
+	team: TeamProject;
+	openTasks: number;
+}) {
+	const reader = team.connectedBy ?? "quem conectou o projeto";
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>
+					<div className="flex items-center gap-2">
+						Asana
+						<StatusIndicator
+							size="sm"
+							tone={team.failing ? "warning" : "success"}
+							label={team.failing ? "Requer atenção" : "Projeto do time"}
+						/>
+					</div>
+				</CardTitle>
+				<CardDescription>
+					A agenda do time vem de um projeto do Asana. Você não precisa conectar
+					nada.
+				</CardDescription>
+			</CardHeader>
+
+			<CardContent>
+				<p className="text-sm">
+					{team.projectName ?? "O projeto do time"}, lido pela conta de {reader}
+					. As tarefas com data atribuídas a você no Asana ficam como suas
+					tarefas no CRM.
+				</p>
+
+				{team.failing ? (
+					<Alert variant="destructive">
+						<Icon icon={Warning} />
+						<AlertTitle>A sincronização da agenda falhou</AlertTitle>
+						<AlertDescription>
+							Peça para {reader} conectar o Asana de novo.
+						</AlertDescription>
+					</Alert>
+				) : (
+					<p className="text-muted-foreground text-xs">
+						{team.lastSyncedAt ? (
+							<>
+								Última verificação:{" "}
+								<LocalRelativeTime date={team.lastSyncedAt} />,{" "}
+								{openTasksLabel(openTasks)} com você
+							</>
+						) : (
+							"Aguardando a primeira verificação"
+						)}
+					</p>
+				)}
+			</CardContent>
+		</Card>
+	);
+}
 
 function ConnectAsana() {
 	const trpc = useTRPC();
@@ -252,7 +327,9 @@ export function AsanaConnection({ slug }: { slug: string }) {
 	const trpc = useTRPC();
 	const cache = useCrmCache();
 
+	const shareId = useId();
 	const [changing, setChanging] = useState(false);
+	const [personal, setPersonal] = useState(false);
 
 	const status = useQuery({
 		...trpc.asana.status.queryOptions(),
@@ -263,6 +340,20 @@ export function AsanaConnection({ slug }: { slug: string }) {
 	const syncNow = useMutation(
 		trpc.asana.syncNow.mutationOptions({
 			onSuccess: () => cache.asana(),
+			onError: (error) => toast.error(error.message),
+		}),
+	);
+
+	const share = useMutation(
+		trpc.asana.share.mutationOptions({
+			onSuccess: async (result) => {
+				await cache.asana();
+				toast.success(
+					result.shared
+						? "O projeto agora é a agenda do time."
+						: "O projeto voltou a ser só seu.",
+				);
+			},
 			onError: (error) => toast.error(error.message),
 		}),
 	);
@@ -292,6 +383,24 @@ export function AsanaConnection({ slug }: { slug: string }) {
 
 	const data = status.data;
 
+	if (!data.connected && data.team) {
+		return (
+			<>
+				<TeamAsana team={data.team} openTasks={data.openTasks} />
+
+				{personal ? (
+					<ConnectAsana />
+				) : (
+					<div className="-ml-2">
+						<Button variant="ghost" size="xs" onClick={() => setPersonal(true)}>
+							Conectar também um projeto só meu
+						</Button>
+					</div>
+				)}
+			</>
+		);
+	}
+
 	if (!data.connected) return <ConnectAsana />;
 
 	if (!data.project) return <ChooseProject current={null} />;
@@ -306,6 +415,7 @@ export function AsanaConnection({ slug }: { slug: string }) {
 	}
 
 	const failing = data.status === "NEEDS_RECONNECT" || data.lastError !== null;
+	const taken = data.team !== null && !data.team.yours;
 
 	return (
 		<>
@@ -325,8 +435,10 @@ export function AsanaConnection({ slug }: { slug: string }) {
 						{data.project.name ?? "O projeto escolhido"}
 						{data.accountName ? `, lido pela conta de ${data.accountName}` : ""}
 						. Tarefas com vencimento entre {data.windowDays.past} dias atrás e{" "}
-						{data.windowDays.future} dias à frente ficam como suas tarefas no
-						CRM.
+						{data.windowDays.future} dias à frente{" "}
+						{data.shared
+							? "ficam no CRM como tarefas do responsável de cada uma."
+							: "ficam como suas tarefas no CRM."}
 					</CardDescription>
 
 					<CardAction>
@@ -356,16 +468,33 @@ export function AsanaConnection({ slug }: { slug: string }) {
 								<>
 									Última verificação:{" "}
 									<LocalRelativeTime date={data.lastSyncedAt} />,{" "}
-									{data.openTasks}{" "}
-									{data.openTasks === 1
-										? "tarefa em aberto"
-										: "tarefas em aberto"}
+									{openTasksLabel(data.openTasks)}
+									{data.shared ? " com você" : ""}
 								</>
 							) : (
 								"Aguardando a primeira verificação"
 							)}
 						</p>
 					)}
+
+					{data.canShare ? (
+						<div className="flex items-start gap-3">
+							<Switch
+								id={shareId}
+								checked={data.shared}
+								disabled={share.isPending || (taken && !data.shared)}
+								onCheckedChange={(shared) => share.mutate({ shared })}
+							/>
+							<div className="flex flex-col gap-1">
+								<Label htmlFor={shareId}>Projeto do time</Label>
+								<p className="text-muted-foreground text-xs">
+									{taken
+										? `O time já usa ${data.team?.projectName ?? "outro projeto"}, conectado por ${data.team?.connectedBy ?? "outra pessoa"}.`
+										: "Cada tarefa vai para quem é o responsável dela no Asana. Tarefa sem responsável, ou de alguém que não está no CRM, fica com você."}
+								</p>
+							</div>
+						</div>
+					) : null}
 
 					<CardFooter>
 						<div className="-ml-2 flex flex-wrap items-center gap-1 text-muted-foreground">
@@ -445,6 +574,8 @@ export function AsanaConnection({ slug }: { slug: string }) {
 					</CardFooter>
 				</CardContent>
 			</Card>
+
+			{data.shared ? <AsanaPeople /> : null}
 
 			{data.status === "NEEDS_RECONNECT" ? <ConnectAsana /> : null}
 		</>

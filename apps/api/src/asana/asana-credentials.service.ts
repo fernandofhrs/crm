@@ -4,10 +4,26 @@ import { InjectDatabase } from "../database/database.constants";
 import { CredentialVaultService } from "../mailbox/credential-vault.service";
 
 export type AsanaLink = {
+	id: string;
 	accountName: string | null;
 	projectGid: string | null;
 	projectName: string | null;
+	shared: boolean;
 };
+
+export type AsanaTeamLink = {
+	userId: string;
+	accountName: string | null;
+	projectName: string | null;
+};
+
+const LINK = {
+	id: true,
+	accountName: true,
+	projectGid: true,
+	projectName: true,
+	shared: true,
+} as const;
 
 export type StoredAsanaToken =
 	| { outcome: "ok"; token: string; link: AsanaLink }
@@ -24,12 +40,7 @@ export class AsanaCredentialsService {
 	async forUser(userId: string): Promise<StoredAsanaToken> {
 		const connection = await this.db.asanaConnection.findUnique({
 			where: { userId },
-			select: {
-				secret: true,
-				accountName: true,
-				projectGid: true,
-				projectName: true,
-			},
+			select: { secret: true, ...LINK },
 		});
 
 		if (!connection) {
@@ -53,9 +64,11 @@ export class AsanaCredentialsService {
 			outcome: "ok",
 			token,
 			link: {
+				id: connection.id,
 				accountName: connection.accountName,
 				projectGid: connection.projectGid,
 				projectName: connection.projectName,
+				shared: connection.shared,
 			},
 		};
 	}
@@ -63,7 +76,21 @@ export class AsanaCredentialsService {
 	async linkOf(userId: string): Promise<AsanaLink | null> {
 		return this.db.asanaConnection.findUnique({
 			where: { userId },
-			select: { accountName: true, projectGid: true, projectName: true },
+			select: LINK,
+		});
+	}
+
+	async team(): Promise<AsanaTeamLink | null> {
+		return this.db.asanaConnection.findFirst({
+			where: { shared: true, projectGid: { not: null } },
+			select: { userId: true, accountName: true, projectName: true },
+		});
+	}
+
+	async saveShared(userId: string, shared: boolean): Promise<void> {
+		await this.db.asanaConnection.update({
+			where: { userId },
+			data: { shared },
 		});
 	}
 

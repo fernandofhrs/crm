@@ -7,7 +7,13 @@ import {
 	it,
 } from "bun:test";
 import { ActivityType, db, GoogleSyncStatus } from "@crm/db";
-import { BadRequestException } from "@nestjs/common";
+import { WORKSPACE_ID } from "@crm/db/workspace";
+import {
+	BadRequestException,
+	ConflictException,
+	ForbiddenException,
+	NotFoundException,
+} from "@nestjs/common";
 import type { ConfigService } from "@nestjs/config";
 import type {
 	AsanaClient,
@@ -17,6 +23,7 @@ import type {
 	AsanaTaskPage,
 	AsanaUser,
 } from "../src/asana/asana.client";
+import { AsanaAssigneesService } from "../src/asana/asana-assignees.service";
 import { ASANA } from "../src/asana/asana-config";
 import { AsanaConnectionService } from "../src/asana/asana-connection.service";
 import { AsanaCredentialsService } from "../src/asana/asana-credentials.service";
@@ -35,6 +42,9 @@ import { SyncStateService } from "../src/mailbox/sync-state.service";
 
 const suffix = process.env.TEST_RUN_ID ?? "asana-sync-spec";
 const userId = `user-${suffix}`;
+const mateId = `mate-${suffix}`;
+const adminId = `admin-${suffix}`;
+const mateEmail = `mate-${suffix}@example.test`;
 const person = `buyer@asana-${suffix}.test`;
 const token = "a-personal-access-token";
 const projectGid = "1200000000000001";
@@ -111,6 +121,7 @@ const stamp = new ActivityStampService(db);
 const state = new SyncStateService(db);
 const vault = new CredentialVaultService(settings);
 const credentials = new AsanaCredentialsService(db, vault);
+const assignees = new AsanaAssigneesService(db);
 
 let asana: FakeAsana;
 
@@ -122,14 +133,29 @@ const client = {
 		asana.openTasks(given, project, offset),
 } as unknown as AsanaClient;
 
-const sync = new AsanaSyncService(db, client, credentials, state, stamp);
+const sync = new AsanaSyncService(
+	db,
+	client,
+	credentials,
+	state,
+	stamp,
+	assignees,
+);
 const connection = new AsanaConnectionService(
 	db,
 	client,
 	credentials,
 	state,
 	stamp,
+	assignees,
 );
+
+const mate = { gid: "7001", name: "Mate in Asana", email: mateEmail };
+const stranger = {
+	gid: "7002",
+	name: "Thaís",
+	email: "thais@elsewhere.test",
+};
 
 function task(name: string, patch: Partial<AsanaTask> = {}): AsanaTask {
 	return {
@@ -140,6 +166,7 @@ function task(name: string, patch: Partial<AsanaTask> = {}): AsanaTask {
 		due_at: null,
 		created_at: "2026-01-01T09:00:00.000Z",
 		permalink_url: `https://app.asana.com/0/${projectGid}/${name}`,
+		assignee: null,
 		...patch,
 	};
 }
@@ -156,6 +183,7 @@ async function activities() {
 			completedAt: true,
 			contactId: true,
 			createdById: true,
+			asanaSyncedById: true,
 			meta: true,
 		},
 	});
@@ -172,16 +200,46 @@ async function clean() {
 		where: { asanaTaskGid: { endsWith: `-${suffix}` } },
 	});
 	await db.contact.deleteMany({ where: { email: person } });
-	await db.mailboxSync.deleteMany({ where: { userId } });
-	await db.asanaConnection.deleteMany({ where: { userId } });
-	await db.user.deleteMany({ where: { id: userId } });
+	const users = [userId, mateId, adminId];
+
+	await db.mailboxSync.deleteMany({ where: { userId: { in: users } } });
+	await db.asanaConnection.deleteMany({ where: { userId: { in: users } } });
+	await db.member.deleteMany({ where: { userId: { in: users } } });
+	await db.user.deleteMany({ where: { id: { in: users } } });
 }
+
+async function enrol(id: string, role: string, email: string) {
+	await db.user.create({ data: { id, name: role, email } });
+	await db.member.create({
+		data: {
+			id: `member-${id}`,
+			organizationId: WORKSPACE_ID,
+			userId: id,
+			role,
+			createdAt: new Date(),
+		},
+	});
+}
+
+const ownerOf = async (name: string) =>
+	(await activities()).find((activity) => activity.asanaTaskGid === gid(name))
+		?.createdById;
 
 beforeAll(async () => {
 	await clean();
-	await db.user.create({
-		data: { id: userId, name: "Test Rep", email: `rep-${suffix}@example.test` },
+	await db.organization.upsert({
+		where: { id: WORKSPACE_ID },
+		create: {
+			id: WORKSPACE_ID,
+			name: "Asana spec",
+			slug: `asana-${suffix}`,
+			createdAt: new Date(),
+		},
+		update: {},
 	});
+	await enrol(userId, "owner", `rep-${suffix}@example.test`);
+	await enrol(mateId, "member", mateEmail);
+	await enrol(adminId, "admin", `admin-${suffix}@example.test`);
 	await db.contact.create({
 		data: { firstName: "A", lastName: "Buyer", email: person },
 	});
@@ -402,6 +460,187 @@ describe("syncing the Asana agenda", () => {
 		expect(outcome.status).toBe("reconnect");
 		expect(after.status).toBe(GoogleSyncStatus.NEEDS_RECONNECT);
 		expect(after.lastError).toBe("O Asana não aceita mais o token salvo.");
+	});
+});
+
+describe("sharing one Asana project with the team", () => {
+	it("refuses a member, and leaves the project personal", async () => {
+		await credentials.saveToken(mateId, { token, accountName: "Mate" });
+		await credentials.saveProject(mateId, { gid: projectGid, name: "Agenda" });
+
+		await expect(connection.share(mateId, true)).rejects.toBeInstanceOf(
+			ForbiddenException,
+		);
+
+		expect((await connection.status(mateId)).shared).toBe(false);
+		expect(await credentials.team()).toBeNull();
+
+		await credentials.remove(mateId);
+	});
+
+	it("gives each task to the member with the assignee's email", async () => {
+		await connection.share(userId, true);
+
+		asana.tasks = [
+			task("soon", {
+				assignee: { ...mate, email: mateEmail.toUpperCase() },
+			}),
+			task("stranger", { assignee: stranger }),
+			task("unassigned"),
+		];
+
+		await sync.sync(await row());
+
+		expect(await ownerOf("soon")).toBe(mateId);
+		expect(await ownerOf("stranger")).toBe(userId);
+		expect(await ownerOf("unassigned")).toBe(userId);
+
+		const synced = (await activities()).filter(
+			(activity) => activity.completedAt === null,
+		);
+
+		expect(
+			synced.every((activity) => activity.asanaSyncedById === userId),
+		).toBe(true);
+	});
+
+	it("shows a member the team project and their own open tasks", async () => {
+		const mine = await connection.status(userId);
+		const theirs = await connection.status(mateId);
+
+		expect(mine).toMatchObject({ shared: true, canShare: true });
+		expect(mine.team).toMatchObject({ projectName: "Agenda", yours: true });
+
+		expect(theirs).toMatchObject({
+			connected: false,
+			shared: false,
+			canShare: false,
+			openTasks: 1,
+		});
+		expect(theirs.team).toMatchObject({
+			projectName: "Agenda",
+			connectedBy: "Test Rep",
+			yours: false,
+			failing: false,
+		});
+		expect(theirs.team?.lastSyncedAt).not.toBeNull();
+	});
+
+	it("moves a task when Asana reassigns it", async () => {
+		asana.tasks = [
+			task("soon"),
+			task("stranger", { assignee: mate }),
+			task("unassigned"),
+		];
+
+		await sync.sync(await row());
+
+		expect(await ownerOf("soon")).toBe(userId);
+		expect(await ownerOf("stranger")).toBe(mateId);
+	});
+
+	it("lists who it met in the project and who each one is here", async () => {
+		const listed = await connection.people(userId);
+
+		expect(listed.people).toEqual([
+			{
+				gid: mate.gid,
+				name: "Mate in Asana",
+				email: mateEmail,
+				chosenUserId: null,
+				emailMatchName: "member",
+			},
+			{
+				gid: stranger.gid,
+				name: "Thaís",
+				email: stranger.email,
+				chosenUserId: null,
+				emailMatchName: null,
+			},
+		]);
+		expect(listed.members.map((member) => member.id)).toEqual(
+			expect.arrayContaining([userId, mateId, adminId]),
+		);
+
+		expect((await connection.people(mateId)).people).toEqual([]);
+	});
+
+	it("gives a person's tasks to the member chosen for them", async () => {
+		asana.tasks = [
+			task("soon", { assignee: stranger }),
+			task("stranger", { assignee: mate }),
+			task("unassigned"),
+		];
+
+		await sync.sync(await row());
+		expect(await ownerOf("soon")).toBe(userId);
+
+		await connection.assign(userId, stranger.gid, adminId);
+		await sync.sync(await row());
+
+		expect(await ownerOf("soon")).toBe(adminId);
+		expect(await ownerOf("stranger")).toBe(mateId);
+
+		await connection.assign(userId, stranger.gid, null);
+		await sync.sync(await row());
+
+		expect(await ownerOf("soon")).toBe(userId);
+	});
+
+	it("refuses a choice that is not a member, or not a person it met", async () => {
+		await expect(
+			connection.assign(userId, stranger.gid, "nobody-here"),
+		).rejects.toBeInstanceOf(BadRequestException);
+
+		await expect(
+			connection.assign(userId, "7999", mateId),
+		).rejects.toBeInstanceOf(NotFoundException);
+
+		await expect(
+			connection.assign(mateId, stranger.gid, mateId),
+		).rejects.toBeInstanceOf(BadRequestException);
+	});
+
+	it("completes a member's task that is no longer open in Asana", async () => {
+		asana.tasks = [task("soon"), task("unassigned")];
+
+		const outcome = await sync.sync(await row());
+		const closed = (await activities()).find(
+			(activity) => activity.asanaTaskGid === gid("stranger"),
+		);
+
+		expect(outcome.tasksClosed).toBe(1);
+		expect(closed?.createdById).toBe(mateId);
+		expect(closed?.completedAt).not.toBeNull();
+	});
+
+	it("refuses a second team project", async () => {
+		await credentials.saveToken(adminId, { token, accountName: "Admin" });
+		await credentials.saveProject(adminId, { gid: projectGid, name: "Agenda" });
+
+		await expect(connection.share(adminId, true)).rejects.toBeInstanceOf(
+			ConflictException,
+		);
+
+		expect((await connection.status(adminId)).shared).toBe(false);
+
+		await credentials.remove(adminId);
+	});
+
+	it("hands every task back to the rep when the project is personal again", async () => {
+		asana.tasks = [task("soon", { assignee: mate }), task("unassigned")];
+
+		await sync.sync(await row());
+		expect(await ownerOf("soon")).toBe(mateId);
+
+		await connection.share(userId, false);
+		await sync.sync(await row());
+
+		expect(await ownerOf("soon")).toBe(userId);
+		expect(await connection.status(mateId)).toMatchObject({
+			team: null,
+			openTasks: 0,
+		});
 	});
 });
 

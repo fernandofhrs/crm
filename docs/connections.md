@@ -72,6 +72,14 @@ OAuth flow to lean on, so the form is the grant.
   hint of it. The field is empty on every later visit.
 - Both are **per rep**. Disconnecting removes only that rep's row, so it needs no
   `canManageConnections`: nobody else's work stops.
+- Asana has one exception, the **team project**. A rep's project becomes the
+  team's only through `canManageConnections`, and there is one at a time. The
+  member page then shows that project and who reads it, with nothing to connect.
+  Disconnecting stays with the rep whose token it is: the tasks already brought in
+  remain with their owners and stop updating.
+- Who each Asana assignee is in the CRM is a **chosen** destination with a
+  **derived** default: the same email. The page lists only the people the project
+  has given a dated task to, and asks once for each.
 - When the saved secret stops working the page says so and puts the same form under
   the status card. Reconnecting keeps the cursor, so nothing is imported twice.
 - `Sends` is "Nothing" for both, and says what that guarantees.

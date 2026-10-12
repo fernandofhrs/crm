@@ -16,7 +16,7 @@ const publicProcedure = t.procedure;
 import { timelineInput, timelineOutput, timelineCountsInput, timelineCountsOutput, myTasksInput, myTasksOutput, activityCreateInput, activityCreateOutput, completeInput, completeOutput } from "../activities/activities.contracts";
 import { agentListOutput, agentReviseInput, agentReviseOutput, agentIdInput, agentFilesOutput, agentSaveFileInput, agentSaveFileOutput, agentByIdOutput, agentHistoryInput, agentHistoryOutput, agentActivityOutput, agentUpdateInput, agentUpdateOutput, agentDeployInput, agentDeployOutput, agentPauseOutput, agentResumeOutput, agentArchiveOutput, agentRestoreOutput, agentRemoveOutput, agentRunNowInput, agentRunNowOutput, agentRetryRunInput, agentRetryRunOutput, agentCancelRunInput, agentCancelRunOutput } from "../agent/agents.contracts";
 import { apiKeyListInput, apiKeyListOutput, createApiKeyInput, createApiKeyOutput, revokeApiKeyInput, revokeApiKeyOutput } from "../api-keys/api-keys.contracts";
-import { asanaConnectionStatusOutput, asanaProjectsOutput, connectAsanaInput, chooseAsanaProjectInput, purgeAsanaDataOutput, disconnectAsanaOutput } from "../asana/asana.contracts";
+import { asanaConnectionStatusOutput, asanaProjectsOutput, connectAsanaInput, chooseAsanaProjectInput, shareAsanaProjectInput, asanaPeopleOutput, assignAsanaPersonInput, purgeAsanaDataOutput, disconnectAsanaOutput } from "../asana/asana.contracts";
 import { companyListInput, companyListOutput, companyIdInput, companyDetailOutput, companyOptionsInput, companyOptionOutput, companyCreateInput, companySummaryOutput, companyUpdateArgs, companyArchiveResultOutput, companyBulkOwnerInput, companyBulkResultOutput, companyBulkInput, companyEnrichOutput, companyResearchOutput, setPrimaryContactInput, companySetPrimaryContactOutput } from "../companies/companies.contracts";
 import { contactListInput, contactListOutput, contactIdInput, contactByIdOutput, contactCreateInput, contactBasicOutput, contactUpdateArgs, contactNameOutput, contactEnrichOutput, contactBulkOwnerInput, bulkResultOutput, contactBulkCompanyInput, contactBulkInput, factDecisionInput, decideFactOutput } from "../contacts/contacts.contracts";
 import { conversationListInput, conversationListOutput, builderListOutput, builderResourceSearchInput, builderResourcesOutput, conversationIdInput, builderConversationDetailOutput, conversationEventsInput, conversationEventsOutput, conversationSaveInput, conversationIdOutput, builderConversationCreateInput, builderConversationSubmitInput, builderQuestionResponseInput, builderResponseRatingInput, builderResponseRatingOutput, conversationShareStatusOutput, conversationShareTokenOutput, sharedConversationInput, sharedConversationOutput } from "../conversations/conversations.contracts";
@@ -157,6 +157,17 @@ const appRouter = t.router({
     chooseProject: publicProcedure
       .input(chooseAsanaProjectInput)
       .output(asanaConnectionStatusOutput)
+      .mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    share: publicProcedure
+      .input(shareAsanaProjectInput)
+      .output(asanaConnectionStatusOutput)
+      .mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    people: publicProcedure
+      .output(asanaPeopleOutput)
+      .query(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
+    assign: publicProcedure
+      .input(assignAsanaPersonInput)
+      .output(asanaPeopleOutput)
       .mutation(async () => "PLACEHOLDER_DO_NOT_REMOVE" as any),
     syncNow: publicProcedure
       .output(asanaConnectionStatusOutput)

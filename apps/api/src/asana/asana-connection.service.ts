@@ -1,6 +1,9 @@
-import type { Db } from "@crm/db";
+import { canManageConnections, workspaceRoleOf } from "@crm/auth";
+import { type Db, GoogleSyncStatus, Prisma as PrismaNamespace } from "@crm/db";
 import {
 	BadRequestException,
+	ConflictException,
+	ForbiddenException,
 	Injectable,
 	Logger,
 	NotFoundException,
@@ -12,10 +15,12 @@ import { SyncStateService } from "../mailbox/sync-state.service";
 import { AsanaClient } from "./asana.client";
 import type {
 	AsanaConnectionStatus,
+	AsanaPeopleOutput,
 	AsanaProjectsOutput,
 	DisconnectAsanaOutput,
 	PurgeAsanaDataOutput,
 } from "./asana.contracts";
+import { AsanaAssigneesService } from "./asana-assignees.service";
 import { ASANA, ASANA_SOURCE } from "./asana-config";
 import { AsanaCredentialsService } from "./asana-credentials.service";
 
@@ -33,12 +38,15 @@ export class AsanaConnectionService {
 		private readonly credentials: AsanaCredentialsService,
 		private readonly state: SyncStateService,
 		private readonly stamp: ActivityStampService,
+		private readonly assignees: AsanaAssigneesService,
 	) {}
 
 	async status(userId: string): Promise<AsanaConnectionStatus> {
-		const [link, row, openTasks] = await Promise.all([
+		const [link, row, team, role, openTasks] = await Promise.all([
 			this.credentials.linkOf(userId),
 			this.state.get(userId, ASANA_SOURCE),
+			this.credentials.team(),
+			workspaceRoleOf(userId, this.db),
 			this.db.activity.count({
 				where: {
 					createdById: userId,
@@ -47,6 +55,11 @@ export class AsanaConnectionService {
 				},
 			}),
 		]);
+
+		const teamRow =
+			team && team.userId !== userId
+				? await this.state.get(team.userId, ASANA_SOURCE)
+				: row;
 
 		return {
 			connected: link !== null,
@@ -58,6 +71,19 @@ export class AsanaConnectionService {
 			lastSyncedAt: row?.lastSyncedAt?.toISOString() ?? null,
 			lastError: row?.lastError ?? null,
 			openTasks,
+			shared: link?.shared ?? false,
+			canShare: canManageConnections(role),
+			team: team
+				? {
+						projectName: team.projectName,
+						connectedBy: team.accountName,
+						yours: team.userId === userId,
+						lastSyncedAt: teamRow?.lastSyncedAt?.toISOString() ?? null,
+						failing:
+							teamRow?.status === GoogleSyncStatus.NEEDS_RECONNECT ||
+							(teamRow?.lastError ?? null) !== null,
+					}
+				: null,
 			windowDays: {
 				past: Math.round(ASANA.window.pastMs / DAY_MS),
 				future: Math.round(ASANA.window.futureMs / DAY_MS),
@@ -144,6 +170,78 @@ export class AsanaConnectionService {
 		this.logger.log({ message: "Asana project chosen", userId });
 	}
 
+	async share(userId: string, shared: boolean): Promise<void> {
+		const role = await workspaceRoleOf(userId, this.db);
+
+		if (!canManageConnections(role)) {
+			throw new ForbiddenException(
+				"Só um dono ou um administrador pode definir o projeto do time.",
+			);
+		}
+
+		const link = await this.credentials.linkOf(userId);
+
+		if (!link) throw new NotFoundException("O Asana não está conectado.");
+
+		if (!link.projectGid) {
+			throw new BadRequestException(
+				"Escolha um projeto antes de usar o Asana para o time.",
+			);
+		}
+
+		const team = shared ? await this.credentials.team() : null;
+
+		if (team && team.userId !== userId) {
+			throw new ConflictException(taken(team.accountName));
+		}
+
+		try {
+			await this.credentials.saveShared(userId, shared);
+		} catch (cause) {
+			if (
+				cause instanceof PrismaNamespace.PrismaClientKnownRequestError &&
+				cause.code === "P2002"
+			) {
+				throw new ConflictException(taken(null));
+			}
+
+			throw cause;
+		}
+
+		if (!shared) {
+			await this.db.activity.updateMany({
+				where: { asanaSyncedById: userId, createdById: { not: userId } },
+				data: { createdById: userId },
+			});
+		}
+
+		this.logger.log({ message: "Asana team project set", userId, shared });
+	}
+
+	async people(userId: string): Promise<AsanaPeopleOutput> {
+		const link = await this.credentials.linkOf(userId);
+
+		return this.assignees.list(link?.shared ? link.id : null);
+	}
+
+	async assign(
+		userId: string,
+		gid: string,
+		memberId: string | null,
+	): Promise<void> {
+		const link = await this.credentials.linkOf(userId);
+
+		if (!link?.shared) {
+			throw new BadRequestException(
+				"Só o projeto do time distribui tarefas entre as pessoas.",
+			);
+		}
+
+		await this.assignees.assign(link.id, gid, memberId);
+
+		this.logger.log({ message: "Asana assignee mapped", userId });
+	}
+
 	async disconnect(userId: string): Promise<DisconnectAsanaOutput> {
 		await this.state.remove(userId, ASANA_SOURCE);
 		const disconnected = await this.credentials.remove(userId);
@@ -157,7 +255,7 @@ export class AsanaConnectionService {
 
 	async purgeSyncedData(userId: string): Promise<PurgeAsanaDataOutput> {
 		const removed = await this.db.activity.deleteMany({
-			where: { createdById: userId, asanaTaskGid: { not: null } },
+			where: { asanaSyncedById: userId, asanaTaskGid: { not: null } },
 		});
 
 		await this.stamp.recomputeAll();
@@ -184,6 +282,10 @@ export class AsanaConnectionService {
 
 		return found.token;
 	}
+}
+
+function taken(connectedBy: string | null): string {
+	return `O time já usa um projeto do Asana, conectado por ${connectedBy ?? "outra pessoa"}. Desligue aquele primeiro.`;
 }
 
 function reasonOf(result: Exclude<MailboxResult<unknown>, { outcome: "ok" }>) {

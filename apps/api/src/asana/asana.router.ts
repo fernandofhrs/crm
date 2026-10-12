@@ -13,11 +13,14 @@ import { AuthMiddleware } from "../trpc/middlewares/auth.middleware";
 import { restMeta } from "../trpc/openapi";
 import {
 	asanaConnectionStatusOutput,
+	asanaPeopleOutput,
 	asanaProjectsOutput,
+	assignAsanaPersonInput,
 	chooseAsanaProjectInput,
 	connectAsanaInput,
 	disconnectAsanaOutput,
 	purgeAsanaDataOutput,
+	shareAsanaProjectInput,
 } from "./asana.contracts";
 import { AsanaConnectionService } from "./asana-connection.service";
 import { AsanaSyncService } from "./asana-sync.service";
@@ -73,6 +76,42 @@ export class AsanaRouter {
 		await this.connection.chooseProject(ctx.user.id, input.projectGid);
 		await this.sync.runOne(ctx.user.id);
 		return this.connection.status(ctx.user.id);
+	}
+
+	@Mutation({
+		input: shareAsanaProjectInput,
+		output: asanaConnectionStatusOutput,
+		meta: restMeta("POST", "/asana/share", ["Asana"]),
+	})
+	async share(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof shareAsanaProjectInput>,
+	) {
+		await this.connection.share(ctx.user.id, input.shared);
+		await this.sync.runOne(ctx.user.id);
+		return this.connection.status(ctx.user.id);
+	}
+
+	@Query({
+		output: asanaPeopleOutput,
+		meta: restMeta("GET", "/asana/people", ["Asana"]),
+	})
+	async people(@Ctx() ctx: AuthedTrpcContext) {
+		return this.connection.people(ctx.user.id);
+	}
+
+	@Mutation({
+		input: assignAsanaPersonInput,
+		output: asanaPeopleOutput,
+		meta: restMeta("POST", "/asana/people", ["Asana"]),
+	})
+	async assign(
+		@Ctx() ctx: AuthedTrpcContext,
+		@Input() input: z.infer<typeof assignAsanaPersonInput>,
+	) {
+		await this.connection.assign(ctx.user.id, input.gid, input.userId);
+		await this.sync.runOne(ctx.user.id);
+		return this.connection.people(ctx.user.id);
 	}
 
 	@Mutation({

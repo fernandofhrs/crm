@@ -288,7 +288,7 @@ export function useCrmCache(): CrmCache {
 
 		asana: (options) =>
 			run(
-				[trpc.asana.status.queryKey()],
+				[trpc.asana.status.queryKey(), trpc.asana.people.queryKey()],
 				[...activityKeys(), trpc.dashboard.summary.queryKey()],
 				options,
 			),
