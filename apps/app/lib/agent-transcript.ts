@@ -51,7 +51,13 @@ export type Source = {
 
 export type AgentTurnFailure = {
 	code: string;
-	kind: "rate-limit" | "restricted" | "credits" | "unknown";
+	kind:
+		| "rate-limit"
+		| "restricted"
+		| "credits"
+		| "provider-key"
+		| "provider-credits"
+		| "unknown";
 };
 
 type ToolVerbs = Record<string, string>;
@@ -347,6 +353,30 @@ export function pendingQuestion(messages: readonly EveMessage[]) {
 	return null;
 }
 
+function failureKind(message: string): AgentTurnFailure["kind"] {
+	if (
+		/free tier users do not have access|RestrictedModelsError/i.test(message)
+	) {
+		return "restricted";
+	}
+
+	if (
+		/GatewayRateLimitError|free tier requests.*rate-?limited/i.test(message)
+	) {
+		return "rate-limit";
+	}
+
+	if (/invalid x-api-key|authentication_error/i.test(message)) {
+		return "provider-key";
+	}
+
+	if (/credit balance is too low/i.test(message)) return "provider-credits";
+
+	if (/credits?|quota|billing|usage limit/i.test(message)) return "credits";
+
+	return "unknown";
+}
+
 export function latestTurnFailure(
 	events: readonly EveStreamEvent[],
 ): AgentTurnFailure | null {
@@ -365,17 +395,7 @@ export function latestTurnFailure(
 
 		return {
 			code: failure.code ?? "AGENT_FAILED",
-			kind: /free tier users do not have access|RestrictedModelsError/i.test(
-				message,
-			)
-				? "restricted"
-				: /GatewayRateLimitError|free tier requests.*rate-?limited/i.test(
-							message,
-						)
-					? "rate-limit"
-					: /credits?|quota|billing|usage limit/i.test(message)
-						? "credits"
-						: "unknown",
+			kind: failureKind(message),
 		};
 	}
 

@@ -1190,6 +1190,20 @@ function BuildingAgentCard({
 	);
 }
 
+const FAILURE_MESSAGES = {
+	"rate-limit":
+		"O Vercel AI Gateway limitou as requisições deste modelo antes de ele começar. Tente de novo em instantes ou adicione créditos do AI Gateway na Vercel.",
+	restricted:
+		"Este modelo exige créditos pagos do AI Gateway. Adicione créditos na Vercel, ou configure a chave da Claude Platform no agente, e tente de novo.",
+	credits:
+		"O Vercel AI Gateway está sem créditos disponíveis. Adicione créditos na Vercel e tente de novo.",
+	"provider-key":
+		"A Claude Platform recusou a chave de API. Confira a variável ANTHROPIC_API_KEY do agente e publique de novo.",
+	"provider-credits":
+		"A conta da Claude Platform está sem créditos. Adicione créditos na Claude Platform e tente de novo.",
+	unknown: "O construtor não conseguiu concluir este pedido. Tente de novo.",
+} satisfies Record<AgentTurnFailure["kind"], string>;
+
 function BuilderFailureCard({
 	failure,
 	creatingAgent,
@@ -1201,14 +1215,7 @@ function BuilderFailureCard({
 	retrying: boolean;
 	onRetry: (() => void) | null;
 }) {
-	const message =
-		failure.kind === "rate-limit"
-			? "O Vercel AI Gateway limitou as requisições deste modelo antes de ele começar. Tente de novo em instantes ou adicione créditos do AI Gateway na Vercel."
-			: failure.kind === "restricted"
-				? "Este modelo exige créditos pagos do AI Gateway. Adicione créditos na Vercel e tente de novo."
-				: failure.kind === "credits"
-					? "O Vercel AI Gateway está sem créditos disponíveis. Adicione créditos na Vercel e tente de novo."
-					: "O construtor não conseguiu concluir este pedido. Tente de novo.";
+	const message = FAILURE_MESSAGES[failure.kind];
 
 	return (
 		<div

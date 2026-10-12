@@ -75,6 +75,13 @@ list, read by the sign-in guard *and* the sync's "which side is external" decisi
 if they drifted a colleague would be refused at the door or filed as a lead. **An empty
 list fails closed.** Parsed on demand. `packages/auth/src/workspace.ts`.
 
+**`ANTHROPIC_API_KEY`** — optional. Set, the agent calls the default model at the
+Claude Platform and not through the AI Gateway; unset, everything goes through the
+gateway as before. Read by `apps/agent/agent/lib/model.ts` when the agent is
+compiled and again when it runs, so a new key needs a redeploy of the agent. It is in
+the root `turbo.json` and in `apps/agent/turbo.json`. The rules are in `agent.md`,
+*Model*.
+
 **`DEFAULT_REPORTING_CURRENCY`** — the reporting currency before an admin picks one on
 Settings → Currencies. A supported code or it is ignored. Read by
 `defaultReportingCurrency()` in `@crm/db/settings`; the rules are in `currency.md`.

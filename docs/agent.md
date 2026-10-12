@@ -11,8 +11,24 @@ are in `docs/setup.md`.
 
 ## Model
 
-Default `zai/glm-5.2-fast`; `DEFAULT_AGENT_MODEL` in `@crm/db/settings` because the
-agent and the API both need it.
+Default `anthropic/claude-haiku-5.5`; `DEFAULT_AGENT_MODEL` in `@crm/db/settings`
+because the agent and the API both need it.
+
+- **With `ANTHROPIC_API_KEY` the default model is called at Anthropic directly**
+  (`defaultModel()` in `lib/model.ts`), and the AI Gateway is not in the path. The
+  compiled `fallback` is then an AI SDK model, not a gateway id. It has to be the
+  fallback: eve resolves `web_search` from the compiled model, and a live model
+  returned from a resolver gets the gateway's search tool, which Anthropic drops.
+- **A selection that names the default returns `null`** (`overDefault`), so it runs
+  on that fallback. Any other chosen model is a gateway id and needs the gateway.
+- **The direct model runs with thinking off** (`MODEL.direct.settings`), set on the
+  model with `wrapLanguageModel`. eve 0.29 does not forward `modelOptions` to a
+  direct model, and a thinking block sent back after compaction is a 400 on a new
+  Anthropic account.
+- **`modelContextWindowTokens` is set on every `defineAgent`.** The catalog bundled
+  with eve 0.29 does not know Haiku 5.5, and the build fails without it.
+- **`ai` is pinned in `apps/agent/package.json`** to the release that matches
+  `@ai-sdk/anthropic`. Two versions of `@ai-sdk/provider` do not typecheck together.
 
 - **A row (`AppSetting`), not an env var**, via `defineDynamic` on `session.started`.
   Open conversations keep their model — prompt caches are per model.

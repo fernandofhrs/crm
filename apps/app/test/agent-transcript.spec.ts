@@ -538,6 +538,30 @@ describe("latestTurnFailure", () => {
 		).toEqual({ code: "MODEL_CALL_FAILED", kind: "restricted" });
 	});
 
+	it("tells a refused Claude Platform key from an empty balance", () => {
+		expect(
+			latestTurnFailure([
+				{
+					type: "session.failed",
+					data: { code: "MODEL_CALL_FAILED", message: "invalid x-api-key" },
+				},
+			]),
+		).toEqual({ code: "MODEL_CALL_FAILED", kind: "provider-key" });
+
+		expect(
+			latestTurnFailure([
+				{
+					type: "turn.failed",
+					data: {
+						code: "MODEL_CALL_FAILED",
+						message:
+							"Your credit balance is too low to access the Anthropic API.",
+					},
+				},
+			]),
+		).toEqual({ code: "MODEL_CALL_FAILED", kind: "provider-credits" });
+	});
+
 	it("keeps provider details out of the display contract", () => {
 		expect(
 			latestTurnFailure([
