@@ -56,6 +56,7 @@ import {
 	agentBuilderCallIsActive,
 	builderConversationIsWorking,
 	builderSessionStreamKey,
+	builderTurnHasSettled,
 	completedBuilderSteps,
 	displayedArtifactVersionId,
 	latestCompletedArtifactVersionId,
@@ -327,7 +328,10 @@ export function AgentBuilderChat({
 			: null;
 	const failure = latestTurnFailure(transcriptEvents);
 	const creatingAgent = hasCreateAgentCommand(submissions);
-	const working = builderConversationIsWorking(data) && !failure;
+	const working =
+		builderConversationIsWorking(data) &&
+		!failure &&
+		!builderTurnHasSettled(submissions, transcriptEvents);
 	const builderCallActive = agentBuilderCallIsActive(transcriptEvents);
 	const currentSubmissionCreatesAgent =
 		submissions.at(-1)?.commandType === "CREATE_AGENT";
@@ -388,15 +392,23 @@ export function AgentBuilderChat({
 					onSnapshot={(snapshot) =>
 						setLiveStream({ key: streamKey, events: snapshot })
 					}
-					onEvent={(event) =>
+					onEvent={(event) => {
 						setLiveStream((current) => ({
 							key: streamKey,
 							events:
 								current?.key === streamKey
 									? appendEvent(current.events, event)
 									: [event],
-						}))
-					}
+						}));
+						if (eventStreamSettled([event])) {
+							void queryClient.invalidateQueries({
+								queryKey: trpc.conversations.builderById.pathKey(),
+							});
+							void queryClient.invalidateQueries({
+								queryKey: trpc.conversations.builderList.pathKey(),
+							});
+						}
+					}}
 					onEnded={() =>
 						setLiveStream((current) =>
 							current?.key === streamKey ? null : current,

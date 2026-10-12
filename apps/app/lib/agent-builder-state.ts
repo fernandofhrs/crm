@@ -3,6 +3,7 @@ import {
 	eveRequestedActions,
 	eveSettledAction,
 } from "@crm/validation/eve-stream";
+import { eventStreamSettled } from "./agent-transcript";
 
 export type BuilderArtifactState = {
 	id: string;
@@ -52,9 +53,32 @@ export function builderConversationIsWorking(
 ): boolean {
 	return (
 		conversation.submissions.some((submission) =>
-			["PENDING", "SENDING"].includes(submission.status),
+			UNSENT_SUBMISSION_STATUSES.includes(submission.status),
 		) || Boolean(conversation.sessionId && !conversation.continuationToken)
 	);
+}
+
+const UNSENT_SUBMISSION_STATUSES = ["PENDING", "SENDING"];
+
+export function builderTurnHasSettled(
+	submissions: ReadonlyArray<{ status: string; createdAt: string }>,
+	events: ReadonlyArray<{ type: string; meta: { at: string } }>,
+): boolean {
+	if (
+		submissions.some((submission) =>
+			UNSENT_SUBMISSION_STATUSES.includes(submission.status),
+		)
+	) {
+		return false;
+	}
+
+	const last = events.at(-1);
+	if (!last || !eventStreamSettled(events)) return false;
+
+	const asked = submissions.at(-1)?.createdAt;
+	if (!asked) return true;
+
+	return Date.parse(last.meta.at) >= Date.parse(asked);
 }
 
 export function builderSessionStreamKey(
