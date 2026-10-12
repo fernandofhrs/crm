@@ -35,6 +35,7 @@ function Combobox({
 	placeholder = "Selecione uma opção",
 	searchPlaceholder = "Buscar…",
 	empty = "Nada encontrado.",
+	footer,
 	search,
 	onSearchChange,
 	stale,
@@ -51,6 +52,7 @@ function Combobox({
 		placeholder?: string;
 		searchPlaceholder?: string;
 		empty?: React.ReactNode;
+		footer?: React.ReactNode;
 		search?: string;
 		onSearchChange?: (search: string) => void;
 		stale?: boolean;
@@ -69,6 +71,7 @@ function Combobox({
 
 	return (
 		<Popover
+			modal
 			open={open}
 			onOpenChange={(next) => (next ? setOpen(true) : close())}
 		>
@@ -126,6 +129,11 @@ function Combobox({
 							))}
 						</CommandGroup>
 					</CommandList>
+					{footer ? (
+						<div className="border-t px-2 py-1.5 text-muted-foreground text-xs">
+							{footer}
+						</div>
+					) : null}
 				</Command>
 			</PopoverContent>
 		</Popover>

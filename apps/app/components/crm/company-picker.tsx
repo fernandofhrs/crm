@@ -80,6 +80,9 @@ export function CompanyPicker({
 			placeholder={placeholder}
 			searchPlaceholder="Buscar empresas…"
 			empty={companies.isFetching ? "Buscando…" : "Nenhuma empresa encontrada."}
+			footer={
+				query.trim() ? undefined : "Digite para buscar em todas as empresas."
+			}
 			search={text}
 			onSearchChange={setText}
 			stale={stale}
