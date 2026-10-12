@@ -1,6 +1,7 @@
 import { db } from "@crm/db";
 import { websiteUrl } from "@crm/db/workspace";
 import { capabilitiesMarkdown } from "./capabilities";
+import { stagesMarkdown } from "./deal-stages";
 import { identity, usMarkdown, type WorkspaceIdentity } from "./workspace";
 
 export type Opened = {
@@ -35,7 +36,7 @@ export async function sessionPreamble(
 export async function composeClosing(
 	us: WorkspaceIdentity | null,
 ): Promise<string> {
-	return [usMarkdown(us), await capabilitiesMarkdown()]
+	return [usMarkdown(us), stagesMarkdown(), await capabilitiesMarkdown()]
 		.filter(Boolean)
 		.join("\n\n");
 }

@@ -298,6 +298,13 @@ preamble; `lib/workspace.ts` is the only renderer.
 - **Not a `Company` row** — that needs excluding from every list, facet and join. One
   `WorkspaceProfile` keyed on `WORKSPACE_ID`.
 
+### Every session names a stage the way the board does
+
+`composeClosing()` also carries a **Deal stages** block (`lib/deal-stages.ts`): each
+stage key beside the name the CRM shows. `DEAL_STAGE_LABELS` in `@crm/db/deal-stage`
+is the one list, and the app's board reads the same one. Without the block the model
+translates the key, and "Contrato enviado" is not a column anybody has on screen.
+
 The pass is a `workspace-profile` task using `web_fetch` (no credits), filed only via
 `write_workspace_profile`, queued by `WorkspaceService.update` on a website change. **A
 finished attempt stands the sweep down for seven days.**

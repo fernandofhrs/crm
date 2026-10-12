@@ -99,6 +99,17 @@ describe("every session is told who we are", () => {
 		expect(await composeClosing(null)).not.toContain("## Who we are");
 		expect(await composeClosing(null)).toContain("## What you can use here");
 	});
+
+	it("names every deal stage the way the CRM shows it", async () => {
+		const closing = await composeClosing(null);
+
+		expect(closing).toContain("## Deal stages");
+		expect(closing).toContain('`QUALIFIED_TO_BUY` is "Proposta enviada"');
+		expect(closing).toContain('`CONTRACT_SENT` is "Aprovada · entrada"');
+		expect(closing.indexOf("## Deal stages")).toBeLessThan(
+			closing.indexOf("## What you can use here"),
+		);
+	});
 });
 
 describe("a profile belongs to the website it was read from", () => {

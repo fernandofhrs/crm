@@ -1,3 +1,4 @@
+import { DEAL_STAGE_LABELS } from "@crm/db/deal-stage";
 import { DealStage } from "@crm/db/enums";
 import type { StatusTone } from "@crm/ui/components/status-indicator";
 
@@ -11,20 +12,15 @@ const ORDER = [
 	DealStage.UNQUALIFIED_TO_BUY,
 ] as const;
 
-type DealStagePresentation = Record<
-	DealStage,
-	{ label: string; tone: StatusTone }
->;
-
-const PRESENTATION: DealStagePresentation = {
-	DEMO_BOOKED: { label: "Lead", tone: "neutral" },
-	QUALIFIED_TO_BUY: { label: "Proposta enviada", tone: "info" },
-	DECISION_MAKER_BOUGHT_IN: { label: "OK verbal · piloto", tone: "info" },
-	CONTRACT_SENT: { label: "Aprovada · entrada", tone: "warning" },
-	CLOSED_WON: { label: "Ganha", tone: "success" },
-	CLOSED_LOST: { label: "Perdida", tone: "error" },
-	UNQUALIFIED_TO_BUY: { label: "Sem perfil", tone: "neutral" },
-};
+const TONE = {
+	DEMO_BOOKED: "neutral",
+	QUALIFIED_TO_BUY: "info",
+	DECISION_MAKER_BOUGHT_IN: "info",
+	CONTRACT_SENT: "warning",
+	CLOSED_WON: "success",
+	CLOSED_LOST: "error",
+	UNQUALIFIED_TO_BUY: "neutral",
+} as const satisfies Record<DealStage, StatusTone>;
 
 export const OPEN_STAGES = ORDER.slice(0, 4) as readonly DealStage[];
 
@@ -35,7 +31,7 @@ export const LOSING_STAGES: readonly DealStage[] = [
 
 export const DEAL_STAGE_OPTIONS = ORDER.map((value) => ({
 	value,
-	label: PRESENTATION[value].label,
+	label: DEAL_STAGE_LABELS[value],
 }));
 
 const OPEN_STAGE_COLORS = [
@@ -54,9 +50,9 @@ export function dealStageColor(stage: DealStage): string {
 }
 
 export function dealStageLabel(stage: DealStage): string {
-	return PRESENTATION[stage].label;
+	return DEAL_STAGE_LABELS[stage];
 }
 
 export function dealStagePresentation(stage: DealStage) {
-	return PRESENTATION[stage];
+	return { label: DEAL_STAGE_LABELS[stage], tone: TONE[stage] };
 }
