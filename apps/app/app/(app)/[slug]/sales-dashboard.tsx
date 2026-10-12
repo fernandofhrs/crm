@@ -106,9 +106,9 @@ export function SalesDashboard({ summary }: { summary: Summary }) {
 							: formatPercent(performance.winRate)
 					}
 					description={
-						performance.wins + performance.losses === 0
+						performance.wins + performance.losses + performance.recycled === 0
 							? "Nenhum negócio fechado ainda"
-							: `${formatCount(performance.wins, "ganho")} · ${formatCount(performance.losses, "perdido")}`
+							: `${formatCount(performance.wins, "ganho")} · ${formatCount(performance.losses, "perdido")} · ${performance.recycled} para reciclar`
 					}
 				/>
 				<StatCard

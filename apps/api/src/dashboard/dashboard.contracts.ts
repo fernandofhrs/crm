@@ -101,6 +101,7 @@ export const dashboardSummaryOutput = z.object({
 		windowDays: z.number(),
 		wins: z.number(),
 		losses: z.number(),
+		recycled: z.number(),
 		winRate: z.number().nullable(),
 		avgDealCents: z.number().nullable(),
 		avgCycleDays: z.number().nullable(),
