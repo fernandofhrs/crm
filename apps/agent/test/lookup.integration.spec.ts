@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { DealStage, db } from "@crm/db";
-import { listDeals, searchCrm } from "../agent/lib/lookup";
+import { countRecords, listDeals, searchCrm } from "../agent/lib/lookup";
 
 const suffix = process.env.TEST_RUN_ID ?? "lookup-spec";
 const domain = `northwind-${suffix}.test`;
@@ -197,6 +197,37 @@ describe("searchCrm", () => {
 
 	it("refuses a query too short to mean anything", async () => {
 		expect((await searchCrm("a")).total).toBe(0);
+	});
+});
+
+describe("countRecords", () => {
+	it("counts what is in the CRM, and leaves archived records out", async () => {
+		const before = await countRecords();
+
+		expect(before.deals.total).toBe(
+			before.deals.byStage.reduce((sum, row) => sum + row.count, 0),
+		);
+		expect(before.deals.total).toBe(
+			before.deals.open + before.deals.won + before.deals.lost,
+		);
+		expect(before.deals.open).toBeGreaterThanOrEqual(2);
+		expect(before.deals.lost).toBeGreaterThanOrEqual(1);
+
+		const extra = await db.company.create({
+			data: { name: `Counted ${suffix}`, domain: `counted-${suffix}.test` },
+			select: { id: true },
+		});
+
+		expect((await countRecords()).companies).toBe(before.companies + 1);
+
+		await db.company.update({
+			where: { id: extra.id },
+			data: { archivedAt: new Date() },
+		});
+
+		expect((await countRecords()).companies).toBe(before.companies);
+
+		await db.company.delete({ where: { id: extra.id } });
 	});
 });
 

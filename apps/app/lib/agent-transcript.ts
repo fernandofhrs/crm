@@ -83,6 +83,7 @@ const VERBS: ToolVerbs = {
 	schedule_recheck: "Decidiu quando olhar de novo",
 	record_job_change: "Sinalizou uma mudança de emprego",
 	list_deals: "Revisou o funil de negócios",
+	count_records: "Contou os registros do CRM",
 	list_outstanding_work: "Procurou pendências",
 	set_chat_title: "Deu nome ao chat",
 	list_fields: "Leu o que este espaço de trabalho acompanha",

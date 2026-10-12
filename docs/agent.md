@@ -258,6 +258,12 @@ ask a rep who had a company open, contacts on screen, to paste an email.
 | `read_company_history` | **every contact with id**, deals, threads, meetings, notes |
 | `read_deal_history` | stage clock and history, **people with ids**, last reply |
 | `search_crm` | contacts, companies and deals matching typed text |
+| `count_records` | how many companies, contacts and deals, with deals by stage and summed amount |
+
+**`search_crm` finds, `count_records` counts.** A search returns a page of matches, so
+a model that counts the page answers "20 companies" for a base of 200. Any how-many or
+how-much question about the whole CRM goes to `count_records` (`countRecords` in
+`lib/lookup.ts`), which counts in the database and leaves archived records out.
 
 **A preamble or tool result naming a record without its id is a bug** — the only
 recovery is asking the human. Ambiguity is fine: four Marchettis is four rows with

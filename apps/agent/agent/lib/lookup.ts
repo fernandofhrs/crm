@@ -56,6 +56,62 @@ export type DealListOptions = {
 	now?: Date;
 };
 
+export type RecordCounts = {
+	companies: number;
+	contacts: number;
+	deals: {
+		total: number;
+		open: number;
+		won: number;
+		lost: number;
+		byStage: {
+			stage: DealStage;
+			currency: string;
+			count: number;
+			amount: number;
+		}[];
+	};
+};
+
+export async function countRecords(): Promise<RecordCounts> {
+	const [companies, contacts, groups] = await Promise.all([
+		db.company.count({ where: { archivedAt: null } }),
+		db.contact.count({ where: { archivedAt: null } }),
+		db.deal.groupBy({
+			by: ["stage", "currency"],
+			where: { archivedAt: null },
+			_count: { _all: true },
+			_sum: { amount: true },
+			orderBy: [{ stage: "asc" }, { currency: "asc" }],
+		}),
+	]);
+
+	const open = new Set<DealStage>(OPEN_DEAL_STAGES);
+	const losing = new Set<DealStage>(LOSING_DEAL_STAGES);
+
+	const byStage = groups.map((group) => ({
+		stage: group.stage,
+		currency: group.currency,
+		count: group._count._all,
+		amount: Number(group._sum.amount ?? 0),
+	}));
+
+	const countOf = (keep: (stage: DealStage) => boolean) =>
+		byStage.reduce((sum, row) => (keep(row.stage) ? sum + row.count : sum), 0);
+
+	return {
+		companies,
+		contacts,
+		deals: {
+			total: countOf(() => true),
+			open: countOf((stage) => open.has(stage)),
+			won: countOf((stage) => stage === DealStage.CLOSED_WON),
+			lost: countOf((stage) => losing.has(stage)),
+			byStage,
+		},
+	};
+}
+
 export async function listDeals(options: DealListOptions = {}) {
 	const status = options.status ?? "open";
 	const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
