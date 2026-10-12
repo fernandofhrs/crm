@@ -62,6 +62,11 @@ colours, which lighten so a line stays visible on a dark surface.
   chat, it is a narrow rail with a short name under each icon; below `md` it is
   a top bar and a bottom tab bar. Do not add a second way to move between
   sections.
+- **Inside another site's frame the app has no navigation.**
+  `apps/app/lib/embedded-frame.ts` sets `data-embedded` on the document before the
+  first paint, and the three shapes hide with `in-data-embedded:hidden!`. The host
+  page owns the menu and loads a section by its URL. Nothing else changes: a page
+  does not read the attribute.
 - **A list is a table from `sm` up and a stack of cards below it.** `DataTable`
   does this on its own from the same column definitions; a page does not build
   its own phone layout for a list.

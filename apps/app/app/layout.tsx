@@ -4,9 +4,11 @@ import { TooltipProvider } from "@crm/ui/components/tooltip";
 import { cn } from "@crm/ui/lib/utils";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import Script from "next/script";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { LocalDateTimeHydrator } from "@/components/local-date-time";
 import { ThemeProvider } from "@/components/theme-provider";
+import { EMBEDDED_FRAME } from "@/lib/embedded-frame";
 import { TRPCReactProvider } from "@/lib/trpc/client";
 
 const fontSans = localFont({
@@ -53,6 +55,9 @@ export default function RootLayout({
 					</TRPCReactProvider>
 				</NuqsAdapter>
 				<LocalDateTimeHydrator />
+				<Script id={EMBEDDED_FRAME.scriptId} strategy="beforeInteractive">
+					{EMBEDDED_FRAME.script}
+				</Script>
 			</body>
 		</html>
 	);

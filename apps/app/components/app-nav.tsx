@@ -191,7 +191,7 @@ export function AppNav({ user }: { user: User }) {
 
 	return (
 		<>
-			<header className="flex h-14 shrink-0 items-center gap-2 border-b bg-sidebar px-3 md:hidden [view-transition-name:app-header]">
+			<header className="flex h-14 shrink-0 items-center gap-2 border-b bg-sidebar px-3 md:hidden in-data-embedded:hidden! [view-transition-name:app-header]">
 				{inChat ? (
 					<Button
 						variant="ghost"
@@ -238,7 +238,7 @@ export function AppNav({ user }: { user: User }) {
 
 			<aside
 				className={cn(
-					"hidden w-[84px] shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex [view-transition-name:app-rail]",
+					"hidden w-[84px] shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex in-data-embedded:hidden! [view-transition-name:app-rail]",
 					wide && "lg:w-[236px]",
 				)}
 			>
@@ -354,7 +354,7 @@ export function AppNav({ user }: { user: User }) {
 
 			<nav
 				aria-label="Principal"
-				className="order-1 grid shrink-0 grid-cols-5 border-t bg-sidebar px-1 pb-[env(safe-area-inset-bottom)] md:hidden"
+				className="order-1 grid shrink-0 grid-cols-5 border-t bg-sidebar px-1 pb-[env(safe-area-inset-bottom)] md:hidden in-data-embedded:hidden!"
 			>
 				{items
 					.filter((item) => item.tab)
@@ -565,7 +565,7 @@ export function AppNavFallback() {
 	return (
 		<>
 			<header
-				className="flex h-14 shrink-0 items-center gap-2.5 border-b bg-sidebar px-3 md:hidden"
+				className="flex h-14 shrink-0 items-center gap-2.5 border-b bg-sidebar px-3 md:hidden in-data-embedded:hidden!"
 				aria-busy="true"
 			>
 				<BrandMark />
@@ -576,7 +576,7 @@ export function AppNavFallback() {
 			</header>
 
 			<aside
-				className="hidden w-[84px] shrink-0 flex-col border-r bg-sidebar md:flex lg:w-[236px]"
+				className="hidden w-[84px] shrink-0 flex-col border-r bg-sidebar md:flex lg:w-[236px] in-data-embedded:hidden!"
 				aria-busy="true"
 			>
 				<div className="flex h-[72px] shrink-0 items-center justify-center px-3 lg:justify-start lg:px-5">
@@ -596,7 +596,7 @@ export function AppNavFallback() {
 
 			<nav
 				aria-hidden="true"
-				className="order-1 grid h-[62px] shrink-0 grid-cols-5 border-t bg-sidebar md:hidden"
+				className="order-1 grid h-[62px] shrink-0 grid-cols-5 border-t bg-sidebar md:hidden in-data-embedded:hidden!"
 			/>
 		</>
 	);

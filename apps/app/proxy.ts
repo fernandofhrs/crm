@@ -1,7 +1,7 @@
 import { AUTH_COOKIE_PREFIX } from "@crm/auth/cookies";
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
-import { isMarketing, isResearchKeyOptional } from "@/lib/env";
+import { frameAncestors, isMarketing, isResearchKeyOptional } from "@/lib/env";
 import {
 	type Gate,
 	ONBOARDING_PATH,
@@ -15,13 +15,22 @@ const LANDING_PATH = "/";
 
 const SIGN_IN_PATH = "/sign-in";
 
-const UNGATED = ["/grant-access", "/eve"];
+const UNGATED = ["/grant-access", "/eve", "/portal-sign-out"];
 
 const ANONYMOUS = ["/t"];
 
 const SECTIONS = ["/companies", "/contacts", "/deals", "/settings"];
 
+const FRAME_HEADER = "Content-Security-Policy";
+
 export async function proxy(request: NextRequest) {
+	const response = await route(request);
+	response.headers.set(FRAME_HEADER, frameAncestors());
+
+	return response;
+}
+
+async function route(request: NextRequest): Promise<NextResponse> {
 	const { pathname } = request.nextUrl;
 
 	if (pathname === SIGN_IN_PATH) return NextResponse.next();
